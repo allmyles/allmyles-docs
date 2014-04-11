@@ -9,7 +9,7 @@ Contents
 
    quick-start
 
-This documentation provides information about AllMyles travel services API,
+This documentation provides information about the Allmyles travel services API,
 including flight, hotel, car rental search and booking. The documentation
 contains a general  API overview, detailed API reference and common use case
 examples.
@@ -33,4 +33,3 @@ Indices and tables
 
 * :ref:`genindex`
 * :ref:`search`
-
