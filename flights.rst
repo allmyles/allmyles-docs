@@ -12,9 +12,9 @@ when booking LCC flights.
 
  1. :ref:`Flight_Search`
  2. :ref:`Flight_Details`
- 3. Booking
- 4. Payment (mandatory only for LCC)
- 5. Ticketing
+ 3. :ref:`Flight_Booking`
+ 4. :ref:`Flight_Payment` (mandatory only for LCC)
+ 5. :ref:`Flight_Ticketing`
 
 .. _Flight_Search:
 
@@ -97,7 +97,7 @@ Breakdown
         - **type** (*String*) -- type of passengers the breakdown is for, see
           (see :ref:`PassengerTypes`)
         - **quantity** (*Integer*) -- number of passengers of ``type``
-        - **ticketDesignators** (*:ref:`TicketDesignator`\[\]*) -- ticket
+        - **ticketDesignators** (:ref:`TicketDesignator`\[\]) -- ticket
           designators applicable for passengers of ``type``
 
 .. _TicketDesignator:
@@ -295,7 +295,7 @@ Response
     .. warning::
         Due to a bug, the current development nightly has a second
         ``flightDetails`` container inside this one. This will be fixed with
-        the next deployment. We apologize for the inconvenience. We really do.
+        the next deployment. We apologize for the inconvenience.
 
     :JSON Parameters:
         - **flightDetails** (:ref:`FlightDetailsContainer`) -- root container
@@ -469,14 +469,30 @@ Response
           }
         }
 
-.. _FlightBooking:
+.. _Flight_Booking:
 
 ---------
  Booking
 ---------
 
+    .. note::
+        When booking LCC flights, the Allmyles API does not send the book
+        request to the external provider at this point in time, so there's no
+        response---an HTTP 204 No Content status code is returned. The book
+        request will be sent with the ticketing call.
+
+
 Request
 =======
+
+.. http:post:: /books/
+
+    :JSON Parameters:
+        - **bookingId** (*String*) -- the booking ID of the :ref:`Combination`
+          to book
+        - **billingInfo** (:ref:`Contact`) -- billing info for ticket creation
+        - **contactInfo** (:ref:`Contact`) -- contact info for ticket creation
+        - **passengers** (:ref:`Passenger`\[\]) -- the list of passengers
 
 Response
 ========
@@ -487,10 +503,65 @@ Examples
 Request
 -------
 
+    **JSON:**
+
+    .. sourcecode:: json
+
+        {
+          "bookingId": "1_0_0",
+          "billingInfo": {
+            "address": {
+              "addressLine1": "Váci út 13-14",
+              "cityName": "Budapest",
+              "countryCode": "HU",
+              "zipCode": "1234"
+            },
+            "email": "ccc@gmail.com",
+            "name": "Kovacs Gyula",
+            "phone": {
+              "areaCode": 30,
+              "countryCode": 36,
+              "phoneNumber": 1234567
+            }
+          },
+          "contactInfo": {
+            "address": {
+              "addressLine1": "Váci út 13-14",
+              "cityName": "Budapest",
+              "countryCode": "HU"
+            },
+            "email": "bbb@gmail.com",
+            "name": "Kovacs Lajos",
+            "phone": {
+              "areaCode": 30,
+              "countryCode": 36,
+              "phoneNumber": 1234567
+            }
+          },
+          "passengers": [
+            {
+              "baggage": 0,
+              "birthDate": "1974-04-03",
+              "document": {
+                "dateOfExpiry": "2016-09-03",
+                "id": "12345678",
+                "issueCountry": "HU",
+                "type": "Passport"
+              },
+              "email": "aaa@gmail.com",
+              "firstName": "Janos",
+              "gender": "MALE",
+              "lastName": "Kovacs",
+              "namePrefix": "Mr",
+              "passengerTypeCode": "ADT"
+            }
+          ]
+        }
+
 Response
 --------
 
-.. _FlightPayment:
+.. _Flight_Payment:
 
 ---------
  Payment
@@ -511,7 +582,7 @@ Request
 Response
 --------
 
-.. _FlightTicketing:
+.. _Flight_Ticketing:
 
 -----------
  Ticketing
