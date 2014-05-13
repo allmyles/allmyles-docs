@@ -11,7 +11,7 @@ for traditional flights. A fifth step (providing payment details) is required
 when booking LCC flights.
 
  1. :ref:`FlightSearch`
- 2. Details
+ 2. :ref:`FlightDetails`
  3. Booking
  4. Payment (mandatory only for LCC)
  5. Ticketing
@@ -46,9 +46,9 @@ Request
                                  IATA code, must be in the city specified in
                                  ``toLocation``
     :jsonparam String providerType: *(optional)* type of results to retrieve
-    :jsonparam String[] airlines: *(optional)* list of airlines to filter
-                                  results to, given as their two character IATA
-                                  code
+    :jsonparam String[] preferredAirlines: *(optional)* list of airlines to
+                                           filter results to, given as their
+                                           two character IATA code
 
 .. _Person:
 
@@ -70,6 +70,13 @@ Response
 
 FlightResult
 ------------
+
+    .. warning::
+        The ``total_fare`` field here does not include the credit card
+        surcharge just yet, as fetching the exact surcharge for a specific
+        flight can require an extra 5-10 second call to the external provider.
+
+        This surcharge is retrieved in the _`FlightDetails` call.
 
     :JSON Parameters:
         - **breakdown** (*Breakdown[]*) -- summary of passenger data per type
@@ -271,3 +278,129 @@ Response
             }
           ]
         }
+
+.. _FlightDetails:
+
+---------
+ Details
+---------
+
+Request
+=======
+
+.. http:get:: /flights/(bookingId)
+
+Response
+========
+
+    .. warning::
+        Due to a bug the current development nightly has a second
+        ``flightDetails`` container inside this one. This will be fixed with
+        the next deployment. We apologize for the inconvenience. We really do.
+
+    :JSON Parameters:
+        - **flightDetails** (*FlightDetails*) --
+
+Examples
+========
+
+Response
+--------
+
+    **JSON:**
+
+    .. sourcecode:: json
+
+    {
+      "flightDetails": {
+        "rulesLink": null,
+        "baggageTiers": [],
+        "fields": {
+          "countryCode": {
+            "required": true,
+            "per_person": false
+          },
+          "documentType": {
+            "required": true,
+            "per_person": true
+          }
+        },
+        "price": {
+          "currency": "EUR",
+          "amount": 4464.46
+        },
+        "result": {},
+        "options": {
+          "seatSelectionAvailable": false,
+          "travelfusionPrepayAvailable": false
+        },
+        "surcharge": {
+          "currency": "EUR",
+          "amount": 5.0
+        }
+      }
+    }
+
+.. _FlightBooking:
+
+---------
+ Booking
+---------
+
+Request
+=======
+
+Response
+========
+
+Examples
+========
+
+Request
+-------
+
+Response
+--------
+
+.. _FlightPayment:
+
+---------
+ Payment
+---------
+
+Request
+=======
+
+Response
+========
+
+Examples
+========
+
+Request
+-------
+
+Response
+--------
+
+.. _FlightTicketing:
+
+-----------
+ Ticketing
+-----------
+
+Request
+=======
+
+Response
+========
+
+Examples
+========
+
+Request
+-------
+
+Response
+--------
+
