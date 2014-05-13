@@ -311,35 +311,35 @@ Response
 
     .. sourcecode:: json
 
-    {
-      "flightDetails": {
-        "rulesLink": null,
-        "baggageTiers": [],
-        "fields": {
-          "countryCode": {
-            "required": true,
-            "per_person": false
-          },
-          "documentType": {
-            "required": true,
-            "per_person": true
+        {
+          "flightDetails": {
+            "rulesLink": null,
+            "baggageTiers": [],
+            "fields": {
+              "countryCode": {
+                "required": true,
+                "per_person": false
+              },
+              "documentType": {
+                "required": true,
+                "per_person": true
+              }
+            },
+            "price": {
+              "currency": "EUR",
+              "amount": 4464.46
+            },
+            "result": {},
+            "options": {
+              "seatSelectionAvailable": false,
+              "travelfusionPrepayAvailable": false
+            },
+            "surcharge": {
+              "currency": "EUR",
+              "amount": 5.0
+            }
           }
-        },
-        "price": {
-          "currency": "EUR",
-          "amount": 4464.46
-        },
-        "result": {},
-        "options": {
-          "seatSelectionAvailable": false,
-          "travelfusionPrepayAvailable": false
-        },
-        "surcharge": {
-          "currency": "EUR",
-          "amount": 5.0
         }
-      }
-    }
 
 .. _FlightBooking:
 
