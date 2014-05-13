@@ -46,30 +46,8 @@ Request
           as IATA code, must be in the city specified in ``toLocation``
         - **providerType** (*String*) -- *(optional)* type of results to
           retrieve
-        - **preferredAirlines** (*String*[]) -- *(optional)* list of airlines
-          to filter results to, given as their two character IATA code
-
-
-    :jsonparam String fromLocation: departure location, given as IATA code
-    :jsonparam String toLocation: destination, given as IATA code
-    :jsonparam String departureDate: date of departure, in ISO format
-                                     *(including a time code, even though
-                                     whole day will be searched by default)*
-    :jsonparam String returnDate: date of return, in ISO format *(including
-                                  a time code, even though whole day will be
-                                  searched by default)*
-    :jsonparam Person persons: a list of passengers, grouped by type code
-                              containing Persons (see :ref:`Person`)
-    :jsonparam String fromAirport: *(optional)* departure airport, given as
-                                   IATA code, must be in the city specified in
-                                   ``fromLocation``
-    :jsonparam String toAirport: *(optional)* destination airport, given as
-                                 IATA code, must be in the city specified in
-                                 ``toLocation``
-    :jsonparam String providerType: *(optional)* type of results to retrieve
-    :jsonparam String[] preferredAirlines: *(optional)* list of airlines to
-                                           filter results to, given as their
-                                           two character IATA code
+        - **preferredAirlines** (*String*\[ \]) -- *(optional)* list of
+          airlines to filter results to, given as their two character IATA code
 
 .. _Person:
 
@@ -85,7 +63,7 @@ Response
 ========
 
     :JSON Parameters:
-        - **flightResultSet** (:ref:`FlightResult`\[\]) -- root container
+        - **flightResultSet** (:ref:`FlightResult`\[ \]) -- root container
 
 .. _FlightResult:
 
@@ -100,11 +78,11 @@ FlightResult
         This surcharge is retrieved in the _`FlightDetails` call.
 
     :JSON Parameters:
-        - **breakdown** (:ref:`Breakdown`\[\]) -- summary of passenger data per
-          type
+        - **breakdown** (:ref:`Breakdown`\[ \]) -- summary of passenger data
+          per type
         - **currency** (*String*) -- currency of all prices in response
         - **total_fare** (*Float*) -- total fare, including service fee
-        - **combinations** (:ref:`Combination`\[\]) -- list of combination
+        - **combinations** (:ref:`Combination`\[ \]) -- list of combination
           objects
 
 .. _Breakdown:
@@ -113,12 +91,12 @@ Breakdown
 ---------
 
     :JSON Parameters:
-        - **fare** (*Float[]*) -- total price of the tickets for passengers of
+        - **fare** (*Float[ ]*) -- total price of the tickets for passengers of
           ``type``
         - **type** (*String*) -- type of passengers the breakdown is for, see
           (see :ref:`PassengerTypes`)
         - **quantity** (*Integer*) -- number of passengers of ``type``
-        - **ticketDesignators** (:ref:`TicketDesignator`\[\]) -- ticket
+        - **ticketDesignators** (:ref:`TicketDesignator`\[ \]) -- ticket
           designators applicable for passengers of ``type``
 
 .. _TicketDesignator:
@@ -161,14 +139,14 @@ Combination
 Leg
 ---
 
-    Legs are made up of one or more segment, and span from one location the
+    Legs are made up of one or more segments, and span from one location the
     customer searched for to the other.
 
     :JSON Parameters:
         - **elapsedTime** (*String*) -- The total time between the leg's first
           departure, and last arrival (including time spent waiting when
           transferring). It is given in the format ``HHMM``.
-        - **flightSegments** (:ref:`Segment`\[\]) -- The list of segments this
+        - **flightSegments** (:ref:`Segment`\[ \]) -- The list of segments this
           leg is made up of.
 
 .. _Segment:
@@ -177,14 +155,14 @@ Segment
 -------
 
     Segments are the smallest unit of an itinerary. They are the direct
-    flights the passenger will take from one airport to the other.
+    flights the passenger will take from one stop to another.
 
     :JSON Parameters:
         - **departure** (:ref:`Stop`) -- data about the flight's departure
         - **arrival** (:ref:`Stop`) -- data about the flight's arrival
         - **operatingAirline** (*String*) -- The airline operating this
           specific segment, given as a two character IATA code.
-        - **availableBookingClasses** (*BookingClass[]*) -- a list of the
+        - **availableBookingClasses** (*BookingClass[ ]*) -- a list of the
           classes that can be booked for this specific segment
 
           - **cabinCode** (*String*) --
@@ -346,10 +324,10 @@ FlightDetails
         - **fields** (:ref:`FormFields`) -- contains field validation data.
         - **price** (:ref:`Price`) -- contains the final price of the ticket
           (including the credit card surcharge, but not the baggages)
-        - **result** (:ref:`FlightResult`) -- contains an exact copy of the result
-          from the :ref:`Flight_Search` call's response
-        - **options** (:ref:`FlightOption`) -- contains whether certain options are
-          enabled for this flight
+        - **result** (:ref:`FlightResult`) -- contains an exact copy of the
+          result from the :ref:`Flight_Search` call's response
+        - **options** (:ref:`FlightOptions`) -- contains whether certain
+          options are enabled for this flight
         - **surcharge** (:ref:`Price`) -- contains the credit card surcharge
           for this flight
 
@@ -510,7 +488,7 @@ Request
           to book
         - **billingInfo** (:ref:`Contact`) -- billing info for ticket creation
         - **contactInfo** (:ref:`Contact`) -- contact info for ticket creation
-        - **passengers** (:ref:`Passenger`\[\]) -- the list of passengers
+        - **passengers** (:ref:`Passenger`\[ \]) -- the list of passengers
 
 Response
 ========
