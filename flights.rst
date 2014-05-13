@@ -473,9 +473,8 @@ Response
 
     .. note::
         When booking LCC flights, the Allmyles API does not send the book
-        request to the external provider at this point in time, so there's no
-        response---an HTTP 204 No Content status code is returned. The book
-        request will be sent with the ticketing call.
+        request to the external provider until the ticketing call arrives, so
+        there's no response---an HTTP 204 No Content status code is returned.
 
 
 Request
