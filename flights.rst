@@ -10,13 +10,13 @@ The flight booking/ticket creation workflow consists of four mandatory steps
 for traditional flights. A fifth step (providing payment details) is required
 when booking LCC flights.
 
- 1. :ref:`FlightSearch`
- 2. :ref:`FlightDetails`
+ 1. :ref:`Flight_Search`
+ 2. :ref:`Flight_Details`
  3. Booking
  4. Payment (mandatory only for LCC)
  5. Ticketing
 
-.. _FlightSearch:
+.. _Flight_Search:
 
 --------
  Search
@@ -64,7 +64,7 @@ Response
 ========
 
     :JSON Parameters:
-        - **flightResultSet** (*FlightResult[]*) -- root container (see :ref:`FlightResult`)
+        - **flightResultSet** (:ref:`FlightResult`\[\]) -- root container
 
 .. _FlightResult:
 
@@ -79,12 +79,12 @@ FlightResult
         This surcharge is retrieved in the _`FlightDetails` call.
 
     :JSON Parameters:
-        - **breakdown** (*Breakdown[]*) -- summary of passenger data per type
-          (see :ref:`Breakdown`)
+        - **breakdown** (:ref:`Breakdown`\[\]) -- summary of passenger data per
+          type
         - **currency** (*String*) -- currency of all prices in response
         - **total_fare** (*Float*) -- total fare, including service fee
-        - **combinations** (*Combination[]*) -- list of combination objects
-          (see :ref:`Combination`)
+        - **combinations** (:ref:`Combination`\[\]) -- list of combination
+          objects
 
 .. _Breakdown:
 
@@ -97,8 +97,8 @@ Breakdown
         - **type** (*String*) -- type of passengers the breakdown is for, see
           (see :ref:`PassengerTypes`)
         - **quantity** (*Integer*) -- number of passengers of ``type``
-        - **ticketDesignators** (*TicketDesignator[]*) -- ticket designators
-          applicable for passengers of ``type`` (see :ref:`TicketDesignator`)
+        - **ticketDesignators** (*:ref:`TicketDesignator`\[\]*) -- ticket
+          designators applicable for passengers of ``type``
 
 .. _TicketDesignator:
 
@@ -131,10 +131,8 @@ Combination
         - **bookingId** (*String*) -- the unique identifier of this
           combination (this is later used to identify the combination when
           booking, for example.)
-        - **firstLeg** (*Leg*) -- The outbound leg of the itinerary
-          (see :ref:`Leg`)
-        - **returnLeg** (*Leg*) -- The inbound leg of the itinerary
-          (see :ref:`Leg`)
+        - **firstLeg** (:ref:`Leg`) -- The outbound leg of the itinerary
+        - **returnLeg** (:ref:`Leg`) -- The inbound leg of the itinerary
         - **serviceFeeAmount** (*Float*) -- ticket designator's description
 
 .. _Leg:
@@ -149,8 +147,8 @@ Leg
         - **elapsedTime** (*String*) -- The total time between the leg's first
           departure, and last arrival (including time spent waiting when
           transferring). It is given in the format ``HHMM``.
-        - **flightSegments** (*Segment[]*) -- The list of segments this leg is
-          made up of. (see :ref:`Segment`)
+        - **flightSegments** (:ref:`Segment`\[\]) -- The list of segments this
+          leg is made up of.
 
 .. _Segment:
 
@@ -161,18 +159,16 @@ Segment
     flights the passenger will take from one airport to the other.
 
     :JSON Parameters:
-        - **departure** (*Stop*) -- data about the flight's departure
-          (see :ref:`Stop`)
-        - **arrival** (*Stop*) -- data about the flight's arrival
-          (see :ref:`Stop`)
+        - **departure** (:ref:`Stop`) -- data about the flight's departure
+        - **arrival** (:ref:`Stop`) -- data about the flight's arrival
         - **operatingAirline** (*String*) -- The airline operating this
           specific segment, given as a two character IATA code.
         - **availableBookingClasses** (*BookingClass[]*) -- a list of the
           classes that can be booked for this specific segment
 
-            - **cabinCode** (*String*) --
-            - **code** (*String*) --
-            - **quantity** (*Integer*) --
+          - **cabinCode** (*String*) --
+          - **code** (*String*) --
+          - **quantity** (*Integer*) --
 
 .. _Stop:
 
@@ -185,10 +181,10 @@ Stop
         - **dateTime** (*String*) -- time of the stop (in ISO format)
         - **airport** (*Airport*) -- location of the stop
 
-           - **terminal** -- the relevant terminal of the airport specified
-             below (this will be ``null`` is the airport has only one terminal)
-           - **code** -- the three letter IATA code of the airport the stop is
-             at
+          - **terminal** -- the relevant terminal of the airport specified
+            below (this will be ``null`` is the airport has only one terminal)
+          - **code** -- the three letter IATA code of the airport the stop is
+            at
 
 Examples
 ========
@@ -279,7 +275,7 @@ Response
           ]
         }
 
-.. _FlightDetails:
+.. _Flight_Details:
 
 ---------
  Details
@@ -290,16 +286,148 @@ Request
 
 .. http:get:: /flights/(bookingId)
 
+    :getparam bookingId: the booking ID of the :ref:`Combination` to get the
+                         details of
+
 Response
 ========
 
     .. warning::
-        Due to a bug the current development nightly has a second
+        Due to a bug, the current development nightly has a second
         ``flightDetails`` container inside this one. This will be fixed with
         the next deployment. We apologize for the inconvenience. We really do.
 
     :JSON Parameters:
-        - **flightDetails** (*FlightDetails*) --
+        - **flightDetails** (:ref:`FlightDetailsContainer`) -- root container
+
+.. _FlightDetailsContainer:
+
+FlightDetails
+-------------
+
+    .. warning::
+        While the ``price`` field contains the ticket's final price, baggages
+        are not included in that, as the user may be able to choose from
+        different baggage tiers. It is the travel site's responsibility to add
+        the cost of the passenger's baggages themselves as an extra cost.
+
+    .. note::
+        Providers return prices in the travel site's preferred currency
+        automatically. In the rare case that they might fail to do so, the
+        Allmyles API will convert the prices to the flight fare's currency
+        automatically, based on the provider's currency conversion data.
+
+    :JSON Parameters:
+        - **rulesLink** (*String*) -- link to the airline's rules page (hosted
+          on the airline's website)
+        - **baggageTiers** (:ref:`BaggageTier`) -- contains the different
+          options the passenger has for bringing baggages along.
+        - **fields** (:ref:`FormFields`) -- contains field validation data.
+        - **price** (:ref:`Price`) -- contains the final price of the ticket
+          (including the credit card surcharge, but not the baggages)
+        - **result** (:ref:`FlightResult`) -- contains an exact copy of the result
+          from the :ref:`Flight_Search` call's response
+        - **options** (:ref:`FlightOption`) -- contains whether certain options are
+          enabled for this flight
+        - **surcharge** (:ref:`Price`) -- contains the credit card surcharge
+          for this flight
+
+.. _BaggageTier:
+
+BaggageTier
+-----------
+
+Not implemented currently. Estimated to be added during the week of May 19.
+
+.. _FormFields:
+
+FormFields
+----------
+
+    **{fieldName}** below refers to the following names:
+
+    .. hlist::
+        :columns: 3
+
+        - addressLine1
+        - addressLine2
+        - addressLine3
+        - baggage
+        - billingAddressLine1
+        - billingAddressLine2
+        - billingAddressLine3
+        - billingCityName
+        - billingCountryCode
+        - billingZipCode
+        - birthDate
+        - cityName
+        - countryCode
+        - documentExpiryDate
+        - documentId
+        - documentIssuingCountry
+        - documentType
+        - email
+        - firstName
+        - gender
+        - lastName
+        - namePrefix
+        - passengerTypeCode
+        - phoneAreaCode
+        - phoneCountryCode
+        - phoneNumber
+        - zipCode
+
+    :JSON Parameters:
+        - **{fieldName}** (*FormField*) -- Contains validation data for
+          a field type
+
+          - **required** (*Boolean*) -- Specifies whether the
+          - **per_person** (*Boolean*) -- Contains field validation data.
+
+    The different combinations of the values of `required` and `per_person`
+    carry the following meaning:
+
+    ======== ========== =======================================================
+    required per_person meaning
+    ======== ========== =======================================================
+    True     True       Passing data for this field is mandatory for each
+                        individual passenger.
+    True     False      Passing data for this field is mandatory, but only for
+                        the first passenger, or it requires a universal value
+                        for the booking,such as `billingCityName`.
+    False    True       Passing data for this field is not mandatory, but it
+                        refers to something that can be different for each
+                        passenger, such as `gender`.
+    False    False      Passing data for this field is not mandatory, and it
+                        refers to something that is universal for the booking,
+                        such as `billingAddressLine3`.
+    ======== ========== =======================================================
+
+.. _Price:
+
+Price
+-----
+
+    :JSON Parameters:
+        - **amount** (*Float*) -- the amount of money in the currency below
+        - **currency** (*String*) -- the currency of the amount specified
+
+.. _FlightOptions:
+
+FlightOptions
+-------------
+
+    **{optionName}** below refers to the following names:
+
+    .. hlist::
+        :columns: 3
+
+        - seatSelectionAvailable
+        - travelfusionPrepayAvailable
+
+    :JSON Parameters:
+        - **{optionName}** (*Boolean*) -- whether the option is enabled or not
+
 
 Examples
 ========
