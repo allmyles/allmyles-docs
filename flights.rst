@@ -29,6 +29,27 @@ Request
 
     Searches for flights that match provided criteria.
 
+    :JSON Parameters:
+        - **fromLocation** (*String*) -- departure location, given as IATA code
+        - **toLocation** (*String*) -- destination, given as IATA code
+        - **departureDate** (*String*) -- date of departure, in ISO format,
+          including a time code, even though whole day will be searched by
+          default
+        - **returnDate** (*String*) -- *(optional)* date of return, in ISO
+          format, including a time code, even though whole day will be
+          searched by default
+        - **persons** (:ref:`Person`) -- a list of passengers, grouped by type
+          code, containing Persons
+        - **fromAirport** (*String*) -- *(optional)* departure airport, given
+          as IATA code, must be in the city specified in ``fromLocation``
+        - **toAirport** (*String*) -- *(optional)* destination airport, given
+          as IATA code, must be in the city specified in ``toLocation``
+        - **providerType** (*String*) -- *(optional)* type of results to
+          retrieve
+        - **preferredAirlines** (*String*[]) -- *(optional)* list of airlines
+          to filter results to, given as their two character IATA code
+
+
     :jsonparam String fromLocation: departure location, given as IATA code
     :jsonparam String toLocation: destination, given as IATA code
     :jsonparam String departureDate: date of departure, in ISO format
@@ -418,9 +439,6 @@ FlightOptions
 -------------
 
     **{optionName}** below refers to the following names:
-
-    .. hlist::
-        :columns: 3
 
         - seatSelectionAvailable
         - travelfusionPrepayAvailable
