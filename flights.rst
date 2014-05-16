@@ -25,7 +25,7 @@ when booking LCC flights.
 Request
 =======
 
-.. http:post:: /flights/
+.. http:post:: /flights
 
     Searches for flights that match provided criteria.
 
@@ -46,7 +46,7 @@ Request
           as IATA code, must be in the city specified in ``toLocation``
         - **providerType** (*String*) -- *(optional)* type of results to
           retrieve
-        - **preferredAirlines** (*String*\[ \]) -- *(optional)* list of
+        - **preferredAirlines** (*String\[ \]*) -- *(optional)* list of
           airlines to filter results to, given as their two character IATA code
 
 .. _Person:
@@ -55,15 +55,14 @@ Person
 ------
 
     :JSON Parameters:
-        - **passengerType** (*String*) -- one of the available passenger types
-          (see :ref:`PassengerTypes`)
+        - **passengerType** (*String*) -- one of :ref:`PassengerTypes`
         - **quantity** (*Integer*) -- number of travelers of ``passengerType``
 
 Response
 ========
 
     :JSON Parameters:
-        - **flightResultSet** (:ref:`FlightResult`\[ \]) -- root container
+        - **flightResultSet** (:ref:`FlightResult`*\[ \]*) -- root container
 
 .. _FlightResult:
 
@@ -78,11 +77,11 @@ FlightResult
         This surcharge is retrieved in the _`FlightDetails` call.
 
     :JSON Parameters:
-        - **breakdown** (:ref:`Breakdown`\[ \]) -- summary of passenger data
+        - **breakdown** (:ref:`Breakdown`*\[ \]*) -- summary of passenger data
           per type
         - **currency** (*String*) -- currency of all prices in response
         - **total_fare** (*Float*) -- total fare, including service fee
-        - **combinations** (:ref:`Combination`\[ \]) -- list of combination
+        - **combinations** (:ref:`Combination`*\[ \]*) -- list of combination
           objects
 
 .. _Breakdown:
@@ -96,7 +95,7 @@ Breakdown
         - **type** (*String*) -- type of passengers the breakdown is for, see
           (see :ref:`PassengerTypes`)
         - **quantity** (*Integer*) -- number of passengers of ``type``
-        - **ticketDesignators** (:ref:`TicketDesignator`\[ \]) -- ticket
+        - **ticketDesignators** (:ref:`TicketDesignator`*\[ \]*) -- ticket
           designators applicable for passengers of ``type``
 
 .. _TicketDesignator:
@@ -146,7 +145,7 @@ Leg
         - **elapsedTime** (*String*) -- The total time between the leg's first
           departure, and last arrival (including time spent waiting when
           transferring). It is given in the format ``HHMM``.
-        - **flightSegments** (:ref:`Segment`\[ \]) -- The list of segments this
+        - **flightSegments** (:ref:`Segment`*\[ \]*) -- The list of segments this
           leg is made up of.
 
 .. _Segment:
@@ -165,9 +164,11 @@ Segment
         - **availableBookingClasses** (*BookingClass[ ]*) -- a list of the
           classes that can be booked for this specific segment
 
-          - **cabinCode** (*String*) --
-          - **code** (*String*) --
-          - **quantity** (*Integer*) --
+          - **cabinCode** (*String*) -- cabin code of the class
+            (see :ref:`BookingClassCodes`)
+          - **code** (*String*) -- code of the class
+            (see :ref:`BookingClassCodes`)
+          - **quantity** (*Integer*) -- amount of available seats for class
 
 .. _Stop:
 
@@ -285,8 +286,9 @@ Request
 
 .. http:get:: /flights/(bookingId)
 
-    :getparam bookingId: the booking ID of the :ref:`Combination` to get the
-                         details of
+    :GET Parameters:
+        - **bookingId** (*String*) -- the booking ID of the :ref:`Combination`
+          to get the details of
 
 Response
 ========
@@ -453,7 +455,9 @@ Response
               "currency": "EUR",
               "amount": 4464.46
             },
-            "result": {},
+            "result": {
+              "_comment": "trimmed in example for brevity's sake"
+            },
             "options": {
               "seatSelectionAvailable": false,
               "travelfusionPrepayAvailable": false
@@ -480,17 +484,101 @@ Response
 Request
 =======
 
-.. http:post:: /books/
+.. http:post:: /books
 
     :JSON Parameters:
         - **bookingId** (*String*) -- the booking ID of the :ref:`Combination`
           to book
         - **billingInfo** (:ref:`Contact`) -- billing info for ticket creation
         - **contactInfo** (:ref:`Contact`) -- contact info for ticket creation
-        - **passengers** (:ref:`Passenger`\[ \]) -- the list of passengers
+        - **passengers** (:ref:`Passenger`*\[ \]*) -- the list of passengers
+
+.. _Contact:
+
+Contact
+-------
+
+    :JSON Parameters:
+        - **address** (:ref:`Address`) -- address of the entity in question
+        - **email** (*String*) -- email of the entity in question
+        - **name** (*String*) -- name of the entity in question
+        - **phone** (:ref:`Phone`) -- phone number of the entity in question
+
+.. _Address:
+
+Address
+-------
+
+    :JSON Parameters:
+        - **addressLine1** (*String*)
+        - **addressLine2** (*String*) -- *(optional)*
+        - **addressLine3** (*String*) -- *(optional)*
+        - **cityName** (*String*)
+        - **zipCode** (*String*)
+        - **countryCode** (*String*) -- the two letter code of the country
+
+.. _Phone:
+
+Phone
+-----
+
+    :JSON Parameters:
+        - **countryCode** (*Integer*)
+        - **areaCode** (*Integer*)
+        - **phoneNumber** (*Integer*)
+
+.. _Passenger:
+
+Passenger
+---------
+
+    :JSON Parameters:
+        - **birthDate** (*String*) -- format is ``YYYY-MM-DD``
+        - **document** (:ref:`Document`) -- data about the identifying document
+          the passenger wishes to travel with
+        - **email** (*String*)
+        - **namePrefix** (*String*) -- one of ``Mr``, ``Ms``, or ``Mrs``
+        - **firstName** (*String*)
+        - **lastName** (*String*)
+        - **gender** (*String*) -- one of ``MALE`` or ``FEMALE``
+        - **passengerTypeCode** (*String*) -- one of :ref:`PassengerTypes`
+
+.. _Document:
+
+Document
+--------
+
+    :JSON Parameters:
+        - **id** (*String*) -- document's ID number
+        - **dateOfExpiry** (*String*) -- format is YYYY-MM-DD
+        - **issueCountry** (*String*) -- two letter code of issuing country
+        - **type** (*String*) -- one of :ref:`DocumentTypes`
 
 Response
 ========
+
+    .. note::
+        Again: **there's no response body for LCC book requests!**
+        An HTTP 204 No Content status code confirms that Allmyles saved the
+        sent data for later use.
+
+    .. warning::
+        The format of :ref:`Contact` and :ref:`FlightResult` objects contained
+        within this response might slightly differ from what's described in
+        this documentation as requested. This will be fixed in a later version.
+
+    :JSON Parameters:
+        - **pnr** (*String*) -- the PNR locator which identifies this booking
+        - **lastTicketingDate** (*String*) -- the timestamp of when it's last
+          possible to create a ticket for the booking, in ISO format
+        - **bookingReferenceId** (*String*) -- the ID of the workflow at
+          Allmyles; this is not currently required anywhere later, but can be
+          useful for debugging
+        - **contactInfo** (:ref:`Contact`) -- contains a copy of the data
+          received in the :ref:`Flight_Booking` call
+        - **flightData** (:ref:`FlightResult`) -- contains a copy of the
+          result from the :ref:`Flight_Search` call's response
+
 
 Examples
 ========
@@ -556,17 +644,66 @@ Request
 Response
 --------
 
+    **JSON:**
+
+    .. sourcecode:: json
+
+        {
+          "_warning": "No flight details request was made. This will soon become a mandatory step, and book requests will return an error when called without making a flight details request first.",
+          "bookingReferenceId": "req-cfd7963b187a4fe99702c0373c89cb16",
+          "contactInfo": {
+            "address": {
+              "city": "Budapest",
+              "countryCode": "HU",
+              "line1": "Madach ut 13-14",
+              "line2": null,
+              "line3": null
+            },
+            "email": "testy@gmail.com",
+            "name": "Kovacs Lajos",
+            "phone": {
+              "areaCode": 30,
+              "countryCode": 36,
+              "number": 1234567
+            }
+          },
+          "flightData": {
+            "_comment": "trimmed in example for brevity's sake"
+          },
+          "lastTicketingDate": "2014-05-16T23:59:59Z",
+          "pnr": "6YESST"
+        }
+
 .. _Flight_Payment:
 
 ---------
  Payment
 ---------
 
+If payment is required---that is, if the flight is an LCC one---this is where
+Allmyles gets the payment data. (In a later version this call will also allow
+for immediate payments for traditional flights.)
+
+The only supported payment provider at the moment is PayU. When we receive a
+transaction ID that points to a successful payment by the passenger, we
+essentially take that money from PayU, and forward it to the provider to buy a
+ticket in the :ref:`Flight_Ticketing` step.
+
 Request
 =======
 
+.. http:post:: /payment
+
+    :JSON Parameters:
+        - **payuId** (*String*) -- the transaction ID identifying the
+          successful transaction at PayU
+
 Response
 ========
+
+    **N/A:**
+
+    Returns an HTTP 204 No Content status code if successful.
 
 Examples
 ========
@@ -574,8 +711,13 @@ Examples
 Request
 -------
 
-Response
---------
+    **JSON:**
+
+    .. sourcecode:: json
+
+        {
+          "payuId": "12345678"
+        }
 
 .. _Flight_Ticketing:
 
@@ -583,18 +725,99 @@ Response
  Ticketing
 -----------
 
+Two important notes:
+
+1. Call this only when the passenger's payment completely went through! (That
+   is, after the payment provider's IPN has arrived, confirming that the
+   transaction did not get caught by the fraud protection filter.)
+2. After this call has been made **do not issue refunds** unless the Allmyles
+   API explicitly tells you to. It's way better to just correct ticketing
+   errors manually than to fire automatic refunds even if the ticket purchase
+   might already be locked in for some reason.
+
 Request
 =======
 
+    .. http:get:: /tickets/(bookingId)
+
+        :GET Parameters:
+            - **bookingId** (*String*) -- the booking ID of the
+              :ref:`Combination` to create a ticket for
+
 Response
 ========
+
+    As this is just an abstraction for the book call when buying an LCC ticket
+    (there's no separate book and ticketing calls for those flights), the
+    response differs greatly depending on whether the flight is traditional or
+    LCC.
+
+    :JSON Parameters for traditional flights:
+        - **tickets** (*Ticket[ ]*) -- the purchased tickets
+
+          - **passenger** (*String*) -- the name of the passenger the ticket
+            was purchased for
+          - **ticket** (*String*) -- the ticket number which allows the
+            passenger to actually board the plane
+
+    :JSON Parameters for LCC flights:
+        - **ticket** (*String*) -- the ticket number (LCC PNR) for this booking
+        - **pnr** (*String*) -- the PNR locator which identifies this booking
+        - **lastTicketingDate** (*String*) -- the timestamp of when it's last
+          possible to create a ticket for the booking, in ISO format
+        - **bookingReferenceId** (*String*) -- the ID of the workflow at
+          Allmyles; this is not currently required anywhere later, but can be
+          useful for debugging
+        - **contactInfo** (:ref:`Contact`) -- contains a copy of the data
+          received in the :ref:`Flight_Booking` call
+        - **flightData** (:ref:`FlightResult`) -- contains a copy of the
+          result from the :ref:`Flight_Search` call's response
 
 Examples
 ========
 
-Request
--------
-
 Response
 --------
 
+    **JSON for traditional flights:**
+
+    .. sourcecode:: json
+
+        {
+          "tickets": [
+            {
+              "passenger": "Mr Janos Kovacs",
+              "ticket": "123-4567890123"
+            }
+          ]
+        }
+
+    **JSON for LCC flights:**
+
+    .. sourcecode:: json
+
+        {
+          "bookingReferenceId": "req-d65c00dc43ba4ad798e5478803575aab",
+          "contactInfo": {
+            "address": {
+              "city": "Budapest",
+              "countryCode": "HU",
+              "line1": "Madach ut 13-14",
+              "line2": null,
+              "line3": null
+            },
+            "email": "underer@gmail.com",
+            "name": "Kovacs Lajos",
+            "phone": {
+              "areaCode": 30,
+              "countryCode": 36,
+              "number": 1234567
+            }
+          },
+          "flightData": {
+            "_comment": "trimmed in example for brevity's sake"
+          },
+          "lastTicketingDate": null,
+          "pnr": "6YE2LM",
+          "ticket": "0XN4GTO"
+        }
