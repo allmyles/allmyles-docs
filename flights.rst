@@ -145,8 +145,8 @@ Leg
         - **elapsedTime** (*String*) -- The total time between the leg's first
           departure, and last arrival (including time spent waiting when
           transferring). It is given in the format ``HHMM``.
-        - **flightSegments** (*:ref:`Segment`\[ \]*) -- The list of segments this
-          leg is made up of.
+        - **flightSegments** (*:ref:`Segment`\[ \]*) -- The list of segments
+          this leg is made up of.
 
 .. _Segment:
 
@@ -284,19 +284,13 @@ Response
 Request
 =======
 
-.. http:get:: /flights/(bookingId)
+.. http:get:: /flights/{bookingId}
 
-    :GET Parameters:
-        - **bookingId** (*String*) -- the booking ID of the :ref:`Combination`
-          to get the details of
+    **bookingId** is the booking ID of the :ref:`Combination` to get the
+    details of
 
 Response
 ========
-
-    .. warning::
-        Due to a bug, the current development nightly has a second
-        ``flightDetails`` container inside this one. This will be fixed with
-        the next deployment. We apologize for the inconvenience.
 
     :JSON Parameters:
         - **flightDetails** (:ref:`FlightDetailsContainer`) -- root container
@@ -649,7 +643,6 @@ Response
     .. sourcecode:: json
 
         {
-          "_warning": "No flight details request was made. This will soon become a mandatory step, and book requests will return an error when called without making a flight details request first.",
           "bookingReferenceId": "req-cfd7963b187a4fe99702c0373c89cb16",
           "contactInfo": {
             "address": {
@@ -738,11 +731,10 @@ Two important notes:
 Request
 =======
 
-.. http:get:: /tickets/(bookingId)
+.. http:get:: /tickets/{bookingId}
 
-    :GET Parameters:
-        - **bookingId** (*String*) -- the booking ID of the
-          :ref:`Combination` to create a ticket for
+    *bookingId** is the booking ID of the :ref:`Combination` to create a
+    ticket for
 
 Response
 ========
