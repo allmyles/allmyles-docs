@@ -738,11 +738,11 @@ Two important notes:
 Request
 =======
 
-    .. http:get:: /tickets/(bookingId)
+.. http:get:: /tickets/(bookingId)
 
-        :GET Parameters:
-            - **bookingId** (*String*) -- the booking ID of the
-              :ref:`Combination` to create a ticket for
+    :GET Parameters:
+        - **bookingId** (*String*) -- the booking ID of the
+          :ref:`Combination` to create a ticket for
 
 Response
 ========
@@ -806,7 +806,7 @@ Response
               "line2": null,
               "line3": null
             },
-            "email": "underer@gmail.com",
+            "email": "testytesty@gmail.com",
             "name": "Kovacs Lajos",
             "phone": {
               "areaCode": 30,
