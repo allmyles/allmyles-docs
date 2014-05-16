@@ -62,7 +62,7 @@ Response
 ========
 
     :JSON Parameters:
-        - **flightResultSet** (:ref:`FlightResult`*\[ \]*) -- root container
+        - **flightResultSet** (*:ref:`FlightResult`\[ \]*) -- root container
 
 .. _FlightResult:
 
@@ -77,11 +77,11 @@ FlightResult
         This surcharge is retrieved in the _`FlightDetails` call.
 
     :JSON Parameters:
-        - **breakdown** (:ref:`Breakdown`*\[ \]*) -- summary of passenger data
+        - **breakdown** (*:ref:`Breakdown`\[ \]*) -- summary of passenger data
           per type
         - **currency** (*String*) -- currency of all prices in response
         - **total_fare** (*Float*) -- total fare, including service fee
-        - **combinations** (:ref:`Combination`*\[ \]*) -- list of combination
+        - **combinations** (*:ref:`Combination`\[ \]*) -- list of combination
           objects
 
 .. _Breakdown:
@@ -95,7 +95,7 @@ Breakdown
         - **type** (*String*) -- type of passengers the breakdown is for, see
           (see :ref:`PassengerTypes`)
         - **quantity** (*Integer*) -- number of passengers of ``type``
-        - **ticketDesignators** (:ref:`TicketDesignator`*\[ \]*) -- ticket
+        - **ticketDesignators** (*:ref:`TicketDesignator`\[ \]*) -- ticket
           designators applicable for passengers of ``type``
 
 .. _TicketDesignator:
@@ -145,7 +145,7 @@ Leg
         - **elapsedTime** (*String*) -- The total time between the leg's first
           departure, and last arrival (including time spent waiting when
           transferring). It is given in the format ``HHMM``.
-        - **flightSegments** (:ref:`Segment`*\[ \]*) -- The list of segments this
+        - **flightSegments** (*:ref:`Segment`\[ \]*) -- The list of segments this
           leg is made up of.
 
 .. _Segment:
@@ -491,7 +491,7 @@ Request
           to book
         - **billingInfo** (:ref:`Contact`) -- billing info for ticket creation
         - **contactInfo** (:ref:`Contact`) -- contact info for ticket creation
-        - **passengers** (:ref:`Passenger`*\[ \]*) -- the list of passengers
+        - **passengers** (*:ref:`Passenger`\[ \]*) -- the list of passengers
 
 .. _Contact:
 
