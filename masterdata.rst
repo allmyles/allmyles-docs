@@ -34,11 +34,11 @@ Request
         - **limit** -- *(optional)* the number of results to retrieve
           (default: 10, maximum: 100)
 
-Response
-========
+Response Body
+=============
 
     :JSON Parameters:
-        - **locationSearchResult** (*SearchResult[ ]*) -- root container
+        - **locationSearchResult** (*SearchResult [ ]*) -- root container
 
           - **canonicalName** -- the complete name of the airport/multiairport
           - **htmlFragment** -- the canonical name, preformatted by bolding
@@ -107,8 +107,8 @@ Request
       - eticket_rules
 
 
-Response
-========
+Response Body
+=============
 
     The response will have a root container that is unique to the requested
     data repo. This is an array, containing objects that are, again, unique.

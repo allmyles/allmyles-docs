@@ -46,7 +46,7 @@ Request
           as IATA code, must be in the city specified in ``toLocation``
         - **providerType** (*String*) -- *(optional)* type of results to
           retrieve
-        - **preferredAirlines** (*String\[ \]*) -- *(optional)* list of
+        - **preferredAirlines** (*String \[ \]*) -- *(optional)* list of
           airlines to filter results to, given as their two character IATA code
 
 .. _Person:
@@ -58,13 +58,13 @@ Person
         - **passengerType** (*String*) -- one of :ref:`PassengerTypes`
         - **quantity** (*Integer*) -- number of travelers of ``passengerType``
 
-Response
-========
+Response Body
+=============
 
     :JSON Parameters:
-        - **flightResultSet** (*:ref:`FlightResult`\[ \]*) -- root container
+        - **flightResultSet** (:ref:`flight-result` *\[ \]*) -- root container
 
-.. _FlightResult:
+.. _flight-result:
 
 FlightResult
 ------------
@@ -77,11 +77,11 @@ FlightResult
         This surcharge is retrieved in the _`FlightDetails` call.
 
     :JSON Parameters:
-        - **breakdown** (*:ref:`Breakdown`\[ \]*) -- summary of passenger data
+        - **breakdown** (:ref:`Breakdown` *\[ \]*) -- summary of passenger data
           per type
         - **currency** (*String*) -- currency of all prices in response
         - **total_fare** (*Float*) -- total fare, including service fee
-        - **combinations** (*:ref:`Combination`\[ \]*) -- list of combination
+        - **combinations** (:ref:`Combination` *\[ \]*) -- list of combination
           objects
 
 .. _Breakdown:
@@ -95,7 +95,7 @@ Breakdown
         - **type** (*String*) -- type of passengers the breakdown is for, see
           (see :ref:`PassengerTypes`)
         - **quantity** (*Integer*) -- number of passengers of ``type``
-        - **ticketDesignators** (*:ref:`TicketDesignator`\[ \]*) -- ticket
+        - **ticketDesignators** (:ref:`TicketDesignator` *\[ \]*) -- ticket
           designators applicable for passengers of ``type``
 
 .. _TicketDesignator:
@@ -145,7 +145,7 @@ Leg
         - **elapsedTime** (*String*) -- The total time between the leg's first
           departure, and last arrival (including time spent waiting when
           transferring). It is given in the format ``HHMM``.
-        - **flightSegments** (*:ref:`Segment`\[ \]*) -- The list of segments
+        - **flightSegments** (:ref:`Segment` *\[ \]*) -- The list of segments
           this leg is made up of.
 
 .. _Segment:
@@ -185,6 +185,19 @@ Stop
             below (this will be ``null`` is the airport has only one terminal)
           - **code** -- the three letter IATA code of the airport the stop is
             at
+
+Response Codes
+==============
+
+====  =================================  ======================================
+Code  Message                            Description
+====  =================================  ======================================
+404   No flights available
+404   No flight found for return leg
+500   external provider rejected the     This is the general error sent when we
+      request - please try again         receive an unknown error as response
+                                         from the provider
+====  =================================  ======================================
 
 Examples
 ========
@@ -289,8 +302,8 @@ Request
     **bookingId** is the booking ID of the :ref:`Combination` to get the
     details of
 
-Response
-========
+Response Body
+=============
 
     :JSON Parameters:
         - **flightDetails** (:ref:`FlightDetailsContainer`) -- root container
@@ -320,7 +333,7 @@ FlightDetails
         - **fields** (:ref:`FormFields`) -- contains field validation data.
         - **price** (:ref:`Price`) -- contains the final price of the ticket
           (including the credit card surcharge, but not the baggages)
-        - **result** (:ref:`FlightResult`) -- contains an exact copy of the
+        - **result** (:ref:`flight-result`) -- contains an exact copy of the
           result from the :ref:`Flight_Search` call's response
         - **options** (:ref:`FlightOptions`) -- contains whether certain
           options are enabled for this flight
@@ -420,6 +433,25 @@ FlightOptions
     :JSON Parameters:
         - **{optionName}** (*Boolean*) -- whether the option is enabled or not
 
+Response Codes
+==============
+
+====  =================================  ======================================
+Code  Message                            Description
+====  =================================  ======================================
+404   search first
+412   a request is already being         This error comes up even when the
+      processed                          other request is asynchronous (i.e.
+                                         when we are still processing a search
+                                         request). The response for async
+                                         requests does not need to be retrieved
+                                         for this error to clear, just wait a
+                                         few seconds.
+412   request is not for the latest      This error is returned when a customer
+      search                             is using multiple tabs and trying to
+                                         select a flight from an old result
+                                         list
+====  =================================  ======================================
 
 Examples
 ========
@@ -485,7 +517,7 @@ Request
           to book
         - **billingInfo** (:ref:`Contact`) -- billing info for ticket creation
         - **contactInfo** (:ref:`Contact`) -- contact info for ticket creation
-        - **passengers** (*:ref:`Passenger`\[ \]*) -- the list of passengers
+        - **passengers** (:ref:`Passenger` *\[ \]*) -- the list of passengers
 
 .. _Contact:
 
@@ -548,8 +580,8 @@ Document
         - **issueCountry** (*String*) -- two letter code of issuing country
         - **type** (*String*) -- one of :ref:`DocumentTypes`
 
-Response
-========
+Response Body
+=============
 
     .. note::
         Again: **there's no response body for LCC book requests!**
@@ -557,7 +589,7 @@ Response
         sent data for later use.
 
     .. warning::
-        The format of :ref:`Contact` and :ref:`FlightResult` objects contained
+        The format of :ref:`Contact` and :ref:`flight-result` objects contained
         within this response might slightly differ from what's described in
         this documentation as requested. This will be fixed in a later version.
 
@@ -570,9 +602,56 @@ Response
           useful for debugging
         - **contactInfo** (:ref:`Contact`) -- contains a copy of the data
           received in the :ref:`Flight_Booking` call
-        - **flightData** (:ref:`FlightResult`) -- contains a copy of the
+        - **flightData** (:ref:`flight-result`) -- contains a copy of the
           result from the :ref:`Flight_Search` call's response
 
+Response Codes
+==============
+
+====  =================================  ======================================
+Code  Message                            Description
+====  =================================  ======================================
+303   Unable to book this flight -       This error is returned when the
+      please select a different          external provider encounters a problem
+      bookingId                          such as a discrepancy between actual
+                                         flight data and what they returned
+                                         from their cache before. This happens
+                                         very rarely, or never in production.
+404   search first
+412   a request is already being         This error comes up even when the
+      processed                          other request is asynchronous (i.e.
+                                         when we are still processing a search
+                                         request). The response for async
+                                         requests does not need to be retrieved
+                                         for this error to clear, just wait a
+                                         few seconds.
+412   Already booked.                    This denotes that either us or the
+                                         external provider has detected a
+                                         possible duplicate booking, and has
+                                         broken the flow to avoid dupe
+                                         payments.
+412   already booked                     This is technically the same as the
+                                         error above, but is encountered at a
+                                         different point in the flow. The error
+                                         messages are only temporarily not the
+                                         same for these two errors.
+412   request is not for the latest      This error is returned when a customer
+      search                             is using multiple tabs and trying to
+                                         select a flight from an old result
+                                         list
+500   could not book flight              This is the general error returned
+                                         when we encounter an unknown/empty
+                                         response from the external provider
+504   external gateway timed out - book  The booking might, or might not have
+      request might very well have been  been completed in this case. The flow
+      successful!                        should be stopped, and the customer
+                                         should be contacted to complete the
+                                         booking.
+504   Could not retrieve virtual credit
+      card, flight not booked. An IRN
+      should be sent to payment
+      provider now.
+====  =================================  ======================================
 
 Examples
 ========
@@ -691,12 +770,29 @@ Request
         - **payuId** (*String*) -- the transaction ID identifying the
           successful transaction at PayU
 
-Response
-========
+Response Body
+=============
 
     **N/A:**
 
     Returns an HTTP 204 No Content status code if successful.
+
+Response Codes
+==============
+
+====  =================================  ======================================
+Code  Message                            Description
+====  =================================  ======================================
+412   a request is already being         This error comes up even when the
+      processed                          other request is asynchronous (i.e.
+                                         when we are still processing a search
+                                         request). The response for async
+                                         requests does not need to be retrieved
+                                         for this error to clear, just wait a
+                                         few seconds.
+412   book request should have been
+      received
+====  =================================  ======================================
 
 Examples
 ========
@@ -736,8 +832,8 @@ Request
     *bookingId** is the booking ID of the :ref:`Combination` to create a
     ticket for
 
-Response
-========
+Response Body
+=============
 
     As this is just an abstraction for the book call when buying an LCC ticket
     (there's no separate book and ticketing calls for those flights), the
@@ -745,7 +841,7 @@ Response
     LCC.
 
     :JSON Parameters for traditional flights:
-        - **tickets** (*Ticket[ ]*) -- the purchased tickets
+        - **tickets** (*Ticket [ ]*) -- the purchased tickets
 
           - **passenger** (*String*) -- the name of the passenger the ticket
             was purchased for
@@ -762,8 +858,49 @@ Response
           useful for debugging
         - **contactInfo** (:ref:`Contact`) -- contains a copy of the data
           received in the :ref:`Flight_Booking` call
-        - **flightData** (:ref:`FlightResult`) -- contains a copy of the
+        - **flightData** (:ref:`flight-result`) -- contains a copy of the
           result from the :ref:`Flight_Search` call's response
+
+Response Codes
+==============
+
+====  =================================  ======================================
+Code  Message                            Description
+====  =================================  ======================================
+202   Warning: e-ticket could not be     When this error occurs, the actual
+      issued due to technical            ticket is purchased, but an unknown
+      difficulties. Please contact your  error happens later on in the flow.
+      agent.
+412   a request is already being         This error comes up even when the
+      processed                          other request is asynchronous (i.e.
+                                         when we are still processing a search
+                                         request). The response for async
+                                         requests does not need to be retrieved
+                                         for this error to clear, just wait a
+                                         few seconds.
+412   no payment data given
+412   book request should have been
+      received
+412   book response should have been
+      received
+500   booking failed, cannot create      This error is returned if the book
+      ticket                             response we last received from the
+                                         provider contained an error.
+503   error while querying PNR - please  This error is returned when we are not
+      try again later                    able to check the PNR for the booking,
+                                         prior to actually creating a ticket.
+                                         Safe to refund.
+504   PNR query timed out - please       This is almost the same as the one
+      try again later                    above, also safe to refund.
+503   error while creating ticket -      This is the general error we return
+      please try again later             when receiving an unknown response for
+                                         the ticket request. No refund should
+                                         be sent without manually checking if
+                                         the ticket has been issued first.
+504   ticket creation timed out - but    Almost the same as above, refunds are
+      could very well have been          definitely not safe in this case.
+      successful!
+====  =================================  ======================================
 
 Examples
 ========
