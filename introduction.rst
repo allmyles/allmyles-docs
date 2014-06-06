@@ -2,8 +2,8 @@
  Introduction
 ==============
 
-We highly recommend you to read at least :ref:`the 'Common Gotchas' section below
-<common-gotchas>` before jumping into the API reference, as it contains
+We highly recommend you to read at least :ref:`the 'Common Gotchas' section
+below <common-gotchas>` before jumping into the API reference, as it contains
 information about problems often encountered by developers working with our API
 that are not immediately apparent.
 
@@ -11,9 +11,19 @@ that are not immediately apparent.
  Reading This Documentation
 ----------------------------
 
-We use the following notation in our documentation:
+For the most part, it should be rather easy to understand the documentation.
+Two things that might require explanation are:
 
-**TODO**
+ - A colon in a URL path denotes a variable; in the path
+   ``/flights/:booking_id`` the entirety of ``:booking_id`` should be replaced
+   by a booking ID, as such: ``/flights/8986210d-7e2f-4481-a29f-846ab386ddac``
+
+ - When declaring the type of a variable, the symbol ``[ ]`` after a type
+   means that the variable's type is an array, containing items of the type
+   named before the symbol.
+
+   For example, a ``String [ ]`` variable can look like the following:
+   ``["abc", "def", ""]``.
 
 .. _common-gotchas:
 
@@ -52,6 +62,54 @@ In addition to standard HTTP headers, the following ones are of interest:
    the randomly generated session cookie saved on the customer's computer.
  - **X-Auth-Token**: The API key you received after signing up on
    `the Allmyles home page <https://allmyles.com>`_ (ex. ``12345678-1234``.)
+
+------------------------
+ Generic Response Codes
+------------------------
+
+The documentation has a number of different status codes listed as possible
+reponses to certain requests that are specific to that response. In addition
+to those, we can also return the following status codes:
+
+ - **200 OK**: The request has succeeded.
+ - **202 Accepted**: The request has been accepted for processing but the
+   processing is not yet completed.
+ - **301 Moved Permanently**: The resource at the endpoint URI has been moved
+   permanently and the client must use the new address in the future.
+ - **400 Bad Request**: Invalid request syntax, the error message will in most
+   cases contain the exact reason. The client must not repeat the request in
+   the same form.
+ - **403 Forbidden**: The client failed to authorize themselves with a valid
+   API key, and the request was rejected.
+ - **404 Not Found**: Request contains an invalid URI endpoint, or the given
+   resource does not exist.
+ - **413 Rate Control**: Request limitation threshold violated.
+ - **500 Internal Server Error**: The server has failed to complete the sent
+   request---please report such errors to our support team at
+   `support@allmyles.com <mailto:support@allmyles.com>`_!
+ - **502 Bad Gateway**: The backend servers are down, or an update process
+   is under way.
+ - **503 Service Unavailable**: Servers are accessible, but overloaded.
+   Try and repeat the request later.
+
+--------------------
+ Asynchronous Calls
+--------------------
+
+Long running requests, such as a flight search use asynchronous calls. This
+means that the the Allmyles API can---and in most cases, will---respond to the
+first request with an HTTP 202 status code, and no content. When this
+happens, the client is expected to periodically send the same request to the
+API, with a reasonable delay between the requests (5 seconds is a good baseline
+for this.) The Allmyles API will then reply with an HTTP 202 response code if
+processing is still underway, or any other status code and a content body if it
+is done processing the request.
+
+.. note::
+
+  It is a good idea to implement a timeout on the client side that checks for
+  infinite loops in this process, as the server theoretically could fail in a
+  way that it won't stop returning 202 status codes.
 
 -------------
  Quick Start
