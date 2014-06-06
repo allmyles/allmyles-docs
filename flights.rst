@@ -189,15 +189,11 @@ Stop
 Response Codes
 ==============
 
-====  =================================  ======================================
-Code  Message                            Description
-====  =================================  ======================================
-404   No flights available
-404   No flight found for return leg
-500   external provider rejected the     This is the general error sent when we
-      request - please try again         receive an unknown error as response
-                                         from the provider
-====  =================================  ======================================
+ - **404 'No flights available'**
+ - **404 'No flight found for return leg'**
+ - **500 'external provider rejected the request - please try again'**: This is
+   the generic error sent when we receive an unknown error as response from the
+   provider
 
 Examples
 ========
@@ -436,22 +432,14 @@ FlightOptions
 Response Codes
 ==============
 
-====  =================================  ======================================
-Code  Message                            Description
-====  =================================  ======================================
-404   search first
-412   a request is already being         This error comes up even when the
-      processed                          other request is asynchronous (i.e.
-                                         when we are still processing a search
-                                         request). The response for async
-                                         requests does not need to be retrieved
-                                         for this error to clear, just wait a
-                                         few seconds.
-412   request is not for the latest      This error is returned when a customer
-      search                             is using multiple tabs and trying to
-                                         select a flight from an old result
-                                         list
-====  =================================  ======================================
+ - **404 'search first'**
+ - **412 'a request is already being processed'**: This error comes up even
+   when the other request is asynchronous (i.e. when we are still processing a
+   search request). The response for async requests does not need to be
+   retrieved for this error to clear, just wait a few seconds.
+ - **412 'request is not for the latest search'**: One case where this error
+   is returned is when a customer is using multiple tabs and trying to select
+   a flight from an old result list.
 
 Examples
 ========
@@ -608,50 +596,30 @@ Response Body
 Response Codes
 ==============
 
-====  =================================  ======================================
-Code  Message                            Description
-====  =================================  ======================================
-303   Unable to book this flight -       This error is returned when the
-      please select a different          external provider encounters a problem
-      bookingId                          such as a discrepancy between actual
-                                         flight data and what they returned
-                                         from their cache before. This happens
-                                         very rarely, or never in production.
-404   search first
-412   a request is already being         This error comes up even when the
-      processed                          other request is asynchronous (i.e.
-                                         when we are still processing a search
-                                         request). The response for async
-                                         requests does not need to be retrieved
-                                         for this error to clear, just wait a
-                                         few seconds.
-412   Already booked.                    This denotes that either us or the
-                                         external provider has detected a
-                                         possible duplicate booking, and has
-                                         broken the flow to avoid dupe
-                                         payments.
-412   already booked                     This is technically the same as the
-                                         error above, but is encountered at a
-                                         different point in the flow. The error
-                                         messages are only temporarily not the
-                                         same for these two errors.
-412   request is not for the latest      This error is returned when a customer
-      search                             is using multiple tabs and trying to
-                                         select a flight from an old result
-                                         list
-500   could not book flight              This is the general error returned
-                                         when we encounter an unknown/empty
-                                         response from the external provider
-504   external gateway timed out - book  The booking might, or might not have
-      request might very well have been  been completed in this case. The flow
-      successful!                        should be stopped, and the customer
-                                         should be contacted to complete the
-                                         booking.
-504   Could not retrieve virtual credit
-      card, flight not booked. An IRN
-      should be sent to payment
-      provider now.
-====  =================================  ======================================
+ - **303 'Unable to book this flight - please select a different bookingId'**:
+   This error is returned when the external provider encounters a problem such
+   as a discrepancy between actual flight data and what they returned from
+   their cache before. This happens very rarely, or never in production.
+ - **404 'search first'**
+ - **412 'a request is already being processed'**: This error comes up even
+   when the other request is asynchronous (i.e. when we are still processing a
+   search request). The response for async requests does not need to be
+   retrieved for this error to clear, just wait a few seconds.
+ - **412 'Already booked.'**: This denotes that either us or the external
+   provider has detected a possible duplicate booking, and has broken the flow
+   to avoid dupe payments.
+ - **412 'already booked'**: This is technically the same as the error above,
+   but is encountered at a different point in the flow. The error messages are
+   only temporarily not the same for these two errors.
+ - **412 'request is not for the latest search'**
+ - **500 'could not book flight'**: This is the generic error returned when we
+   encounter an unknown/empty response from the external provider
+ - **504 'external gateway timed out - book request might very well have been
+   successful!'**: The booking might, or might not have been completed in this
+   case. The flow should be stopped, and the customer should be contacted to
+   complete the booking.
+ - **504 'Could not retrieve virtual credit card, flight not booked. An IRN
+   should be sent to payment provider now.'**
 
 Examples
 ========
@@ -780,19 +748,11 @@ Response Body
 Response Codes
 ==============
 
-====  =================================  ======================================
-Code  Message                            Description
-====  =================================  ======================================
-412   a request is already being         This error comes up even when the
-      processed                          other request is asynchronous (i.e.
-                                         when we are still processing a search
-                                         request). The response for async
-                                         requests does not need to be retrieved
-                                         for this error to clear, just wait a
-                                         few seconds.
-412   book request should have been
-      received
-====  =================================  ======================================
+ - **412 'a request is already being processed'**: This error comes up even
+   when the other request is asynchronous (i.e. when we are still processing a
+   search request). The response for async requests does not need to be
+   retrieved for this error to clear, just wait a few seconds.
+ - **412 'book request should have been received'**
 
 Examples
 ========
@@ -864,43 +824,30 @@ Response Body
 Response Codes
 ==============
 
-====  =================================  ======================================
-Code  Message                            Description
-====  =================================  ======================================
-202   Warning: e-ticket could not be     When this error occurs, the actual
-      issued due to technical            ticket is purchased, but an unknown
-      difficulties. Please contact your  error happens later on in the flow.
-      agent.
-412   a request is already being         This error comes up even when the
-      processed                          other request is asynchronous (i.e.
-                                         when we are still processing a search
-                                         request). The response for async
-                                         requests does not need to be retrieved
-                                         for this error to clear, just wait a
-                                         few seconds.
-412   no payment data given
-412   book request should have been
-      received
-412   book response should have been
-      received
-500   booking failed, cannot create      This error is returned if the book
-      ticket                             response we last received from the
-                                         provider contained an error.
-503   error while querying PNR - please  This error is returned when we are not
-      try again later                    able to check the PNR for the booking,
-                                         prior to actually creating a ticket.
-                                         Safe to refund.
-504   PNR query timed out - please       This is almost the same as the one
-      try again later                    above, also safe to refund.
-503   error while creating ticket -      This is the general error we return
-      please try again later             when receiving an unknown response for
-                                         the ticket request. No refund should
-                                         be sent without manually checking if
-                                         the ticket has been issued first.
-504   ticket creation timed out - but    Almost the same as above, refunds are
-      could very well have been          definitely not safe in this case.
-      successful!
-====  =================================  ======================================
+ - **202 'Warning: e-ticket could not be issued due to technical difficulties.
+   Please contact youragent.'**: When this error occurs, the actual ticket is
+   purchased, but an unknown error happens later on in the flow.
+ - **412 'a request is already being processed'**: This error comes up even
+   when the other request is asynchronous (i.e. when we are still processing a
+   search request). The response for async requests does not need to be
+   retrieved for this error to clear, just wait a few seconds.
+ - **412 'no payment data given'**
+ - **412 'book request should have been received'**
+ - **412 'book response should have been received'**
+ - **500 'booking failed, cannot create ticket'**: This error is returned if
+   the book response we last received from the provider contained an error.
+ - **503 'error while querying PNR - please try again later'**: This error is
+   returned when we are not able to check the PNR for the booking, prior to
+   actually creating a ticket. Safe to refund.
+ - **504 'PNR query timed out - please try again later'**: This is almost the
+   same as the one above, also safe to refund.
+ - **503 'error while creating ticket - please try again later'**: This is the
+   generic error we return when receiving an unknown response for the ticket
+   request. No refund should be sent without manually checking if the ticket
+   has been issued first.
+ - **504 'ticket creation timed out - but could very well have been
+   successful!'**: Almost the same as above, refunds are definitely not safe in
+   this case.
 
 Examples
 ========
