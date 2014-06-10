@@ -33,6 +33,37 @@ Request
         - **keyword** -- the string to find locations for
         - **limit** -- *(optional)* the number of results to retrieve
           (default: 10, maximum: 100)
+        - **locales** -- *(optional)* the languages to search in in addition to
+          English (which is on by default.) Multiple locale codes can be given,
+          separated by commas (ex. ``?locales=hu-HU,cs-CZ``) Available locale
+          codes are the following:
+
+    .. hlist::
+        :columns: 3
+
+        - it-IT
+        - pl-PL
+        - ja-JP
+        - es-ES
+        - en-GB
+        - cs-CZ
+        - zh-CN
+        - tr-TR
+        - ro-RO
+        - lt-LT
+        - kk-KZ
+        - ru-RU
+        - hu-HU
+        - fr-FR
+        - el-GR
+        - fi-FI
+        - nl-BE
+        - hr-HR
+        - pt-PT
+        - ko-KR
+        - sk-SK
+        - de-DE
+        - sq-AL
 
 Response Body
 =============
