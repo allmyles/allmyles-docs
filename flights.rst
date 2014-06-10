@@ -161,14 +161,10 @@ Segment
         - **arrival** (:ref:`Stop`) -- data about the flight's arrival
         - **operatingAirline** (*String*) -- The airline operating this
           specific segment, given as a two character IATA code.
-        - **availableBookingClasses** (*BookingClass[ ]*) -- a list of the
-          classes that can be booked for this specific segment
-
-          - **cabinCode** (*String*) -- cabin code of the class
-            (see :ref:`BookingClassCodes`)
-          - **code** (*String*) -- code of the class
-            (see :ref:`BookingClassCodes`)
-          - **quantity** (*Integer*) -- amount of available seats for class
+        - **availableSeats** (*Integer*) -- the number of seats available for
+          this price tier---the maximum number we can know of is 9, so when 9
+          is returned, that means 9 or more seats are available.
+        - **cabin** (*String*) -- one of 'economy', 'first', or 'business'
 
 .. _Stop:
 
@@ -267,13 +263,8 @@ Response
                           },
                           "dateTime": "2014-06-05T21:30:00"
                         },
-                        "availableBookingClasses": [
-                          {
-                            "cabinCode": "Y",
-                            "code": "Y",
-                            "quantity": 0
-                          }
-                        ]
+                        "availableSeats": 9,
+                        "cabin": "economy"
                       }
                     ]
                   },
@@ -293,9 +284,9 @@ Response
 Request
 =======
 
-.. http:get:: /flights/{bookingId}
+.. http:get:: /flights/:booking_id
 
-    **bookingId** is the booking ID of the :ref:`Combination` to get the
+    **booking_id** is the booking ID of the :ref:`Combination` to get the
     details of
 
 Response Body
@@ -787,7 +778,7 @@ Two important notes:
 Request
 =======
 
-.. http:get:: /tickets/{bookingId}
+.. http:get:: /tickets/:booking_id
 
     *bookingId** is the booking ID of the :ref:`Combination` to create a
     ticket for
