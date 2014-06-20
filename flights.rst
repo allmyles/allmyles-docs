@@ -315,8 +315,8 @@ FlightDetails
     :JSON Parameters:
         - **rulesLink** (*String*) -- link to the airline's rules page (hosted
           on the airline's website)
-        - **baggageTiers** (:ref:`BaggageTier`) -- contains the different
-          options the passenger has for bringing baggages along.
+        - **baggageTiers** (:ref:`BaggageTier` *\[ \]*) -- contains the
+          different options the passenger has for bringing baggages along
         - **fields** (:ref:`FormFields`) -- contains field validation data.
         - **price** (:ref:`Price`) -- contains the final price of the ticket
           (including the credit card surcharge, but not the baggages)
@@ -332,7 +332,21 @@ FlightDetails
 BaggageTier
 -----------
 
-Not implemented currently. Estimated to be added during the week of May 19.
+    .. note::
+        Keep in mind that while the tier ID's value may seem closely related to
+        the other fields, it's not guaranteed to contain any semantic meaning at
+        all.
+
+    :JSON Parameters:
+        - **tier** (*String*) -- the ID for this baggage tier (this is used to
+          refer to it when booking)
+        - **price** (:ref:`Price`) -- contains the price of the baggage tier
+        - **max_weight** (*Float*) -- the maximum combined weight
+          of all pieces of baggage a passenger can take in this tier, can be
+          null if there's no limit
+        - **max_quantity** (*Integer*) -- the maximum amount of pieces of
+          baggage the passenger can take in this tier, can be null if there's
+          no limit
 
 .. _FormFields:
 
@@ -405,7 +419,8 @@ Price
 
     :JSON Parameters:
         - **amount** (*Float*) -- the amount of money in the currency below
-        - **currency** (*String*) -- the currency of the amount specified
+        - **currency** (*String*) -- the currency of the amount specified, can
+          be null when the amount is zero
 
 .. _FlightOptions:
 
@@ -445,7 +460,26 @@ Response
         {
           "flightDetails": {
             "rulesLink": null,
-            "baggageTiers": [],
+            "baggageTiers": [
+                {
+                    "max_quantity": null,
+                    "max_weight": 20.0,
+                    "price": {
+                        "amount": 0.0,
+                        "currency": null
+                    },
+                    "tier": "1"
+                },
+                {
+                    "max_quantity": 1,
+                    "max_weight": null,
+                    "price": {
+                        "amount": 0.0,
+                        "currency": null
+                    },
+                    "tier": "2"
+                }
+            ],
             "fields": {
               "countryCode": {
                 "required": true,
@@ -547,6 +581,8 @@ Passenger
         - **lastName** (*String*)
         - **gender** (*String*) -- one of ``MALE`` or ``FEMALE``
         - **passengerTypeCode** (*String*) -- one of :ref:`PassengerTypes`
+        - **baggageTier** (*String*) -- one of the tier IDs returned in the
+          flight details response
 
 .. _Document:
 
@@ -655,7 +691,7 @@ Request
           },
           "passengers": [
             {
-              "baggage": 0,
+              "baggageTier": "0",
               "birthDate": "1974-04-03",
               "document": {
                 "dateOfExpiry": "2016-09-03",

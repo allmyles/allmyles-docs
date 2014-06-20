@@ -184,7 +184,7 @@ available every 5 or so seconds.
         -H "Cookie: 12345678-02" \
         -d @- $SERVICE_ENDPOINT/flights)
 
-    BOOKING_ID=$(echo $RESPONSE | sed -n 's/.*\"bookingId\": \"\([A-Za-z1-9\-_]*\)\".*/\1/p')
+    echo BOOKING_ID=$(echo $RESPONSE | sed -n 's/.*\"bookingId\": \"\([A-Za-z1-9\-_]*\)\".*/\1/p') >> localrc
     echo $RESPONSE
 
 Get Flight Details
