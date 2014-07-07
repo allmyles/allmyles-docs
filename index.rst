@@ -12,6 +12,7 @@
    introduction
    flights
    masterdata
+   php-sdk
 
 This documentation provides information about the Allmyles travel services,
 API including flight, hotel, car rental search and booking. The documentation
