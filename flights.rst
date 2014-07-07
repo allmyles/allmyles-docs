@@ -29,6 +29,11 @@ Request
 
     Searches for flights that match provided criteria.
 
+    .. note::
+        In most cases you'll want to pass 00:00:00 as time for both your
+        departure and your return date. Time filtering constraints will be
+        very strict otherwise, often resulting in no matches for your query.
+
     :JSON Parameters:
         - **fromLocation** (*String*) -- departure location, given as IATA code
         - **toLocation** (*String*) -- destination, given as IATA code
