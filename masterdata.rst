@@ -119,7 +119,7 @@ Response
 Request
 =======
 
-.. http:get:: /masterdata/{category}
+.. http:get:: /masterdata/:category
 
   **category** is the data repo you'd like to retrieve. It can be one of the
   following:

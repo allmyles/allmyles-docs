@@ -32,25 +32,24 @@ dependencies manually. You *really* shouldn't be doing that, though.
 --------------
 
 The allmyles-sdk-php repository contains several examples in
-`/doc/examples/ <https://github.com/allmyles/allmyles-sdk-php-dev/tree/master/doc/examples>`_.
+`/doc/examples/ <https://github.com/allmyles/allmyles-sdk-php/tree/master/doc/examples>`_.
 You might want to try those to get a general feel for how the SDK and the
 ticketing process work in general before you delve into the details down below.
 
 There's code for three different ways to use the API---these are completely
-intercompatible though. We recommend you to read through the simple booking
+intercompatible, though. We recommend you to read through the simple booking
 flow first, as that contains everything you need to successfully create a
 ticket. The complex flow is kind of a showcase for all the advanced ways you
 can use the API, you will most likely not need everything from there. (It
-might be a good idea to start reading the docs once you're about to start
-experiment with these advanced features.)
+might be a good idea to start reading the API Reference once you're about to
+start experimenting with these advanced features.)
 
-The raw examples take a lot of responsiblity off the shoulders of the SDK, the
-requests are crafted more or less manually in those. This way should be used by
+The raw examples take a lot of responsibility off the shoulders of the SDK; the
+requests are written more or less manually in those. This should be used by
 advanced users who don't feel comfortable deferring the task of crafting the
 requests to the SDK, and would rather build arrays themselves instead of using
 the SDK's query classes. Raw requests might also come in handy if the Allmyles
 API has new features deployed that aren't supported by the SDK just yet.
-
 
 ----------------
  Initialization
@@ -59,6 +58,8 @@ API has new features deployed that aren't supported by the SDK just yet.
 Initialization is done by creating an :php:class:`Allmyles\\Client` object
 with the API access details given as arguments. Each request will be made via a
 method call to this object.
+
+Initialization will look something like this:
 
 .. sourcecode:: php
 
