@@ -41,7 +41,7 @@ Two things that might require explanation are:
       for these, include ``"fromLocation": "BUD", "toLocation": "LON",
       "providerType": "OnlyLowCost"`` in your search request.
 
- - Workflows expire 17 minutes after a search request arrives. Any requests for
+ - Workflows expire 17 minutes after a request arrives. Any requests for
    the same session will return an HTTP 412 error.
 
  - All requests in the booking flow are applied to the last received search
