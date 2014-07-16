@@ -965,6 +965,17 @@ Response Body
           - **link** (*String*) -- contains a link to the airline's rules
             page, is returned only for LCC flights
 
+.. _Rule:
+
+Rule
+----
+
+    :JSON Parameters:
+        - **code** (*String*) - the machine readable identifier code for the
+          given section in the rules
+        - **title** (*String*) - the human readable section title for the block
+        - **text** (*String*) - the section's raw rule text body
+
 Response Codes
 ==============
 
