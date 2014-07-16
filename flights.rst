@@ -16,6 +16,10 @@ when booking LCC flights.
  4. :ref:`Flight_Payment` (mandatory only for LCC)
  5. :ref:`Flight_Ticketing`
 
+Additional calls that are available:
+
+ - :ref:`Flight_Rules`
+
 .. _Flight_Search:
 
 --------
@@ -931,4 +935,78 @@ Response
           "lastTicketingDate": null,
           "pnr": "6YE2LM",
           "ticket": "0XN4GTO"
+        }
+
+.. _Flight_Rules:
+
+-------
+ Rules
+-------
+
+This call returns the terms and conditions of the flight in question, or a link
+to them if the raw text isn't available (in case of LCC flights).
+
+Request
+=======
+
+.. http:get:: /flights/:booking_id/rules
+
+    **booking_id** is the booking ID of the :ref:`Combination` to get the
+    rules of
+
+Response Body
+=============
+
+    :JSON Parameters:
+        - **rulesResultSet** (*RulesResultSet*) -- root container
+          - **rules** (:ref:`Rule` *\[ \]*) -- contains the flight rule texts,
+            is returned only for traditional flights
+          - **link** (*String*) -- contains a link to the airline's rules
+            page, is returned only for LCC flights
+
+Response Codes
+==============
+
+ - **404 'search first'**
+ - **412 'a request is already being processed'**: This error comes up even
+   when the other request is asynchronous (i.e. when we are still processing a
+   search request). The response for async requests does not need to be
+   retrieved for this error to clear, just wait a few seconds.
+ - **409 'request is not for the latest search'**
+
+Examples
+========
+
+Response
+--------
+
+    **JSON (for LCC):**
+
+    .. sourcecode:: json
+
+        {
+          "rulesResultSet": {
+            "link": "https://www.ryanair.com/en/terms-and-conditions"
+          }
+        }
+
+    **JSON (for traditional):**
+
+    .. sourcecode:: json
+
+        {
+          "rulesResultSet": {
+            "rules": [
+              {
+                "code": "OD",
+                "text": "NONE UNLESS OTHERWISE SPECIFIED",
+                "title": "OTHER DISCOUNTS"
+              },
+              {
+                "code": "SO",
+                "text": "STOPOVERS NOT PERMITTED ON THE FARE COMPONENT.",
+                "title": "STOPOVERS"
+              },
+            ]
+          }
         }
