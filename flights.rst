@@ -959,6 +959,7 @@ Response Body
 
     :JSON Parameters:
         - **rulesResultSet** (*RulesResultSet*) -- root container
+
           - **rules** (:ref:`Rule` *\[ \]*) -- contains the flight rule texts,
             is returned only for traditional flights
           - **link** (*String*) -- contains a link to the airline's rules
