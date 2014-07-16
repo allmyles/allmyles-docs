@@ -334,8 +334,6 @@ Initialization will look something like this:
 
       Sends the ticket creation request for this flight.
 
-      :param string $payuId: The PayU transaction ID to confirm payment with.
-
       :returns: A :php:class:`Curl\\Response` object. Calling
         :php:meth:`Curl\\Response::get()` on this returns an associative array
         with the response from the Allmyles API in it. See
