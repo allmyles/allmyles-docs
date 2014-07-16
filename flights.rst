@@ -760,8 +760,7 @@ Response
 ---------
 
 If payment is required---that is, if the flight is an LCC one---this is where
-Allmyles gets the payment data. (In a later version this call will also allow
-for immediate payments for traditional flights.)
+Allmyles gets the payment data.
 
 The only supported payment provider at the moment is PayU. When we receive a
 transaction ID that points to a successful payment by the passenger, we
