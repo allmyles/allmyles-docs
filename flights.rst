@@ -101,7 +101,7 @@ Breakdown
     :JSON Parameters:
         - **fare** (*Float[ ]*) -- total price of the tickets for passengers of
           ``type`` (including tax)
-        - **fare** (*Float[ ]*) -- total tax on the tickets for passengers of
+        - **tax** (*Float[ ]*) -- total tax on the tickets for passengers of
           ``type``
         - **type** (*String*) -- type of passengers the breakdown is for, see
           (see :ref:`PassengerTypes`)
