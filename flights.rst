@@ -100,6 +100,8 @@ Breakdown
 
     :JSON Parameters:
         - **fare** (*Float[ ]*) -- total price of the tickets for passengers of
+          ``type`` (including tax)
+        - **fare** (*Float[ ]*) -- total tax on the tickets for passengers of
           ``type``
         - **type** (*String*) -- type of passengers the breakdown is for, see
           (see :ref:`PassengerTypes`)
@@ -244,6 +246,7 @@ Response
                 {
                   "passengerFare": {
                     "fare": 52.8627,
+                    "tax": 21.1229,
                     "ticketDesignators": [],
                     "type": "ADT",
                     "quantity": 1
@@ -845,6 +848,13 @@ Response Body
             was purchased for
           - **ticket** (*String*) -- the ticket number which allows the
             passenger to actually board the plane
+          - **price** (*TicketPrice*)
+
+            - **currency** (*String*)
+            - **total_fare** (*Float*) -- The total amount of money the
+              passenger paid for his ticket, including tax.
+            - **tax** (*Float*) -- The total amount of tax the passenger had to
+              pay for this ticket.
 
     :JSON Parameters for LCC flights:
         - **ticket** (*String*) -- the ticket number (LCC PNR) for this booking
@@ -897,11 +907,25 @@ Response
 
     .. sourcecode:: json
 
-        {
+        "body": {
           "tickets": [
             {
-              "passenger": "Mr Janos Kovacs",
-              "ticket": "123-4567890123"
+              "passenger": "Mr Janos kovcas",
+              "ticket": "125-4838843038",
+              "price": {
+                "currency": "HUF",
+                "total_fare": 26000.0,
+                "tax": 17800.0
+              }
+            },
+            {
+              "passenger": "Mr Janos kascvo",
+              "ticket": "125-4838843039",
+              "price": {
+                "currency": "HUF",
+                "total_fare": 26000.0,
+                "tax": 17800.0
+              }
             }
           ]
         }
