@@ -113,6 +113,17 @@ Initialization will look something like this:
         :php:meth:`Curl\\Response::get()` on this returns an array of
         :php:class:`Flights\\FlightResult` objects.
 
+  .. php:method:: retrieveMasterdata($repo[, $session = null])
+
+      Sends a masterdata retrieval request to the Allmyles API.
+
+      :param string $repo: This should be the name of one of the data repos
+          served by Allmyles (ex. 'airports').
+      :param string $session:
+
+      :returns: A :php:class:`Curl\\Response` object. Calling
+        :php:meth:`Curl\\Response::get()` on this returns an array.
+
   .. warning::
       The methods below are only documented for the sake of completeness. Only
       use them if you really, *really* need to. The methods of the
