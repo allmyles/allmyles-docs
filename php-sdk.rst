@@ -81,6 +81,8 @@ Initialization will look something like this:
                               (ex. ``https://api.allmyles.com/v2.0)``.
       :param string $authKey: Your API key for the Allmyles API.
 
+      :returns: A :php:class:`Client` object.
+
   .. php:method:: searchFlight($parameters[, $async = true, $session = null])
 
       Sends a flight search request to the Allmyles API.
@@ -98,7 +100,25 @@ Initialization will look something like this:
           for the workflow, specify it here. The SDK automatically handles
           sessions, though, so feel free to leave this out.
 
-      :returns: A :php:class:`Client` object.
+      :returns: A :php:class:`Curl\\Response` object. Calling
+        :php:meth:`Curl\\Response::get()` on this returns an array of
+        :php:class:`Flights\\FlightResult` objects.
+
+  .. php:method:: searchHotel($parameters[, $session = null])
+
+      Sends a hotel search request to the Allmyles API.
+
+      :param mixed $parameters: This should be either a
+          :php:class:`Hotels\\SearchQuery` object, or an associative array
+          containing the raw data to be sent off based on the
+          :ref:`Hotel_Search` API docs.
+      :param string $session: If you want to manually set the session cookie
+          for the workflow, specify it here. The SDK automatically handles
+          sessions, though, so feel free to leave this out.
+
+      :returns: A :php:class:`Curl\\Response` object. Calling
+        :php:meth:`Curl\\Response::get()` on this returns an array of
+        :php:class:`Hotels\\Hotel` objects.
 
   .. php:method:: searchLocations($parameters[, $session = null])
 
@@ -109,9 +129,7 @@ Initialization will look something like this:
           API docs.
       :param string $session:
 
-      :returns: A :php:class:`Curl\\Response` object. Calling
-        :php:meth:`Curl\\Response::get()` on this returns an array of
-        :php:class:`Flights\\FlightResult` objects.
+      :returns: An associative array containing the location search results.
 
   .. php:method:: retrieveMasterdata($repo[, $session = null])
 
@@ -170,6 +188,47 @@ Initialization will look something like this:
       :php:meth:`Flights\\Combination::createTicket()` instead.
 
       :param string $bookingId:
+      :param string $session:
+
+      :returns: A :php:class:`Curl\\Response` object.
+
+  .. php:method:: getHotelDetails($hotel)
+
+      Gets the details of the given hotel from the Allmyles API. In almost
+      all cases, this should not be directly called, use
+      :php:meth:`Hotels\\Hotel::getDetails()` instead.
+
+      :param object $hotel: This should be a :php:class:`Hotels\\Hotel` object
+
+      :returns: A :php:class:`Curl\\Response` object.
+
+  .. php:method:: getHotelRoomDetails($room)
+
+      Gets the details of the given room from the Allmyles API. In almost
+      all cases, this should not be directly called, use
+      :php:meth:`Hotels\\Room::getDetails()` instead.
+
+      :param object $room: This should be a :php:class:`Hotels\\Room` object
+
+      :returns: A :php:class:`Curl\\Response` object.
+
+  .. php:method:: getHotelRoomDetails($room)
+
+      Gets the details of the given room from the Allmyles API. In almost
+      all cases, this should not be directly called, use
+      :php:meth:`Hotels\\Room::getDetails()` instead.
+
+      :param object $room: This should be a :php:class:`Hotels\\Room` object
+
+      :returns: A :php:class:`Curl\\Response` object.
+
+  .. php:method:: bookHotel($parameters[, $session = null])
+
+      Sends a book request to the Allmyles API. In almost all cases, this
+      should not be directly called, use
+      :php:meth:`Hotels\\Room::book()` instead.
+
+      :param array $parameters:
       :param string $session:
 
       :returns: A :php:class:`Curl\\Response` object.
@@ -482,6 +541,241 @@ Initialization will look something like this:
       :param array $address: The billing details to book the flight with.
         See :ref:`Contact` in the API docs.
 
+.. php:namespace:: Allmyles\Hotels
+
+.. php:class:: SearchQuery
+
+  This is the object you can pass to a
+  :php:meth:`Allmyles\\Client::searchHotel()` call to simplify searching.
+
+  .. php:method:: __construct($location, $arrivalDate, $leaveDate[, $occupants = 1])
+
+      Starts building a search query.
+
+      :param string $location: A location's three letter IATA code.
+      :param mixed $arrivalDate: Either an ISO formatted date (ex. 2014-12-24),
+        or a :php:class:`DateTime` object.
+      :param mixed $leaveDate: Either an ISO formatted date (ex. 2014-12-24),
+        or a :php:class:`DateTime` object.
+      :param integer $occupants: The number of occupants looking for a hotel.
+
+      :returns: A :php:class:`SearchQuery` object.
+
+.. php:class:: BookQuery
+
+  This is the object you can pass to a
+  :php:meth:`Flights\\Combination::book()` call to simplify booking.
+
+  .. php:method:: __construct([$occupants = null, $contactInfo = null, $billingInfo = null])
+
+      Starts building a book query.
+
+      :param array $occupants: The details of the people wanting to travel.
+        See :ref:`Passenger` in the API docs.
+      :param array $contactInfo: The contact details to book the hotel with.
+        See :ref:`Contact` in the API docs.
+      :param array $billingInfo: The billing details to book the hotel with.
+        See :ref:`Contact` in the API docs.
+
+      :returns: A :php:class:`BookQuery` object.
+
+  .. php:method:: addOccupants($occupants)
+
+      Adds occupants to your book query.
+
+      :param array $occupants: Either an associative array containing data
+        based on :ref:`Passenger` in the API docs, or an array of multiple such
+        arrays.
+
+  .. php:method:: addContactInfo($address)
+
+      Adds contact info to your book query.
+
+      :param array $address: The contact details to book the flight with.
+        See :ref:`Contact` in the API docs.
+
+  .. php:method:: addBillingInfo($address)
+
+      Adds billing info to your book query.
+
+      :param array $address: The billing details to book the flight with.
+        See :ref:`Contact` in the API docs.
+
+.. php:class:: Hotel
+
+  This contains data about entire hotels.
+
+  .. php:attr:: hotelId
+
+    A string.
+
+  .. php:attr:: hotelName
+
+    A string.
+
+  .. php:attr:: chainName
+
+    A string.
+
+  .. php:attr:: thumbnailUrl
+
+    A string.
+
+    Contains a link to a small image representing this hotel.
+
+  .. php:attr:: stars
+
+    An integer.
+
+    Contains the amount of stars this hotel has been awarded.
+
+  .. php:attr:: priceRange
+
+    A :php:class:`Common\\PriceRange` object.
+
+    Contains the available rates for this hotel (for the cheapest and the most
+      expensive room).
+
+  .. php:attr:: location
+
+    A :php:class:`Common\\Location` object.
+
+    Contains the coordinates of the hotel.
+
+  .. php:attr:: amenities
+
+    An associative array, maps strings to booleans.
+
+    Contains whether the hotel has any of the listed amenities.
+
+      .. hlist::
+        :columns: 2
+
+        - restaurant
+        - bar
+        - laundry
+        - room_service
+        - safe_deposit_box
+        - parking
+        - swimming
+        - internet
+        - gym
+        - air_conditioning
+        - business_center
+        - meeting_rooms
+        - spa
+        - pets_allowed
+
+  .. php:method:: getDetails()
+
+      Sends the hotel details request for this hotel.
+
+      :returns: A :php:class:`Curl\\Response` object. Calling
+        :php:meth:`Curl\\Response::get()` on this returns an associative array
+        with the response from the Allmyles API (see :ref:`Hotel_Details`.),
+        and also an array of bookable room objects in the 'rooms' key.
+
+.. php:class:: Room
+
+  This contains data about a room in a hotel.
+
+  .. php:attr:: hotel
+
+    A :php:class:`Hotel` object.
+
+    Contains the parent hotel.
+
+  .. php:attr:: hotelId
+
+    A string.
+
+  .. php:attr:: bookingId
+
+    A string.
+
+  .. php:attr:: price
+
+    A :php:class:`Common\\Price` object.
+
+    Contains the rate for this room. Make sure to take the values of the two
+      attributes below into consideration when working with this value.
+
+  .. php:attr:: priceVaries
+
+    A boolean.
+
+    If this is true, then the hotel has a different rate for at least one of
+      the nights. The given price is the rate of the most expensive day.
+
+  .. php:attr:: priceScope
+
+    A string.
+
+    Either 'day', or 'trip'. The given price covers this scope.
+
+  .. php:attr:: stars
+
+    An integer.
+
+    Contains the amount of stars this hotel has been awarded.
+
+  .. php:attr:: traits
+
+    An associative array.
+
+    Contains the traits of the given room, including the category, bed/shower
+    availability, whether smoking is allowed, and whether it is a suite.
+
+  .. php:attr:: bed
+
+    A string.
+
+    Specifies the type of the bed in the room. Can be one of the values below.
+
+      .. hlist::
+        :columns: 2
+
+        - single
+        - double
+        - twin
+        - king size
+        - queen size
+        - pullout
+        - water bed
+
+  .. php:attr:: description
+
+    A string.
+
+    Contains a short text about the room.
+
+  .. php:attr:: quantity
+
+    An integer.
+
+    Contains the amount left to be booked of this room.
+
+  .. php:method:: getDetails()
+
+      Sends the hotel room details request for this room.
+
+      :returns: A :php:class:`Curl\\Response` object. Calling
+        :php:meth:`Curl\\Response::get()` on this returns an associative array
+        with the response from the Allmyles API
+        (see :ref:`Hotel_Room_Details`.)
+
+  .. php:method:: book($parameters)
+
+      Sends the book request for this hotel.
+
+      :param mixed $parameters: Either a :php:class:`BookQuery` object, or an
+        associative array containing the raw data to be sent off based on the
+        :ref:`Hotel_Booking` API docs.
+
+      :returns: A :php:class:`Curl\\Response` object. Calling
+        :php:meth:`Curl\\Response::get()` on this returns an associative array
+        with the response from the Allmyles API. See :ref:`Hotel_Booking`.
+
 .. php:namespace:: Allmyles\Common
 
 .. php:class:: Price
@@ -497,3 +791,39 @@ Initialization will look something like this:
     A string.
 
     Contains the currency that the amount is in.
+
+.. php:class:: PriceRange
+
+  .. php:attr:: minimum
+
+    A floating point number.
+
+    Contains the minimum amount of money in the given currency that the price
+      range entails.
+
+  .. php:attr:: maximum
+
+    A floating point number.
+
+    Contains the maximum amount of money in the given currency that the price
+      range entails.
+
+  .. php:attr:: currency
+
+    A string.
+
+    Contains the currency that the amounts are in.
+
+.. php:class:: Location
+
+  .. php:attr:: latitude
+
+    A floating point number.
+
+    Contains the latitude of the location.
+
+  .. php:attr:: longitude
+
+    A string.
+
+    Contains the longitude of the location.
