@@ -11,6 +11,7 @@
 
    introduction
    flights
+   hotels
    masterdata
    php-sdk
 
