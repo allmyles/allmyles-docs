@@ -150,11 +150,13 @@ HotelDetails
           of notable locations around the hotel
         - **description** (*String*) -- A short text describing the hotel
         - **contact_info** (*HotelContactInfo*) --
+
           - **phone_numbers** (*String \[ \]*) --
           - **email** (*String*) --
           - **website** (*String*) --
         - **price** (*PriceRange*) -- contains the lowest and highest rates
           available for a room at this hotel
+
           - **minimum** (*Float*) -- Rate of the cheapest room at the hotel
           - **maximum** (*Float*) -- Rate of the most expensive room at the
             hotel
@@ -203,6 +205,7 @@ Room
         - **room_id** (*String*) -- ID of the room in question
         - **booking_id** (*String*) -- ID to use when booking this room
         - **price** (*RoomPrice*) -- Contains data about the price of the room
+
           - **amount** (*Float*) --
           - **covers** (*String*) -- One of 'day' or 'trip', specifies which
             duration the price covers
@@ -391,6 +394,7 @@ HotelRoomDetails
           value. List of keys: 'cancellation', 'notes', 'needs_guarantee',
           'needs_deposit'
         - **price** (*RoomPrice*) --
+
           - **amount** (*Float*) --
           - **includes** (*String \[ \]*) -- Contains what services or extras
             are included in the price.
