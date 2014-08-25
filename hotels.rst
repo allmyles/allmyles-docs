@@ -49,6 +49,31 @@ Response Body
 Hotel
 -----
 
+    :JSON Parameters:
+        - **hotel_id** (*String*) --
+        - **hotel_name** (*String*) --
+        - **chain_name** (*String*) --
+        - **amenities** (*Amenities*) -- An associative array mapping each
+          amenity listed below to a boolean value based on whether the hotel
+          has given amenity. List of keys: 'restaurant', 'bar', 'laundry',
+          'room_service', 'safe_deposit_box', 'parking', 'swimming',
+          'internet', 'gym', 'air_conditioning', 'business_center',
+          'meeting_rooms', 'spa', 'pets_allowed'
+        - **latitude** (*Float*) -- The latitude component of the coordinates
+          of the hotel
+        - **longitude** (*Float*) -- The latitude component of the coordinates
+          of the hotel
+        - max_rate (*Price*)
+
+           - amount (*Float*) --
+           - currency (*String*) --
+        - min_rate": {
+
+           - amount (*Float*) --
+           - currency (*String*) --
+        - stars (*Integer*) -- The amount of stars the hotel has been awarded
+        - thumbnail (*String*) -- Link to a small image representing the hotel
+
 Response Codes
 ==============
 
@@ -170,7 +195,7 @@ HotelDetails
           whether the hotel has given amenity. List of keys: 'restaurant',
           'bar', 'laundry', 'room_service', 'safe_deposit_box', 'parking',
           'swimming', 'internet', 'gym', 'air_conditioning',
-          'business_center', meeting_rooms', 'spa', 'pets_allowed'
+          'business_center', 'meeting_rooms', 'spa', 'pets_allowed'
         - **stars** (*Integer*) -- Contains the amount of stars this hotel
           has been awarded.
         - **rules** (*Rules*) -- Contains an associative array, mapping each
