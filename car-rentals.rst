@@ -572,7 +572,6 @@ Request
         },
         "persons": [
           {
-            "baggage": 0,
             "birthDate": "1974-04-03",
             "document": {
               "dateOfExpiry": "2016-09-03",
@@ -584,8 +583,7 @@ Request
             "firstName": "Janos",
             "gender": "MALE",
             "lastName": "Kovacs",
-            "namePrefix": "Mr",
-            "passengerTypeCode": "ADT"
+            "namePrefix": "Mr"
           }
         ]
       }
