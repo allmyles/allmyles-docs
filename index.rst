@@ -12,6 +12,7 @@
    introduction
    flights
    hotels
+   car-rentals
    masterdata
    php-sdk
 

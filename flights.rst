@@ -588,8 +588,8 @@ Passenger
 
     :JSON Parameters:
         - **birthDate** (*String*) -- format is ``YYYY-MM-DD``
-        - **document** (:ref:`Document`) -- data about the identifying document
-          the passenger wishes to travel with
+        - **document** (:ref:`FlightDocument`) -- data about the identifying
+          document the passenger wishes to travel with
         - **email** (*String*)
         - **namePrefix** (*String*) -- one of ``Mr``, ``Ms``, or ``Mrs``
         - **firstName** (*String*)
@@ -599,7 +599,7 @@ Passenger
         - **baggageTier** (*String*) -- one of the tier IDs returned in the
           flight details response
 
-.. _Document:
+.. _FlightDocument:
 
 Document
 --------

@@ -67,7 +67,7 @@ Hotel
 
            - amount (*Float*) --
            - currency (*String*) --
-        - min_rate": {
+        - min_rate (*Price*) --
 
            - amount (*Float*) --
            - currency (*String*) --
@@ -504,7 +504,7 @@ Phone
         - **areaCode** (*Integer*)
         - **phoneNumber** (*Integer*)
 
-.. _Person:
+.. _HotelPerson:
 
 Person
 ------

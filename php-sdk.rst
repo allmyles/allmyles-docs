@@ -120,6 +120,22 @@ Initialization will look something like this:
         :php:meth:`Curl\\Response::get()` on this returns an array of
         :php:class:`Hotels\\Hotel` objects.
 
+  .. php:method:: searchCar($parameters[, $session = null])
+
+      Sends a car search request to the Allmyles API.
+
+      :param mixed $parameters: This should be either a
+          :php:class:`Cars\\SearchQuery` object, or an associative array
+          containing the raw data to be sent off based on the
+          :ref:`Car_Search` API docs.
+      :param string $session: If you want to manually set the session cookie
+          for the workflow, specify it here. The SDK automatically handles
+          sessions, though, so feel free to leave this out.
+
+      :returns: A :php:class:`Curl\\Response` object. Calling
+        :php:meth:`Curl\\Response::get()` on this returns an array of
+        :php:class:`Cars\\Car` objects.
+
   .. php:method:: searchLocations($parameters[, $session = null])
 
       Sends a masterdata search request to the Allmyles API.
@@ -170,13 +186,13 @@ Initialization will look something like this:
 
       :returns: A :php:class:`Curl\\Response` object.
 
-  .. php:method:: addPayuPayment($payuId[, $session = null])
+  .. php:method:: addPayuPayment($parmaeters[, $session = null])
 
       Sends a PayU transaction ID to the Allmyles API to confirm that payment
       was successful. In almost all cases, this should not be directly called,
       use :php:meth:`Flights\\Combination::addPayuPayment()` instead.
 
-      :param string $payuId:
+      :param array $parameters: Contains 'payuId' and 'basket'
       :param string $session:
 
       :returns: A :php:class:`Curl\\Response` object.
@@ -212,21 +228,33 @@ Initialization will look something like this:
 
       :returns: A :php:class:`Curl\\Response` object.
 
-  .. php:method:: getHotelRoomDetails($room)
-
-      Gets the details of the given room from the Allmyles API. In almost
-      all cases, this should not be directly called, use
-      :php:meth:`Hotels\\Room::getDetails()` instead.
-
-      :param object $room: This should be a :php:class:`Hotels\\Room` object
-
-      :returns: A :php:class:`Curl\\Response` object.
-
   .. php:method:: bookHotel($parameters[, $session = null])
 
       Sends a book request to the Allmyles API. In almost all cases, this
       should not be directly called, use
       :php:meth:`Hotels\\Room::book()` instead.
+
+      :param array $parameters:
+      :param string $session:
+
+      :returns: A :php:class:`Curl\\Response` object.
+
+  .. php:method:: getCarDetails($bookingId[, $session = null])
+
+      Gets the details of the given car from the Allmyles API. In almost
+      all cases, this should not be directly called, use
+      :php:meth:`Cars\\Car::getDetails()` instead.
+
+      :param object $bookingId: A string, one of the vehicle_id values for the
+        search results.
+
+      :returns: A :php:class:`Curl\\Response` object.
+
+  .. php:method:: bookCar($parameters[, $session = null])
+
+      Sends a book request to the Allmyles API. In almost all cases, this
+      should not be directly called, use :php:meth:`Cars\\Car::book()`
+      instead.
 
       :param array $parameters:
       :param string $session:
@@ -775,6 +803,147 @@ Initialization will look something like this:
       :returns: A :php:class:`Curl\\Response` object. Calling
         :php:meth:`Curl\\Response::get()` on this returns an associative array
         with the response from the Allmyles API. See :ref:`Hotel_Booking`.
+
+.. php:namespace:: Allmyles\Cars
+
+.. php:class:: SearchQuery
+
+  This is the object you can pass to a
+  :php:meth:`Allmyles\\Client::searchCar()` call to simplify searching.
+
+  .. php:method:: __construct($location, $startDate, $endDate)
+
+      Starts building a search query.
+
+      :param string $location: An airport's three letter IATA code.
+      :param mixed $startDate: Either an ISO formatted date (ex. 2014-12-24),
+        or a :php:class:`DateTime` object.
+      :param mixed $endDate: Either an ISO formatted date (ex. 2014-12-24),
+        or a :php:class:`DateTime` object.
+
+      :returns: A :php:class:`SearchQuery` object.
+
+.. php:class:: BookQuery
+
+  This is the object you can pass to a :php:meth:`Cars\\Car::book()` call to
+  simplify booking.
+
+  .. php:method:: __construct([$persons = null, $contactInfo = null, $billingInfo = null])
+
+      Starts building a book query.
+
+      :param array $occupants: The details of the people wanting to travel.
+        See :ref:`CarPerson` in the API docs.
+      :param array $contactInfo: The contact details to book the hotel with.
+        See :ref:`CarContact` in the API docs.
+      :param array $billingInfo: The billing details to book the hotel with.
+        See :ref:`CarContact` in the API docs.
+
+      :returns: A :php:class:`BookQuery` object.
+
+  .. php:method:: addPersons($persons)
+
+      Adds people to your book query.
+
+      :param array $persons: Either an associative array containing data
+        based on :ref:`CarPerson` in the API docs, or an array of multiple
+        such arrays.
+
+  .. php:method:: addContactInfo($address)
+
+      Adds contact info to your book query.
+
+      :param array $address: The contact details to book the flight with.
+        See :ref:`CarContact` in the API docs.
+
+  .. php:method:: addBillingInfo($address)
+
+      Adds billing info to your book query.
+
+      :param array $address: The billing details to book the flight with.
+        See :ref:`CarContact` in the API docs.
+
+.. php:class:: Car
+
+  This contains data about cars. See explanation of field values in the API
+  docs, in the Car chapter's :ref:`Car_Search` section.
+
+  .. php:attr:: vehicleId
+
+    A string.
+
+  .. php:attr:: price
+
+    A :php:class:`Common\\Price` object.
+
+  .. php:attr:: vendor
+
+    A :php:class:`Cars\\Vendor` object.
+
+  .. php:attr:: isAvailable
+
+    A boolean value.
+
+  .. php:attr:: isUnlimited
+
+    A boolean value.
+
+  .. php:attr:: overageFee
+
+    An associative array.
+
+    Keys are 'includedDistance' as an integer, 'unit' as a string, and 'price'
+    as a :php:class:`Common\\Price` object.
+
+  .. php:attr:: traits
+
+    An associative array.
+
+  .. php:method:: getDetails($parameters)
+
+      Sends the car details request for this hotel.
+
+      :returns: A :php:class:`Curl\\Response` object. Calling
+        :php:meth:`Curl\\Response::get()` on this returns an associative array
+        with the response from the Allmyles API (see :ref:`Car_Details`.)
+
+  .. php:method:: book($parameters)
+
+      Sends the book request for this car.
+
+      :param mixed $parameters: Either a :php:class:`BookQuery` object, or an
+        associative array containing the raw data to be sent off based on the
+        :ref:`Car_Booking` API docs.
+
+      :returns: A :php:class:`Curl\\Response` object. Calling
+        :php:meth:`Curl\\Response::get()` on this returns an associative array
+        with the response from the Allmyles API. See :ref:`Car_Booking`.
+
+.. php:class:: Vendor
+
+  This contains data about a vendor.
+
+  .. php:attr:: id
+
+    A string.
+
+    This is what Allmyles identifies the vendor by internally.
+
+  .. php:attr:: name
+
+    A string.
+
+  .. php:attr:: code
+
+    A string.
+
+  .. php:method:: searchCars()
+
+      Sends a search request that will return more results from this vendor.
+
+      :returns: A :php:class:`Curl\\Response` object. Calling
+        :php:meth:`Curl\\Response::get()` on this returns a new array of
+        :php:class:`Cars\\Car` objects.
 
 .. php:namespace:: Allmyles\Common
 
