@@ -6,14 +6,12 @@
  Summary
 ---------
 
-The flight booking/ticket creation workflow consists of four mandatory steps
-for traditional flights. A fifth step (providing payment details) is required
-when booking LCC flights.
+The flight booking/ticket creation workflow consists of five steps.
 
  1. :ref:`Flight_Search`
  2. :ref:`Flight_Details`
  3. :ref:`Flight_Booking`
- 4. :ref:`Flight_Payment` (mandatory only for LCC)
+ 4. :ref:`Flight_Payment`
  5. :ref:`Flight_Ticketing`
 
 Additional calls that are available:
