@@ -168,12 +168,26 @@ Segment
     :JSON Parameters:
         - **departure** (:ref:`Stop`) -- data about the flight's departure
         - **arrival** (:ref:`Stop`) -- data about the flight's arrival
-        - **operatingAirline** (*String*) -- The airline operating this
-          specific segment, given as a two character IATA code.
+        - **airplaneType** (*String*) -- Planned aircraft scheduled for the
+          specific segment
         - **availableSeats** (*Integer*) -- the number of seats available for
           this price tier---the maximum number we can know of is 9, so when 9
           is returned, that means 9 or more seats are available.
         - **cabin** (*String*) -- one of 'economy', 'first', or 'business'
+        - **marketingAirline** (*String) -- two character IATA code of the
+          marketing airline that publishes and markets the flight booked
+          under its own airline designator and flight number. The marketing
+          airline should be displayed to travelers as the primary airline.
+        - **operatingAirline** (*String*) -- two character IATA code of the 
+          airline operating this specific segment
+        - **marketingAirlineName** (*String*) -- The name of the airline 
+          that publishes and markets the flight booked under its own airline
+          designator and flight number
+        - **operatingAirlineName** (*String*) -- The airline operating this
+          specific segment
+        - **flightNumber** (*String*) - the flight number for the specific
+          flight, normally displayed as XXYYYY, where XX is the marketing
+          airline's code, and YYYY is this number
 
 .. _Stop:
 
@@ -188,6 +202,7 @@ Stop
 
           - **terminal** -- the relevant terminal of the airport specified
             below (this will be ``null`` is the airport has only one terminal)
+          - **name** (*String*) -- official airport name of the specific stop  
           - **code** -- the three letter IATA code of the airport the stop is
             at
 
@@ -261,21 +276,28 @@ Response
                     "elapsedTime": "0230",
                     "flightSegments": [
                       {
+                        "operatingAirlineName": "British Airways",
+                        "marketingAirlineName": "British Airways",
+                        "airplaneType": "Airbus Industries A320",
                         "arrival": {
                           "airport": {
+                            "name": "Stansted",
                             "terminal": null,
                             "code": "STN"
                           },
                           "dateTime": "2014-06-05T23:00:00"
                         },
+                        "marketingAirline": "BA",
                         "operatingAirline": "FR",
                         "departure": {
                           "airport": {
                             "terminal": null,
                             "code": "BUD"
+                            "name": "Liszt Ferenc Intl",
                           },
                           "dateTime": "2014-06-05T21:30:00"
                         },
+                        "flightNumber": "867",
                         "availableSeats": 9,
                         "cabin": "economy"
                       }
