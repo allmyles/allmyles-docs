@@ -12,7 +12,7 @@ The flight booking/ticket creation workflow consists of five steps.
  2. :ref:`Flight_Details`
  3. :ref:`Flight_Booking`
  4. :ref:`Flight_Payment`
- 5. :ref:`Flight_Ticketing`
+ 5. :ref:`Flight_Ticketing`air
 
 Additional calls that are available:
 
@@ -168,7 +168,7 @@ Segment
     :JSON Parameters:
         - **departure** (:ref:`Stop`) -- data about the flight's departure
         - **arrival** (:ref:`Stop`) -- data about the flight's arrival
-        - **airplaneType** (*String*) -- Planned aircraft scheduled for the
+        - **aircraft** (*String*) -- Planned aircraft scheduled for the
           specific segment
         - **availableSeats** (*Integer*) -- the number of seats available for
           this price tier---the maximum number we can know of is 9, so when 9
@@ -278,7 +278,7 @@ Response
                       {
                         "operatingAirlineName": "British Airways",
                         "marketingAirlineName": "British Airways",
-                        "airplaneType": "Airbus Industries A320",
+                        "aircraft": "Airbus Industries A320",
                         "arrival": {
                           "airport": {
                             "name": "Stansted",
