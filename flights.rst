@@ -12,7 +12,7 @@ The flight booking/ticket creation workflow consists of five steps.
  2. :ref:`Flight_Details`
  3. :ref:`Flight_Booking`
  4. :ref:`Flight_Payment`
- 5. :ref:`Flight_Ticketing`air
+ 5. :ref:`Flight_Ticketing`
 
 Additional calls that are available:
 
