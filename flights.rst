@@ -292,10 +292,10 @@ Response
                             "terminal": null,
                             "code": "STN"
                           },
--                          "city": {
--                            "code": "LON",
--                            "name": "London"
--                          }, 
+                          "city": {
+                            "code": "LON",
+                            "name": "London"
+                          }, 
                           "dateTime": "2014-06-05T23:00:00"
                         },
                         "marketingAirline": "BA",
@@ -306,10 +306,10 @@ Response
                             "code": "BUD"
                             "name": "Liszt Ferenc Intl",
                           },
--                          "city": {
--                            "code": "BUD",
--                            "name": "Budapest"
--                          },
+                          "city": {
+                            "code": "BUD",
+                            "name": "Budapest"
+                          },
                           "dateTime": "2014-06-05T21:30:00"
                         },
                         "flightNumber": "867",
