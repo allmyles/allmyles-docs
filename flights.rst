@@ -206,6 +206,13 @@ Stop
           - **code** -- the three letter IATA code of the airport the stop is
             at
 
+        - **city** (*City*) -- location city name of the stop
+
+          - **name** (*String*) -- official city name of the specific stop  
+          - **code** -- the three letter IATA code of the city the stop 
+            belongs to
+
+
 Response Codes
 ==============
 
@@ -285,6 +292,10 @@ Response
                             "terminal": null,
                             "code": "STN"
                           },
+-                          "city": {
+-                            "code": "LON",
+-                            "name": "London"
+-                          }, 
                           "dateTime": "2014-06-05T23:00:00"
                         },
                         "marketingAirline": "BA",
@@ -295,6 +306,10 @@ Response
                             "code": "BUD"
                             "name": "Liszt Ferenc Intl",
                           },
+-                          "city": {
+-                            "code": "BUD",
+-                            "name": "Budapest"
+-                          },
                           "dateTime": "2014-06-05T21:30:00"
                         },
                         "flightNumber": "867",
