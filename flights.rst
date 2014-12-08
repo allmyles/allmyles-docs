@@ -141,6 +141,7 @@ Combination
         - **firstLeg** (:ref:`Leg`) -- The outbound leg of the itinerary
         - **returnLeg** (:ref:`Leg`) -- The inbound leg of the itinerary
         - **serviceFeeAmount** (*Float*) -- ticket designator's description
+        - **comfortScore** -- the comfort score of this combination
 
 .. _Leg:
 
@@ -174,6 +175,8 @@ Segment
           this price tier---the maximum number we can know of is 9, so when 9
           is returned, that means 9 or more seats are available.
         - **cabin** (*String*) -- one of 'economy', 'first', or 'business'
+        - **class** (*String*) -- an airline-specific identifier used in fare
+          pricing. The code related to comfort score is cabin code.
         - **marketingAirline** (*String) -- two character IATA code of the
           marketing airline that publishes and markets the flight booked
           under its own airline designator and flight number. The marketing
@@ -314,11 +317,13 @@ Response
                         },
                         "flightNumber": "867",
                         "availableSeats": 9,
-                        "cabin": "economy"
+                        "cabin": "economy",
+                        "class": "Y",
                       }
                     ]
                   },
-                  "serviceFeeAmount": 5.0
+                  "serviceFeeAmount": 5.0,
+                  "comfortScore": 50
                 }
               ]
             }
@@ -881,6 +886,7 @@ Response Body
 
           - **passenger** (*String*) -- the name of the passenger the ticket
             was purchased for
+          - **passenger_type** (*String*) -- one of :ref:`PassengerTypes`
           - **ticket** (*String*) -- the ticket number which allows the
             passenger to actually board the plane
           - **price** (*TicketPrice*)
@@ -890,6 +896,14 @@ Response Body
               passenger paid for his ticket, including tax.
             - **tax** (*Float*) -- The total amount of tax the passenger had to
               pay for this ticket.
+          - **baggage**
+            - **quantity** (*Int*) -- The maximum quantity of baggage the
+              passenger can bring along
+            - **unit** (*String*) -- Units of measurement
+        - **flightData** (:ref:`flight-result`) -- contains a copy of the
+          result from the :ref:`Flight_Search` call's response
+        - **contactInfo** (:ref:`Contact`) -- contains a copy of the data
+          received in the :ref:`Flight_Booking` call
 
     :JSON Parameters for LCC flights:
         - **ticket** (*String*) -- the ticket number (LCC PNR) for this booking
@@ -903,6 +917,9 @@ Response Body
           received in the :ref:`Flight_Booking` call
         - **flightData** (:ref:`flight-result`) -- contains a copy of the
           result from the :ref:`Flight_Search` call's response
+        - **baggageTier** (:ref:`BaggageTier` *\[ \]*) -- the baggage tier 
+          option the passenger has chosen
+
 
 Response Codes
 ==============
@@ -946,23 +963,52 @@ Response
           "tickets": [
             {
               "passenger": "Mr Janos kovcas",
+              "passenger_type": "ADT",
               "ticket": "125-4838843038",
               "price": {
                 "currency": "HUF",
                 "total_fare": 26000.0,
                 "tax": 17800.0
               }
+              "baggage": {
+                "quantity": 1,
+                "unit": "PC",
+              }
             },
             {
               "passenger": "Mr Janos kascvo",
+              "passenger_type": "ADT",
               "ticket": "125-4838843039",
               "price": {
                 "currency": "HUF",
                 "total_fare": 26000.0,
                 "tax": 17800.0
               }
+              "baggage": {
+                "quantity": 1,
+                "unit": "PC",
+              }
             }
-          ]
+          ],
+          "flightData": {
+            "_comment": "trimmed in example for brevity's sake"
+          },
+          "contactInfo": {
+            "address": {
+              "city": "Budapest",
+              "countryCode": "HU",
+              "line1": "Madach ut 13-14",
+              "line2": null,
+              "line3": null
+            },
+            "email": "testytesty@gmail.com",
+            "name": "Kovacs Lajos",
+            "phone": {
+              "areaCode": 30,
+              "countryCode": 36,
+              "number": 1234567
+            }
+          }  
         }
 
     **JSON for LCC flights:**
@@ -992,7 +1038,14 @@ Response
           },
           "lastTicketingDate": null,
           "pnr": "6YE2LM",
-          "ticket": "0XN4GTO"
+          "ticket": "0XN4GTO",
+          "baggageTier": {
+            "max_quantity": 1,
+            "max_weight": null,
+            "amount": 0.0,
+            "currency": null
+            "tier": "2"
+          }
         }
 
 .. _Flight_Rules:
