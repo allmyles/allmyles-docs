@@ -181,9 +181,9 @@ Segment
           marketing airline that publishes and markets the flight booked
           under its own airline designator and flight number. The marketing
           airline should be displayed to travelers as the primary airline.
-        - **operatingAirline** (*String*) -- two character IATA code of the 
+        - **operatingAirline** (*String*) -- two character IATA code of the
           airline operating this specific segment
-        - **marketingAirlineName** (*String*) -- The name of the airline 
+        - **marketingAirlineName** (*String*) -- The name of the airline
           that publishes and markets the flight booked under its own airline
           designator and flight number
         - **operatingAirlineName** (*String*) -- The airline operating this
@@ -205,14 +205,14 @@ Stop
 
           - **terminal** -- the relevant terminal of the airport specified
             below (this will be ``null`` is the airport has only one terminal)
-          - **name** (*String*) -- official airport name of the specific stop  
+          - **name** (*String*) -- official airport name of the specific stop
           - **code** -- the three letter IATA code of the airport the stop is
             at
 
         - **city** (*City*) -- location city name of the stop
 
-          - **name** (*String*) -- official city name of the specific stop  
-          - **code** -- the three letter IATA code of the city the stop 
+          - **name** (*String*) -- official city name of the specific stop
+          - **code** -- the three letter IATA code of the city the stop
             belongs to
 
 
@@ -298,7 +298,7 @@ Response
                           "city": {
                             "code": "LON",
                             "name": "London"
-                          }, 
+                          },
                           "dateTime": "2014-06-05T23:00:00"
                         },
                         "marketingAirline": "BA",
@@ -818,6 +818,7 @@ Request
     :JSON Parameters:
         - **payuId** (*String*) -- the transaction ID identifying the
           successful transaction at PayU
+        - **basket** (*String[ ]*) -- the booking IDs the payment is for
 
 Response Body
 =============
@@ -846,7 +847,8 @@ Request
     .. sourcecode:: json
 
         {
-          "payuId": "12345678"
+          "payuId": "12345678",
+          "basket": ["2_1_0"]
         }
 
 .. _Flight_Ticketing:

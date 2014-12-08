@@ -6,15 +6,13 @@
  Summary
 ---------
 
-The hotel booking workflow consists of three mandatory steps.
+The hotel booking workflow consists of four or five mandatory steps.
 
  1. :ref:`Hotel_Search`
  2. :ref:`Hotel_Details`
- 3. :ref:`Hotel_Booking`
-
-Additional calls that are available:
-
- - :ref:`Hotel_Room_Details`
+ 3. :ref:`Hotel_Room_Details`
+ 4. :ref:`Hotel_Payment` (payment is not required for some hotels)
+ 5. :ref:`Hotel_Booking`
 
 .. _Hotel_Search:
 
@@ -165,10 +163,10 @@ HotelDetails
 ------------
 
     :JSON Parameters:
-        - **chain_code** (*String*) --
-        - **chain_name** (*String*) --
-        - **hotel_code** (*String*) --
-        - **hotel_name** (*String*) --
+        - **chain_code** (*String*)
+        - **chain_name** (*String*)
+        - **hotel_code** (*String*)
+        - **hotel_name** (*String*)
         - **location** (:ref:`HotelLocation`) -- contains info about the
           hotel's location.
         - **points_of_interest** (:ref:`POI` *\[ \]*) -- contains a list
@@ -176,16 +174,18 @@ HotelDetails
         - **description** (*String*) -- A short text describing the hotel
         - **contact_info** (*HotelContactInfo*) --
 
-          - **phone_numbers** (*String \[ \]*) --
-          - **email** (*String*) --
-          - **website** (*String*) --
+          - **phone_numbers** (*String \[ \]*)
+          - **email** (*String*)
+          - **website** (*String*)
+
         - **price** (*PriceRange*) -- contains the lowest and highest rates
           available for a room at this hotel
 
           - **minimum** (*Float*) -- Rate of the cheapest room at the hotel
           - **maximum** (*Float*) -- Rate of the most expensive room at the
             hotel
-          - **currency** (*String*) --
+          - **currency** (*String*)
+
         - **thumbnail** (*String*) -- Contains a URL pointing to a small
           image of the hotel
         - **photos** (*String \[ \]*) -- Contains an array of URLs pointing
@@ -210,11 +210,11 @@ HotelLocation
 -------------
 
     :JSON Parameters:
-        - **country** (*String*) --
-        - **state** (*String*) --
-        - **city** (*String*) --
-        - **address** (*String*) --
-        - **zip_code** (*String*) --
+        - **country** (*String*)
+        - **state** (*String*)
+        - **city** (*String*)
+        - **address** (*String*)
+        - **zip_code** (*String*)
         - **area** (*String*) -- one of: 'north', 'east', 'south', 'west',
           'downtown', 'airport', 'resort'
         - **recommended_transport** (*String*) -- one of: 'boat', 'coach',
@@ -237,6 +237,7 @@ Room
           - **rate_varies** (*Boolean*) -- True if the rate is not going to be
             the same for each day during the occupant's stay. In this case,
             the above given amount is the highest one during the trip.
+
         - **room_type** (*Traits*) -- Contains the traits of the given room,
           including the category, bed/shower availability, whether smoking is
           allowed, and whether it is a suite. The keys are the following:
@@ -420,9 +421,15 @@ HotelRoomDetails
           'needs_deposit'
         - **price** (*RoomPrice*) --
 
-          - **amount** (*Float*) --
-          - **includes** (*String \[ \]*) -- Contains what services or extras
-            are included in the price.
+          - **total** (*Float*) -- The total cost of booking the hotel for the
+            guest. This includes the charge we require right now.
+          - **charge** (*Float*) -- The amount of money we need to charge the
+            guest to complete the booking. If this amount is zero, no
+            transaction needs to be made and you can go on to booking straight
+            away.
+
+        - **includes** (*String \[ \]*) -- Contains what services or extras
+          are included in the price.
 
 Examples
 ========
@@ -451,6 +458,60 @@ Response
           }
         }
       }
+
+.. _Flight_Payment:
+
+---------
+ Payment
+---------
+
+If payment is required---that is, if the room's charge field was not zero---this
+is where Allmyles gets the payment data.
+
+The only supported payment provider at the moment is PayU. When we receive a
+transaction ID that points to a successful payment by the passenger, we
+essentially take that money from PayU, and forward it to the provider to book a
+hotel room in the :ref:`Hotel_Booking` step.
+
+Request
+=======
+
+.. http:post:: /payment
+
+    :JSON Parameters:
+        - **payuId** (*String*) -- the transaction ID identifying the
+          successful transaction at PayU
+        - **basket** (*String[ ]*) -- the booking IDs the payment is for
+
+Response Body
+=============
+
+    **N/A:**
+
+    Returns an HTTP 204 No Content status code if successful.
+
+Response Codes
+==============
+
+ - **412 'a request is already being processed'**: This error comes up even
+   when the other request is asynchronous (i.e. when we are still processing a
+   search request). The response for async requests does not need to be
+   retrieved for this error to clear, just wait a few seconds.
+
+Examples
+========
+
+Request
+-------
+
+    **JSON:**
+
+    .. sourcecode:: json
+
+        {
+          "payuId": "12345678",
+          "basket": ["2_1_0"]
+        }
 
 .. _Hotel_Booking:
 
