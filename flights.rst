@@ -899,6 +899,7 @@ Response Body
             - **tax** (*Float*) -- The total amount of tax the passenger had to
               pay for this ticket.
           - **baggage**
+
             - **quantity** (*Int*) -- The maximum quantity of baggage the
               passenger can bring along
             - **unit** (*String*) -- Units of measurement
