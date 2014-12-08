@@ -459,7 +459,7 @@ Response
         }
       }
 
-.. _Flight_Payment:
+.. _Hotel_Payment:
 
 ---------
  Payment
