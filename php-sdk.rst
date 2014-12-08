@@ -725,8 +725,8 @@ Initialization will look something like this:
 
     A :php:class:`Common\\Price` object.
 
-    Contains the rate for this room. Make sure to take the values of the two
-      attributes below into consideration when working with this value.
+    Contains the total price for this room. Make sure to take the values of the
+    two attributes below into consideration when working with this value.
 
   .. php:attr:: priceVaries
 
@@ -777,6 +777,35 @@ Initialization will look something like this:
 
     Contains a short text about the room.
 
+  .. php:attr:: rules
+
+    An associative array.
+
+    Contains each rule type listed below with the relevant text, or a relevant
+    boolean value.
+
+    Keys: 'cancellation', 'notes', 'needs_guarantee', 'needs_deposit'
+
+    Available only after :php:meth:`Room::getDetails()` has been called.
+
+  .. php:attr:: charge
+
+    A :php:class:`Common\\Price` object.
+
+    Contains the amount that needs to be charged on the guest's credit card to
+    book this room.
+
+    Available only after :php:meth:`Room::getDetails()` has been called.
+
+  .. php:attr:: includes
+
+    An array of strings.
+
+    Contains what services or extras are included in the price.
+
+    Available only after :php:meth:`Room::getDetails()` has been called.
+
+
   .. php:attr:: quantity
 
     An integer.
@@ -785,16 +814,25 @@ Initialization will look something like this:
 
   .. php:method:: getDetails()
 
-      Sends the hotel room details request for this room.
+      Sends the hotel room details request for this room and updates the object
+      with new attributes.
 
-      :returns: A :php:class:`Curl\\Response` object. Calling
-        :php:meth:`Curl\\Response::get()` on this returns an associative array
-        with the response from the Allmyles API
-        (see :ref:`Hotel_Room_Details`.)
+      :returns: The currently used :php:class:`Allmyles\\Hotels\\Room` object.
+
+  .. php:method:: addPayuPayment($payuId)
+
+      Sends the PayU transaction ID to confirm that payment for the room has
+      been completed.
+
+      Does not need to be called if the required charge was zero
+
+      :param string $payuId: The PayU transaction ID to confirm payment with.
+
+      :returns: ``true``
 
   .. php:method:: book($parameters)
 
-      Sends the book request for this hotel.
+      Sends the book request for this room.
 
       :param mixed $parameters: Either a :php:class:`BookQuery` object, or an
         associative array containing the raw data to be sent off based on the
