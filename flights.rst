@@ -141,7 +141,9 @@ Combination
         - **firstLeg** (:ref:`Leg`) -- The outbound leg of the itinerary
         - **returnLeg** (:ref:`Leg`) -- The inbound leg of the itinerary
         - **serviceFeeAmount** (*Float*) -- ticket designator's description
-        - **comfortScore** -- the comfort score of this combination
+        - **comfortScore** -- the comfort score of this combination, based 
+          on different aspects of the flight, e.g. ground time, cabin code 
+          and number of segments.
 
 .. _Leg:
 
