@@ -179,7 +179,7 @@ Segment
         - **cabin** (*String*) -- one of 'economy', 'first', or 'business'
         - **class** (*String*) -- an airline-specific identifier used in fare
           pricing. The code related to comfort score is cabin code.
-        - **marketingAirline** (*String) -- two character IATA code of the
+        - **marketingAirline** (*String*) -- two character IATA code of the
           marketing airline that publishes and markets the flight booked
           under its own airline designator and flight number. The marketing
           airline should be displayed to travelers as the primary airline.
