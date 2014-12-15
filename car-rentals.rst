@@ -144,9 +144,9 @@ Available Car Types
   .. hlist::
       :columns: 3
 
-      - 2-3 door car
+      - 2 door car
       - 2/4 door car
-      - 4-5 door car
+      - 4 door car
       - coupe
       - SUV
       - crossover
