@@ -35,9 +35,11 @@ Request
         - **airport_code** (*String*) -- the IATA code of the airport to find
           available cars at
         - **start_date** (*String*) -- date when the passengers arrive, in ISO
-          format, not including a time code (ex. 2014-12-24)
+          format, either with (ex. 2014-12-24T12:00:00Z) or without
+          (ex. 2014-12-24) a time code 
         - **end_date** (*String*) -- date when the passengers arrive, in ISO
-          format, not including a time code (ex. 2014-12-26)
+          format, either with (ex. 2014-12-26T12:00:00Z) or without
+          (ex. 2014-12-26) a time code 
 
     To retrieve more results by one vendor, using the same values for the
     fields above as in the last search, send the following request:
