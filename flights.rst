@@ -231,24 +231,24 @@ Comfort score
     flight segments the less comfortable the travel is.
 
     :Modifiers:
-    - **default_score** -- Default value of the comfort score
-    - **elapsed_time** -- (negative) Total time elapsed from first departure 
-      to last arrival
-    - **number_of_segments** -- (negative) The number of flight segments 
-      (:ref:`Segment` *\[ \]*)
-    - **cabin_code** -- Weight of cabin code factor as a whole. See the 
-      comfort value of each cabin code below
-    - **cabin_code_default** -- Default value in case the cabin code is 
-      missing from a segment
-    - **aircraft_capacity** -- The maximum passenger number of given aircraft
-    - **aircraft_capacity_default** -- Default value in case the capacity 
-      info is not available
-    - **red_eye** -- Modifier for flights that take off or arrive at an 
-      uncomfortable time
-    - **ground_time** -- (negative) The time elapsed between flight segments
-    - **first** -- Comfort value of first class cabins
-    - **business** -- Comfort value of business cabins
-    - **economy** -- Comfort value of economy cabins
+        - **default_score** -- Default value of the comfort score
+        - **elapsed_time** -- (negative) Total time elapsed from first departure 
+          to last arrival
+        - **number_of_segments** -- (negative) The number of flight segments 
+          (:ref:`Segment` *\[ \]*)
+        - **cabin_code** -- Weight of cabin code factor as a whole. See the 
+          comfort value of each cabin code below
+        - **cabin_code_default** -- Default value in case the cabin code is 
+          missing from a segment
+        - **aircraft_capacity** -- The maximum passenger number of given aircraft
+        - **aircraft_capacity_default** -- Default value in case the capacity 
+          info is not available
+        - **red_eye** -- Modifier for flights that take off or arrive at an 
+          uncomfortable time
+        - **ground_time** -- (negative) The time elapsed between flight segments
+        - **first** -- Comfort value of first class cabins
+        - **business** -- Comfort value of business cabins
+        - **economy** -- Comfort value of economy cabins
 
 Response Codes
 ==============
