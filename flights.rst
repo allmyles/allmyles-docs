@@ -222,33 +222,15 @@ Comfort score
 -------------
 
     Comfort score is a variable that indicates how comfortable each 
-    combination option is. 
-
-    Modifiers are used to weigh each parameter of the comfort score.
-
-    Negative modifiers denote the values that are in inverse proportion 
-    to comfort score, e.g. the more the passenger has to wait between two 
-    flight segments the less comfortable the travel is.
-
-    :Modifiers:
-        - **default_score** -- Default value of the comfort score
-        - **elapsed_time** -- (negative) Total time elapsed from first departure 
-          to last arrival
-        - **number_of_segments** -- (negative) The number of flight segments 
-          (:ref:`Segment` *\[ \]*)
-        - **cabin_code** -- Weight of cabin code factor as a whole. See the 
-          comfort value of each cabin code below
-        - **cabin_code_default** -- Default value in case the cabin code is 
-          missing from a segment
-        - **aircraft_capacity** -- The maximum passenger number of given aircraft
-        - **aircraft_capacity_default** -- Default value in case the capacity 
-          info is not available
-        - **red_eye** -- Modifier for flights that take off or arrive at an 
-          uncomfortable time
-        - **ground_time** -- (negative) The time elapsed between flight segments
-        - **first** -- Comfort value of first class cabins
-        - **business** -- Comfort value of business cabins
-        - **economy** -- Comfort value of economy cabins
+    combination option is. It is based on different aspects of the 
+    flight, e.g.:
+     - Total time elapsed from first departure to last arrival
+     - Number of flight segments (:ref:`Segment` *\[ \]*)
+     - Weight of cabin code factor as a whole
+     - Default value in case the cabin code is missing from a segment
+     - Passenger capacity of aircrafts
+     - Red-eye flight status
+     - The time elapsed between flight segments
 
 Response Codes
 ==============
