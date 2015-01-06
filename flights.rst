@@ -224,13 +224,13 @@ Comfort score
     Comfort score is a variable that indicates how comfortable each 
     combination option is. 
 
-    :Modifiers:
     Modifiers are used to weigh each parameter of the comfort score.
 
     Negative modifiers denote the values that are in inverse proportion 
     to comfort score, e.g. the more the passenger has to wait between two 
     flight segments the less comfortable the travel is.
 
+    :Modifiers:
     - **default_score** -- Default value of the comfort score
     - **elapsed_time** -- (negative) Total time elapsed from first departure 
       to last arrival
