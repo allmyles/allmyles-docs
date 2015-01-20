@@ -17,6 +17,8 @@ The flight booking/ticket creation workflow consists of five steps.
 Additional calls that are available:
 
  - :ref:`Flight_Rules`
+ - :ref:`Get_Booking`
+ - :ref:`Cancel`
 
 .. _Flight_Search:
 
@@ -889,7 +891,7 @@ Request
 
 .. http:get:: /tickets/:booking_id
 
-    *bookingId** is the booking ID of the :ref:`Combination` to create a
+    **booking_id** is the booking ID of the :ref:`Combination` to create a
     ticket for
 
 Response Body
@@ -1153,3 +1155,114 @@ Response
             ]
           }
         }
+
+.. _Get_Booking:
+
+-------------
+ Get Booking
+-------------
+
+This call returns the details of a booking identified by a PNR locator.
+This makes it possible to re-open an expired session and send a ticketing
+request based on the PNR locator after the initial session is closed. 
+
+Request
+=======
+
+.. http:get:: /books/:pnr_locator
+
+    **pnr_locator** is a unique identifier of the booking, received
+    at the book response.
+
+Response Body
+=============
+
+    :JSON Parameters:
+        - **pnr** (*pnr*) -- root container
+
+          - **passengers** (:ref:`Passenger` *\[ \]*) -- the list of
+            passengers
+          - **id** (*String*) -- the PNR locator which identifies the 
+            booking
+          - **lcc_ticket** (*String*) -- the ticket number which allows 
+            the passenger to actually board the plane 
+            (or ``null `` if flight is traditional)
+
+.. _Passenger:
+
+Passenger
+---------
+
+    :JSON Parameters:
+        - **birth_date** (*String*) -- format is ``YYYY-MM-DD``
+        - **traditional_ticket** (*String*) - the ticket number which 
+          allows the passenger to actually board the plane 
+          (or ``null `` if flight is LCC)
+        - **type** (*String*) -- one of :ref:`PassengerTypes`
+        - **email** (*String*)
+        - **name** (*String*) -- the name of the passenger the booking
+          was made for
+
+Response Codes
+==============
+
+ - **404 'PNR not found'**
+ - **403 'PNR belongs to another auth token'** 
+
+Examples
+========
+
+Response
+--------
+
+    **JSON:**
+
+    .. sourcecode:: json
+
+        {
+          "pnr": {
+            "passengers": [
+              {
+                "birth_date": "1974-01-01",
+                "traditional_ticket": "123-5249155974",
+                "type": "ADT",
+                "email": "test@gmail.com",
+                "name": "KOVACS JANOS/MR"
+              }
+            ],
+            "id": "3KWQUK",
+            "lcc_ticket": null
+          }
+        }
+
+.. _Cancel:
+
+--------
+ Cancel
+--------
+
+This call cancels the booking identified in the request. Bookings can only 
+be cancelled before a ticket is created.
+
+Request
+=======
+
+.. http:delete:: /books/:pnr_locator
+
+    **pnr_locator** is a unique identifier of the booking, received
+    at the book response.
+
+Response Body
+=============
+
+    **N/A:**
+
+    Returns an HTTP 204 No Content status code if successful.
+
+Response Codes
+==============
+
+ - **403 'PNR belongs to another auth token'**
+ - **404 'PNR not found'**
+ - **409 'Booking already cancelled.'**
+ - **409 'Booked flights can only be cancelled before ticket is created.'**
