@@ -1164,7 +1164,7 @@ Response
 
 This call returns the details of a booking identified by a PNR locator.
 This makes it possible to re-open an expired session and send a ticketing
-request based on the PNR locator after the initial session is closed. 
+request based on the PNR locator after the initial session is closed.
 
 Request
 =======
@@ -1182,11 +1182,11 @@ Response Body
 
           - **passengers** (:ref:`Passenger` *\[ \]*) -- the list of
             passengers
-          - **id** (*String*) -- the PNR locator which identifies the 
+          - **id** (*String*) -- the PNR locator which identifies the
             booking
-          - **lcc_ticket** (*String*) -- the ticket number which allows 
-            the passenger to actually board the plane 
-            (or ``null `` if flight is traditional)
+          - **lcc_ticket** (*String*) -- the ticket number which allows
+            the passenger to actually board the plane
+            (or ``null`` if flight is traditional)
 
 .. _Passenger:
 
@@ -1195,9 +1195,9 @@ Passenger
 
     :JSON Parameters:
         - **birth_date** (*String*) -- format is ``YYYY-MM-DD``
-        - **traditional_ticket** (*String*) - the ticket number which 
-          allows the passenger to actually board the plane 
-          (or ``null `` if flight is LCC)
+        - **traditional_ticket** (*String*) - the ticket number which
+          allows the passenger to actually board the plane
+          (or ``null`` if flight is LCC)
         - **type** (*String*) -- one of :ref:`PassengerTypes`
         - **email** (*String*)
         - **name** (*String*) -- the name of the passenger the booking
@@ -1207,7 +1207,7 @@ Response Codes
 ==============
 
  - **404 'PNR not found'**
- - **403 'PNR belongs to another auth token'** 
+ - **403 'PNR belongs to another auth token'**
 
 Examples
 ========
@@ -1241,7 +1241,7 @@ Response
  Cancel
 --------
 
-This call cancels the booking identified in the request. Bookings can only 
+This call cancels the booking identified in the request. Bookings can only
 be cancelled before a ticket is created.
 
 Request
