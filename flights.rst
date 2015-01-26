@@ -58,7 +58,7 @@ Request
         - **preferredAirlines** (*String \[ \]*) -- *(optional)* list of
           airlines to filter results to, given as their two character IATA code
         - **extraDays** (*Integer*) -- *(optional)* number of days to call
-          :ref: `Flexible_Date_Search` with, between 1-3
+          :ref:`Flexible_Date_Search` with, between 1-3
 
 .. _Person:
 
@@ -360,10 +360,10 @@ Flexible Date Search
     the departure and arrival dates +/- the number of ``extraDays``.
 
     ..warning::
-       To proceed with the flight workflow after a flexible date search, a
-       regular search request must be sent with the parameters of the chosen
-       option. It is not possible to make a booking based on booking IDs
-       returned in the flexible date search response!
+        To proceed with the flight workflow after a flexible date search, a
+        regular search request must be sent with the parameters of the chosen
+        option. It is not possible to make a booking based on booking IDs
+        returned in the flexible date search response!
 
     :JSON Parameters:
         - **fromLocation** (*String*) -- departure location, given as IATA code
@@ -371,6 +371,9 @@ Flexible Date Search
         - **departureDate** (*String*) -- date of departure
         - **returnDate** (*String*) -- date of return
         - **id** (*String*) -- unique identifier of the result
+
+Examples
+--------
 
 Flexible Date Response
 ----------------------
