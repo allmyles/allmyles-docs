@@ -57,6 +57,8 @@ Request
           retrieve
         - **preferredAirlines** (*String \[ \]*) -- *(optional)* list of
           airlines to filter results to, given as their two character IATA code
+        - **extraDays** (*Integer*) -- *(optional)* number of days to call
+          :ref: `Flexible_Date_Search` with, between 1-3
 
 .. _Person:
 
@@ -345,6 +347,50 @@ Response
                   "comfortScore": 50
                 }
               ]
+            }
+          ]
+        }
+
+.. _Flexible_Date_Search:
+
+Flexible Date Search
+--------------------
+
+    Returns the cheapest flight option for all the possible combinations of
+    the departure and arrival dates +/- the number of ``extraDays``.
+
+    ..warning::
+       To proceed with the flight workflow after a flexible date search, a
+       regular search request must be sent with the parameters of the chosen
+       option. It is not possible to make a booking based on booking IDs
+       returned in the flexible date search response!
+
+    :JSON Parameters:
+        - **fromLocation** (*String*) -- departure location, given as IATA code
+        - **toLocation** (*String*) -- destination, given as IATA code
+        - **departureDate** (*String*) -- date of departure
+        - **returnDate** (*String*) -- date of return
+        - **id** (*String*) -- unique identifier of the result
+
+Flexible Date Response
+----------------------
+
+    **JSON:**
+
+    .. sourcecode:: json
+
+        {
+          "flightResultSet": [
+            {
+              "flightResult": {
+                "_comment": "same as in regular search response"
+              },  
+              "fromLocation": "BUD",
+              "toLocation": "LON",
+              "departureDate": "2015-04-29T00:00:00Z",
+              "returnDate": "2015-05-06T00:00:00Z",
+              "id": "0648ae1d-3b48-4a88-b317-a5ca65fd2d67",
+              "more": true
             }
           ]
         }
