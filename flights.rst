@@ -359,7 +359,7 @@ Flexible Date Search
     Returns the cheapest flight option for all the possible combinations of
     the departure and arrival dates +/- the number of ``extraDays``.
 
-    ..warning::
+    .. warning::
         To proceed with the flight workflow after a flexible date search, a
         regular search request must be sent with the parameters of the chosen
         option. It is not possible to make a booking based on booking IDs
@@ -375,8 +375,8 @@ Flexible Date Search
 Examples
 --------
 
-Flexible Date Response
-----------------------
+Response
+--------
 
     **JSON:**
 
