@@ -463,12 +463,9 @@ BaggageTier
         - **tier** (*String*) -- the ID for this baggage tier (this is used to
           refer to it when booking)
         - **price** (:ref:`Price`) -- contains the price of the baggage tier
-        - **max_weight** (*Float*) -- the maximum combined weight
-          of all pieces of baggage a passenger can take in this tier, can be
-          null if there's no limit
-        - **max_quantity** (*Integer*) -- the maximum amount of pieces of
-          baggage the passenger can take in this tier, can be null if there's
-          no limit
+        - **max_weights** (*Float* *\[ \]*) -- the maximum weight of each
+          piece of baggage a passenger can take in this tier, can be an
+          empty list if there's no limit
 
 .. _FormFields:
 
