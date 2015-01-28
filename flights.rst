@@ -393,7 +393,6 @@ Response
               "departureDate": "2015-04-29T00:00:00Z",
               "returnDate": "2015-05-06T00:00:00Z",
               "id": "0648ae1d-3b48-4a88-b317-a5ca65fd2d67",
-              "more": true
             }
           ]
         }
@@ -440,7 +439,7 @@ FlightDetails
           on the airline's website)
         - **baggageTiers** (:ref:`BaggageTier` *\[ \]*) -- contains the
           different options the passenger has for bringing baggages along
-        - **fields** (:ref:`FormFields`) -- contains field validation data.
+        - **fields** (:ref:`FormFields`) -- contains field validation data
         - **price** (:ref:`Price`) -- contains the final price of the ticket
           (including the credit card surcharge, but not the baggages)
         - **result** (:ref:`flight-result`) -- contains an exact copy of the
@@ -473,67 +472,75 @@ BaggageTier
 
 .. _FormFields:
 
-FormFields
+Form Fields
+-----------
+
+Form fields define criteria for field validation, making it easy to generate
+HTML form elements.
+
+      :JSON Parameters:
+        - **passengers** (:ref:`FormField` *\[ \]*) -- contains validation
+          data for Passenger fields
+        - **contactInfo** (:ref:`FormField` *\[ \]*) -- contains validation
+          data for Contact Info fields
+        - **billingInfo** (:ref:`FormField` *\[ \]*) -- contains validation
+          data for Billing Info fields
+        
+.. _FormField:
+
+Form Field
 ----------
 
-    **{fieldName}** below refers to the following names:
+    :JSON Parameters for ``select`` fields:
+        - **tag** (*String*) -- HTML tag type, in this case ``select``
+        - **options** (*String [ ]*) -- value options of the field
+        - **attributes** (:ref:`Attributes`) -- attributes of the field
 
-    .. hlist::
-        :columns: 3
+    :JSON Parameters for ``input`` fields:
+        - **tag** (*String*) -- HTML tag type, in this case ``input``
+        - **attributes** (:ref:`Attributes` *\[ \]*) -- attributes of the field
 
-        - addressLine1
-        - addressLine2
-        - addressLine3
-        - baggage
-        - billingAddressLine1
-        - billingAddressLine2
-        - billingAddressLine3
-        - billingCityName
-        - billingCountryCode
-        - billingZipCode
-        - birthDate
-        - cityName
-        - countryCode
-        - documentExpiryDate
-        - documentId
-        - documentIssuingCountry
-        - documentType
-        - email
-        - firstName
-        - gender
-        - lastName
-        - namePrefix
-        - passengerTypeCode
-        - phoneAreaCode
-        - phoneCountryCode
-        - phoneNumber
-        - zipCode
+.. _Attributes:
+
+Attributes
+----------
 
     :JSON Parameters:
-        - **{fieldName}** (*FormField*) -- Contains validation data for
-          a field type
+        - **name** (*String*) -- one of (:ref:`Field_Names`)
+        - **data-label** (*String*) -- user friendly field label
+        - **type** (*String*) -- type of input data (``†ext`` or ``email``)
+        - **maxLength** (*Float*)
+        - **required** (*String*) -- if present, field is required
+        - **pattern** (*String*) -- regex pattern of valid data
 
-          - **required** (*Boolean*) -- Specifies whether the
-          - **per_person** (*Boolean*) -- Contains field validation data.
+.. _Field_Names:
 
-    The different combinations of the values of `required` and `per_person`
-    carry the following meaning:
+Field Names
+-----------
 
-    ======== ========== =======================================================
-    required per_person meaning
-    ======== ========== =======================================================
-    True     True       Passing data for this field is mandatory for each
-                        individual passenger.
-    True     False      Passing data for this field is mandatory, but only for
-                        the first passenger, or it requires a universal value
-                        for the booking,such as `billingCityName`.
-    False    True       Passing data for this field is not mandatory, but it
-                        refers to something that can be different for each
-                        passenger, such as `gender`.
-    False    False      Passing data for this field is not mandatory, and it
-                        refers to something that is universal for the booking,
-                        such as `billingAddressLine3`.
-    ======== ========== =======================================================
+    :Passenger:
+        - namePrefix
+        - firstName
+        - lastName
+        - gender
+        - birthDate
+        - document/type
+        - document/id
+        - document/issueCountry
+        - document/dateOfExpiry
+
+    :Contact and Billing Info:
+        - name
+        - email
+        - address/addressLine1
+        - address/addressLine2
+        - address/addressLine3
+        - address/cityName
+        - address/zipCode
+        - address/countryCode
+        - phone/countryCode
+        - phone/areaCode
+        - phone/phoneNumber
 
 .. _Price:
 
@@ -604,14 +611,54 @@ Response
                 }
             ],
             "fields": {
-              "countryCode": {
-                "required": true,
-                "per_person": false
-              },
-              "documentType": {
-                "required": true,
-                "per_person": true
-              }
+              "passengers": [
+                {
+                  "tag": "select",
+                  "options": ["Mr", "Ms", "Mrs"],
+                  "attributes": [
+                    {
+                      "key": "required",
+                      "value": "required"
+                    },
+                    {
+                      "key": "name",
+                      "value": "persons/0/namePrefix"
+                    },
+                    {
+                      "key": "data-label",
+                      "value": "Name Prefix"
+                    }
+                  ],
+                },
+              ],
+              "contact_info": [
+                {
+                  "tag": "input",
+                  "attributes": [
+                    {
+                      "key": "maxLength",
+                      "value": "30"
+                    },
+                    {
+                      "key": "type",
+                      "value": "text"
+                    },
+                    {
+                     "key": "name",
+                     "value": "billingInfo/name"
+                    },
+                    {
+                      "key": "data-label",
+                      "value": "Name"
+                    }
+                  ],
+                },
+              ],
+              "billing_info": [
+                {
+                  "_comment": "trimmed in example for brevity's sake"
+                },
+              ]
             },
             "price": {
               "currency": "EUR",
