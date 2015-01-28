@@ -494,7 +494,7 @@ Form Field
     :JSON Parameters for ``select`` fields:
         - **tag** (*String*) -- HTML tag type, in this case ``select``
         - **options** (*String [ ]*) -- value options of the field
-        - **attributes** (:ref:`Attributes`) -- attributes of the field
+        - **attributes** (:ref:`Attributes` *\[ \]*) -- attributes of the field
 
     :JSON Parameters for ``input`` fields:
         - **tag** (*String*) -- HTML tag type, in this case ``input``
