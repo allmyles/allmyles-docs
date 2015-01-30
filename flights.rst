@@ -503,7 +503,7 @@ Attributes
 ----------
 
     :JSON Parameters:
-        - **name** (*String*) -- one of (:ref:`Field_Names`)
+        - **name** (*String*) -- one of :ref:`Field_Names`
         - **data-label** (*String*) -- user friendly field label
         - **type** (*String*) -- type of input data (``†ext`` or ``email``)
         - **maxLength** (*Float*)
