@@ -1202,7 +1202,7 @@ Request
 .. http:get:: /tickets/:booking_id/status
 
     **booking_id** is the booking ID of the :ref:`Combination` whose ticket's
-      status we are interested in
+    status we are interested in
 
 Response Body
 =============
