@@ -16,6 +16,7 @@ The flight booking/ticket creation workflow consists of five steps.
 
 Additional calls that are available:
 
+ - :ref:`Flight_Ticketing_Status`
  - :ref:`Flight_Rules`
  - :ref:`Get_Booking`
  - :ref:`Cancel`
@@ -145,7 +146,7 @@ Combination
         - **firstLeg** (:ref:`Leg`) -- the outbound leg of the itinerary
         - **returnLeg** (:ref:`Leg`) -- the inbound leg of the itinerary
         - **serviceFeeAmount** (*Float*) -- ticket designator's description
-        - **comfortScore** (:ref:`Comfort score`) -- the comfort score of 
+        - **comfortScore** (:ref:`Comfort score`) -- the comfort score of
           the combination
 
 .. _Leg:
@@ -225,9 +226,10 @@ Stop
 Comfort score
 -------------
 
-    Comfort score is a variable that indicates how comfortable each 
-    combination option is. It is based on different aspects of the 
+    Comfort score is a variable that indicates how comfortable each
+    combination option is. It is based on different aspects of the
     flight, e.g.:
+
      - Total time elapsed from first departure to last arrival
      - Number of flight segments (:ref:`Segment` *\[ \]*)
      - Weight of cabin code factor as a whole
@@ -387,7 +389,7 @@ Response
             {
               "flightResult": {
                 "_comment": "same as in regular search response"
-              },  
+              },
               "fromLocation": "BUD",
               "toLocation": "LON",
               "departureDate": "2015-04-29T00:00:00Z",
@@ -482,7 +484,7 @@ HTML form elements.
           data for Contact Info fields
         - **billingInfo** (:ref:`FormField` *\[ \]*) -- contains validation
           data for Billing Info fields
-        
+
 .. _FormField:
 
 Form Field
@@ -1032,12 +1034,19 @@ Response Body
           received in the :ref:`Flight_Booking` call
         - **flightData** (:ref:`flight-result`) -- contains a copy of the
           result from the :ref:`Flight_Search` call's response
-        - **baggageTier** (:ref:`BaggageTier` *\[ \]*) -- the baggage tier 
+        - **baggageTier** (:ref:`BaggageTier` *\[ \]*) -- the baggage tier
           option the passenger has chosen
 
 
 Response Codes
 ==============
+
+In case of errors (referring to response code 202 and 5xx), the client is
+expected to either have a correct the ticketing manually, or send periodic
+:ref:`Flight_Ticketing_Status` requests until a definitive response is given
+(one of the following statuses: 'successful', 'failed', or 'unknown'.) This
+should take no longer than 40 minutes. Tickets with an unknown status still
+require manual intervention.
 
  - **202 'Warning: e-ticket could not be issued due to technical difficulties.
    Please contact youragent.'**: When this error occurs, the actual ticket is
@@ -1051,11 +1060,6 @@ Response Codes
  - **412 'book response should have been received'**
  - **500 'booking failed, cannot create ticket'**: This error is returned if
    the book response we last received from the provider contained an error.
- - **503 'error while querying PNR - please try again later'**: This error is
-   returned when we are not able to check the PNR for the booking, prior to
-   actually creating a ticket. Safe to refund.
- - **504 'PNR query timed out - please try again later'**: This is almost the
-   same as the one above, also safe to refund.
  - **503 'error while creating ticket - please try again later'**: This is the
    generic error we return when receiving an unknown response for the ticket
    request. No refund should be sent without manually checking if the ticket
@@ -1123,7 +1127,7 @@ Response
               "countryCode": 36,
               "number": 1234567
             }
-          }  
+          }
         }
 
     **JSON for LCC flights:**
@@ -1162,6 +1166,88 @@ Response
             "tier": "2"
           }
         }
+
+.. _Flight_Ticketing_Status:
+
+------------------
+ Ticketing Status
+------------------
+
+This call enables checking the result of a ticketing request. This is useful
+when it's unclear whether the ticketing process went through, due to a failure
+at external providers, in Allmyles' systems, on the client's server, or anywhere
+in between. The request will identify the correct workflow based on the cookie
+header's contents, which must match whatever was sent in the ticket request.
+
+The periodic checks should be made at most once every minute.
+
+Available statuses
+==================
+
+ - **inactive**: this is the status returned when the ticketing process has not
+   been initiated yet, i.e. before a :ref:`Flight_Ticketing` request is
+   sent
+ - **pending**: the ticket creation is still in progress
+ - **successful**: the ticket has been successfully created. PNR data will be
+   passed alongside this status, including the ticket number(s).
+ - **failed**: the ticket creation failed, and the fare can be refunded (do
+   note that this is the only status in which refunds can be automatically made)
+ - **unknown**: it is not possible to programmatically determine the outcome of
+   the request. The passenger's money should be held until a human identifies
+   the issue and determines whether the ticket exists or not.
+
+Request
+=======
+
+.. http:get:: /tickets/:booking_id/status
+
+    **booking_id** is the booking ID of the :ref:`Combination` whose ticket's
+      status we are interested in
+
+Response Body
+=============
+
+
+    :JSON Parameters:
+        - **status** (*String*) -- one of the statuses
+        - **pnr** (:ref:`PNR <pnr-data>`) -- the pnr object that a
+          :ref:`Get_Booking` request would return about the flight --- this
+          includes the ticket number(s) as well
+
+Examples
+========
+
+Response
+--------
+
+    **JSON for traditional flights:**
+
+    .. sourcecode:: json
+
+        {
+            "status": "successful",
+            "pnr": {
+                "deleted": false,
+                "id": "3L4TMN",
+                "passengers": [
+                    {
+                        "birth_date": "1974-01-01",
+                        "email": "test@example.com",
+                        "name": "SMFDETH HYRASESN/MR",
+                        "traditional_ticket": "125-5249156160",
+                        "type": "ADT"
+                    },
+                    {
+                        "birth_date": "1974-01-01",
+                        "email": null,
+                        "name": "SMIATTASDH OSAJOEONHTDNHO/MR",
+                        "traditional_ticket": "125-5249156161",
+                        "type": "ADT"
+                    }
+                ]
+            }
+        }
+
 
 .. _Flight_Rules:
 
@@ -1267,34 +1353,31 @@ Request
     **pnr_locator** is a unique identifier of the booking, received
     at the book response.
 
+.. _pnr-data:
+
 Response Body
 =============
 
     :JSON Parameters:
         - **pnr** (*pnr*) -- root container
 
-          - **passengers** (:ref:`Passenger` *\[ \]*) -- the list of
+          - **passengers** (*Passenger [ ]*) -- the list of
             passengers
+
+            - **birth_date** (*String*) -- format is ``YYYY-MM-DD``
+            - **traditional_ticket** (*String*) - the ticket number which allows
+              the passenger to actually board the plane (or ``null`` if flight
+              is LCC)
+            - **type** (*String*) -- one of :ref:`PassengerTypes`
+            - **email** (*String*)
+            - **name** (*String*) -- the name of the passenger the booking was
+              made for
           - **id** (*String*) -- the PNR locator which identifies the
             booking
           - **lcc_ticket** (*String*) -- the ticket number which allows
             the passenger to actually board the plane
             (or ``null`` if flight is traditional)
 
-.. _Passenger:
-
-Passenger
----------
-
-    :JSON Parameters:
-        - **birth_date** (*String*) -- format is ``YYYY-MM-DD``
-        - **traditional_ticket** (*String*) - the ticket number which
-          allows the passenger to actually board the plane
-          (or ``null`` if flight is LCC)
-        - **type** (*String*) -- one of :ref:`PassengerTypes`
-        - **email** (*String*)
-        - **name** (*String*) -- the name of the passenger the booking
-          was made for
 
 Response Codes
 ==============
@@ -1330,9 +1413,9 @@ Response
 
 .. _Cancel:
 
---------
- Cancel
---------
+---------------
+ Cancel Booking
+---------------
 
 This call cancels the booking identified in the request. Bookings can only
 be cancelled before a ticket is created.
