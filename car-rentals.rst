@@ -34,12 +34,10 @@ Request
     :JSON Parameters:
         - **airport_code** (*String*) -- the IATA code of the airport to find
           available cars at
-        - **start_date** (*String*) -- date when the passengers arrive, in ISO
-          format, either with (ex. 2014-12-24T12:00:00Z) or without
-          (ex. 2014-12-24) a time code 
-        - **end_date** (*String*) -- date when the passengers arrive, in ISO
-          format, either with (ex. 2014-12-26T12:00:00Z) or without
-          (ex. 2014-12-26) a time code
+        - **start_date** (*String*) -- pickup date and time, in ISO
+          format ex. 2014-12-24T00:00:00Z)
+        - **end_date** (*String*) -- return date and time, in ISO
+          format (ex. 2014-12-26T00:00:00Z)
         - **filters** (:ref:`Filter`) -- *(optional)* search filter
           for different car properties
 
@@ -197,8 +195,8 @@ Request
 
         {
           "airport_code": "LHR",
-          "start_date": "2015-03-01",
-          "end_date": "2015-03-04",
+          "start_date": "2015-03-01T00:00:00Z",
+          "end_date": "2015-03-04T00:00:00Z",
           "filters": {
             "type": [
               "crossover"
