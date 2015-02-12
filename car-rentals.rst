@@ -40,8 +40,8 @@ Request
         - **end_date** (*String*) -- date when the passengers arrive, in ISO
           format, either with (ex. 2014-12-26T12:00:00Z) or without
           (ex. 2014-12-26) a time code
-        - **filters** (:ref:`Filter`) -- *(optional)* search filters for
-          different car properties
+        - **filters** (:ref:`Filter`) -- *(optional)* search filter
+          for different car properties
 
     To retrieve more results by one vendor, using the same values for the
     fields above as in the last search, send the following request:
@@ -56,7 +56,8 @@ Filter
 ------
 
     :JSON Parameters:
-        - **type** (*String*) -- one of the :ref:`car-types` listed below
+        - **type** (*String* *\[ \]*) -- one of the :ref:`car-types` listed
+          below
 
 Response Body
 =============
@@ -197,7 +198,12 @@ Request
         {
           "airport_code": "LHR",
           "start_date": "2015-03-01",
-          "end_date": "2015-03-04"
+          "end_date": "2015-03-04",
+          "filters": {
+            "type": [
+              "crossover"
+            ]
+          }
         }
 
     **JSON (vendor search):**
