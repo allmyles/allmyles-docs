@@ -232,10 +232,10 @@ Comfort score
 
      - Total time elapsed from first departure to last arrival
      - Number of flight segments (:ref:`Segment` *\[ \]*)
-     - Weight of cabin code factor as a whole
-     - Default value in case the cabin code is missing from a segment
+     - Cabin type
      - Passenger capacity of aircrafts
-     - Red-eye flight status
+     - Red-eye flight status, meaning flight leaves or departs at an
+       inconvenient time
      - The time elapsed between flight segments
 
 Response Codes
