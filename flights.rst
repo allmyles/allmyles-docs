@@ -70,6 +70,13 @@ Person
         - **passengerType** (*String*) -- one of :ref:`PassengerTypes`
         - **quantity** (*Integer*) -- number of travelers of ``passengerType``
 
+.. _PassengerTypes:
+
+PassengerTypes
+--------------
+
+    One of ``ADT``, ``CHD`` or ``INF``
+
 Response Body
 =============
 
