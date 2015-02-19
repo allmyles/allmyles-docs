@@ -27,26 +27,17 @@ Request
 
 .. http:post:: /cars
 
-    Searches for cars that match provided criteria. This is going to return
-    only one result by each available vendor; it is later possible to retrieve
-    more results by one specific vendor, see below.
+    Searches for cars that match provided criteria.
 
     :JSON Parameters:
         - **airport_code** (*String*) -- the IATA code of the airport to find
           available cars at
         - **start_date** (*String*) -- pickup date and time, in ISO
-          format ex. 2014-12-24T00:00:00Z)
+          format ex. 2014-12-24T12:00:00Z)
         - **end_date** (*String*) -- return date and time, in ISO
-          format (ex. 2014-12-26T00:00:00Z)
+          format (ex. 2014-12-26T12:00:00Z)
         - **filters** (:ref:`Filter`) -- *(optional)* search filter
           for different car properties
-
-    To retrieve more results by one vendor, using the same values for the
-    fields above as in the last search, send the following request:
-
-    :JSON Parameters:
-        - **vendor_id** (*String*) -- the vendor ID from the previous search
-          result set to retrieve more results from.
 
 .. _Filter:
 
@@ -203,19 +194,6 @@ Request
             ]
           }
         }
-
-    **JSON (vendor search):**
-
-    .. sourcecode:: json
-
-        {
-          "vendor_id": "2"
-        }
-
-    .. note::
-        Please keep in mind that a vendor specific search is going to use the
-        same location code, start date, and end date as your last regular
-        search.
 
 Response
 --------
