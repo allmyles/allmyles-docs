@@ -447,7 +447,9 @@ FlightDetails
         - **rulesLink** (*String*) -- link to the airline's rules page (hosted
           on the airline's website)
         - **baggageTiers** (:ref:`BaggageTier` *\[ \]*) -- contains the
-          different options the passenger has for bringing baggages along
+          different options the passenger has for bringing baggages along. The
+          book request will need to contain the ID of one of these objects in
+          the baggage field.
         - **fields** (:ref:`FormFields`) -- contains field validation data
         - **price** (:ref:`Price`) -- contains the final price of the ticket
           (including the credit card surcharge, but not the baggages)
@@ -463,6 +465,9 @@ FlightDetails
 BaggageTier
 -----------
 
+    These objects define the passenger's options for taking baggages on the
+    flight. Each passenger can choose one of these for themselves.
+
     .. note::
         Keep in mind that while the tier ID's value may seem closely related to
         the other fields, it's not guaranteed to contain any semantic meaning at
@@ -473,8 +478,10 @@ BaggageTier
           refer to it when booking)
         - **price** (:ref:`Price`) -- contains the price of the baggage tier
         - **max_weights** (*Float* *\[ \]*) -- the maximum weight of each
-          piece of baggage a passenger can take in this tier, can be an
-          empty list if there's no limit
+          piece of baggage a passenger can take in this tier in kg, can be an
+          empty array if there's no limit. Having multiple items in this array
+          means that for the specified price, the passenger can check in as many
+          baggages as there are items in the array.
 
 .. _FormFields:
 
@@ -598,22 +605,28 @@ Response
             "rulesLink": null,
             "baggageTiers": [
                 {
-                    "max_quantity": null,
-                    "max_weight": 20.0,
+                    "tier": "0",
                     "price": {
-                        "amount": 0.0,
-                        "currency": null
+                        "currency": null,
+                        "amount": 0.0
                     },
-                    "tier": "1"
+                    "max_weights": []
                 },
                 {
-                    "max_quantity": 1,
-                    "max_weight": null,
+                    "tier": "1",
                     "price": {
-                        "amount": 0.0,
-                        "currency": null
+                        "currency": "HUF",
+                        "amount": 15427.0
                     },
-                    "tier": "2"
+                    "max_weights": [15.0]
+                },
+                {
+                    "tier": "2",
+                    "price": {
+                        "currency": "HUF",
+                        "amount": 37024.8
+                    },
+                    "max_weights": [15.0, 20.0]
                 }
             ],
             "fields": {
