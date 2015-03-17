@@ -1045,8 +1045,6 @@ Response Body
     :JSON Parameters for LCC flights:
         - **ticket** (*String*) -- the ticket number (LCC PNR) for this booking
         - **pnr** (*String*) -- the PNR locator which identifies this booking
-        - **lastTicketingDate** (*String*) -- the timestamp of when it's last
-          possible to create a ticket for the booking, in ISO format
         - **bookingReferenceId** (*String*) -- the ID of the workflow at
           Allmyles; this is not currently required anywhere later, but can be
           useful for debugging
