@@ -450,6 +450,10 @@ FlightDetails
           different options the passenger has for bringing baggages along. The
           book request will need to contain the ID of one of these objects in
           the baggage field.
+        - **carryOnBaggageTiers** (:ref:`carryOnBaggageTier`) -- contains the
+          different options of cabin baggages. The book request will need
+          to contain the ID of one of these objects in the carry-on baggage
+          field.
         - **fields** (:ref:`FormFields`) -- contains field validation data
         - **price** (:ref:`Price`) -- contains the final price of the ticket
           (including the credit card surcharge, but not the baggages)
@@ -482,6 +486,21 @@ BaggageTier
           empty array if there's no limit. Having multiple items in this array
           means that for the specified price, the passenger can check in as many
           baggages as there are items in the array.
+
+.. _carryOnBaggageTier:
+
+CarryOnBaggageTier
+---------------------
+    These objects define the passenger's options for taking cabin baggages
+    on the flight. Each passenger can choose one of these for themselves.
+
+    :JSON Parameters:
+        - **tier** (*String*) -- the ID for this baggage tier (this is used to
+          refer to it when booking)
+        - **price** (:ref:`Price`) -- contains the price of the baggage tier
+        - **description** (*String*) -- A basic description of the carry-on
+          baggage's size, e.g. `Small cabin bag`. Exact dimensions should be
+          checked on the airline's website.
 
 .. _FormFields:
 
@@ -629,6 +648,24 @@ Response
                     "max_weights": [15.0, 20.0]
                 }
             ],
+            "carryOnBaggageTiers": [
+                {
+                    "tier": "1",
+                    "price": {
+                        "currency": "null",
+                        "amount": 0.0
+                    },
+                    "description": "Small cabin bag",
+                },
+                {
+                    "tier": "2",
+                    "price": {
+                        "currency": "HUF",
+                        "amount": 8000.0
+                    },
+                    "description": "Large cabin bag",
+                }
+            ],
             "fields": {
               "passengers": [
                 {
@@ -772,6 +809,8 @@ Passenger
         - **passengerTypeCode** (*String*) -- one of :ref:`PassengerTypes`
         - **baggageTier** (*String*) -- one of the tier IDs returned in the
           flight details response
+        - **carryOnBaggageTier** (*String*) -- one of the tier IDs returned
+          in the flight details response
 
 .. _FlightDocument:
 
@@ -881,6 +920,7 @@ Request
           "passengers": [
             {
               "baggageTier": "0",
+              "carryOnBaggageTier": "1",
               "birthDate": "1974-04-03",
               "document": {
                 "dateOfExpiry": "2016-09-03",
@@ -1054,6 +1094,8 @@ Response Body
           result from the :ref:`Flight_Search` call's response
         - **baggageTier** (:ref:`BaggageTier` *\[ \]*) -- the baggage tier
           option the passenger has chosen
+        - **carryOnBaggageTier** (:ref:`carryOnBaggageTier` *\[ \]*) -- the
+          carry-on baggage tier option the passenger has chosen
 
 
 Response Codes
@@ -1182,6 +1224,12 @@ Response
             "amount": 0.0,
             "currency": null
             "tier": "2"
+          },
+          "carryOnBaggageTier": {
+            "description": "Small cabin bag",
+            "amount": 0.0,
+            "currency": null
+            "tier": "1"
           }
         }
 
