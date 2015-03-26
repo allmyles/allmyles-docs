@@ -898,9 +898,9 @@ Request
             "email": "ccc@gmail.com",
             "name": "Kovacs Gyula",
             "phone": {
-              "areaCode": '30',
-              "countryCode": '36',
-              "phoneNumber": '1234567'
+              "areaCode": "30",
+              "countryCode": "36",
+              "phoneNumber": "1234567"
             }
           },
           "contactInfo": {
@@ -912,9 +912,9 @@ Request
             "email": "bbb@gmail.com",
             "name": "Kovacs Lajos",
             "phone": {
-              "areaCode": '30',
-              "countryCode": '36',
-              "phoneNumber": '1234567'
+              "areaCode": "30",
+              "countryCode": "36",
+              "phoneNumber": "1234567"
             }
           },
           "passengers": [
@@ -958,9 +958,9 @@ Response
             "email": "testy@gmail.com",
             "name": "Kovacs Lajos",
             "phone": {
-              "areaCode": '30',
-              "countryCode": '36',
-              "number": '1234567'
+              "areaCode": "30",
+              "countryCode": "36",
+              "number": "1234567"
             }
           },
           "flightData": {
@@ -1183,9 +1183,9 @@ Response
             "email": "testytesty@gmail.com",
             "name": "Kovacs Lajos",
             "phone": {
-              "areaCode": '30',
-              "countryCode": '36',
-              "number": '1234567'
+              "areaCode": "30",
+              "countryCode": "36",
+              "number": "1234567"
             }
           }
         }
@@ -1207,9 +1207,9 @@ Response
             "email": "testytesty@gmail.com",
             "name": "Kovacs Lajos",
             "phone": {
-              "areaCode": '30',
-              "countryCode": '36',
-              "number": '1234567'
+              "areaCode": "30",
+              "countryCode": "36",
+              "number": "1234567"
             }
           },
           "flightData": {
