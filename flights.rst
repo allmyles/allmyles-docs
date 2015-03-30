@@ -1220,17 +1220,19 @@ Response
           "ticket": "0XN4GTO",
           "baggageTiers": {
             "tier": "2",
-            "max_weight": null,
+            "max_weights": [15.0, 20.0],
             "price": {
-              "amount": 0.0,
-              "currency": null
+              "amount": 37024.8,
+              "currency": HUF
             }
           },
           "carryOnBaggageTiers": {
-            "description": "Small cabin bag",
-            "amount": 0.0,
-            "currency": null
-            "tier": "1"
+            "tier": "2",
+            "description": "Large cabin bag",
+            "price": {
+              "amount": 8000.0,
+              "currency": HUF
+            }
           }
         }
 
