@@ -1092,9 +1092,9 @@ Response Body
           received in the :ref:`Flight_Booking` call
         - **flightData** (:ref:`flight-result`) -- contains a copy of the
           result from the :ref:`Flight_Search` call's response
-        - **baggageTier** (:ref:`BaggageTier` *\[ \]*) -- the baggage tier
+        - **baggageTiers** (:ref:`BaggageTier` *\[ \]*) -- the baggage tier
           option the passenger has chosen
-        - **carryOnBaggageTier** (:ref:`carryOnBaggageTier` *\[ \]*) -- the
+        - **carryOnBaggageTiers** (:ref:`carryOnBaggageTier` *\[ \]*) -- the
           carry-on baggage tier option the passenger has chosen
 
 
@@ -1218,14 +1218,15 @@ Response
           "lastTicketingDate": null,
           "pnr": "6YE2LM",
           "ticket": "0XN4GTO",
-          "baggageTier": {
-            "max_quantity": 1,
+          "baggageTiers": {
+            "tier": "2",
             "max_weight": null,
-            "amount": 0.0,
-            "currency": null
-            "tier": "2"
+            "price": {
+              "amount": 0.0,
+              "currency": null
+            }
           },
-          "carryOnBaggageTier": {
+          "carryOnBaggageTiers": {
             "description": "Small cabin bag",
             "amount": 0.0,
             "currency": null
