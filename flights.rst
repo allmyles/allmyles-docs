@@ -754,22 +754,22 @@ Request
     :JSON Parameters:
         - **bookingId** (*String*) -- the booking ID of the :ref:`Combination`
           to book
-        - **billingInfo** (:ref:`Contact`) -- billing info for ticket creation
-        - **contactInfo** (:ref:`Contact`) -- contact info for ticket creation
+        - **billingInfo** (:ref:`Flight_Contact`) -- billing info for ticket creation
+        - **contactInfo** (:ref:`Flight_Contact`) -- contact info for ticket creation
         - **passengers** (:ref:`Passenger` *\[ \]*) -- the list of passengers
 
-.. _Contact:
+.. _Flight_Contact:
 
 Contact
 -------
 
     :JSON Parameters:
-        - **address** (:ref:`Address`) -- address of the entity in question
+        - **address** (:ref:`Flight_Address`) -- address of the entity in question
         - **email** (*String*) -- email of the entity in question
         - **name** (*String*) -- name of the entity in question
-        - **phone** (:ref:`Phone`) -- phone number of the entity in question
+        - **phone** (:ref:`Flight_Phone`) -- phone number of the entity in question
 
-.. _Address:
+.. _Flight_Address:
 
 Address
 -------
@@ -782,7 +782,7 @@ Address
         - **zipCode** (*String*)
         - **countryCode** (*String*) -- the two letter code of the country
 
-.. _Phone:
+.. _Flight_Phone:
 
 Phone
 -----
@@ -832,7 +832,7 @@ Response Body
         sent data for later use.
 
     .. warning::
-        The format of :ref:`Contact` and :ref:`flight-result` objects contained
+        The format of :ref:`Flight_Contact` and :ref:`flight-result` objects contained
         within this response might slightly differ from what's described in
         this documentation as requested. This will be fixed in a later version.
 
@@ -843,7 +843,7 @@ Response Body
         - **bookingReferenceId** (*String*) -- the ID of the workflow at
           Allmyles; this is not currently required anywhere later, but can be
           useful for debugging
-        - **contactInfo** (:ref:`Contact`) -- contains a copy of the data
+        - **contactInfo** (:ref:`Flight_Contact`) -- contains a copy of the data
           received in the :ref:`Flight_Booking` call
         - **flightData** (:ref:`flight-result`) -- contains a copy of the
           result from the :ref:`Flight_Search` call's response
@@ -1079,7 +1079,7 @@ Response Body
             - **unit** (*String*) -- Units of measurement
         - **flightData** (:ref:`flight-result`) -- contains a copy of the
           result from the :ref:`Flight_Search` call's response
-        - **contactInfo** (:ref:`Contact`) -- contains a copy of the data
+        - **contactInfo** (:ref:`Flight_Contact`) -- contains a copy of the data
           received in the :ref:`Flight_Booking` call
 
     :JSON Parameters for LCC flights:
@@ -1088,7 +1088,7 @@ Response Body
         - **bookingReferenceId** (*String*) -- the ID of the workflow at
           Allmyles; this is not currently required anywhere later, but can be
           useful for debugging
-        - **contactInfo** (:ref:`Contact`) -- contains a copy of the data
+        - **contactInfo** (:ref:`Flight_Contact`) -- contains a copy of the data
           received in the :ref:`Flight_Booking` call
         - **flightData** (:ref:`flight-result`) -- contains a copy of the
           result from the :ref:`Flight_Search` call's response
