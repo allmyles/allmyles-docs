@@ -1,0 +1,1227 @@
+FORMAT: 1A
+
+# Allmyles API documentation
+Welcome to Allmyles API documentation!
+
+We highly recommend you to read at least the ‘Common Gotchas’ section below before jumping into the API reference, as it contains information about problems often encountered by developers working with our API that are not immediately apparent.
+# Reading this document
+For the most part, it should be rather easy to understand the documentation. Two things that might require explanation are:
+
+* A colon in a URL path denotes a variable; in the path `/flights/:booking_id'` the entirety of `:booking_id` should be replaced by a booking ID, as such: `/flights/8986210d-7e2f-4481-a29f-846ab386ddac`
+* When declaring the type of a variable, the symbol `[ ]` after a type means that the variable’s type is an array, containing items of the type named before the symbol. For example, a `String [ ]` variable can look like the following: `["abc", "def", ""]`.
+
+# Common Gotchas
+* The staging API returns search results from all available airlines, but only the following results are guaranteed to work when booking in staging:
+    * Budapest to London & London to Budapest British Airways flights, to filter for these, include `"fromLocation": "BUD", "toLocation": "LON", "preferredAirlines": ["BA"]` in your search request.
+    * Budapest to London & London to Budapest Low Cost Carrier flights, to filter for these, include `"fromLocation": "BUD", "toLocation": "LON", "providerType": "OnlyLowCost"` in your search request.
+* Workflows expire 17 minutes after a request arrives. Any requests for the same session will return an HTTP 412 error.
+* All requests in the booking flow are applied to the last received search request. This means that if a passenger is searching for flights in multiple tabs, they will be able to proceed with booking only in the tab they last searched in.
+
+# Request Headers
+In addition to standard HTTP headers, the following ones are of interest:
+
+* **Accept**: The format the response data should be sent in. Currently we support JSON, specified as `application/json`, and XML, specified as `application/json`.
+* **Cookie**:  unique identifier for the customer’s session, this is typically the randomly generated session cookie saved on the customer’s computer.
+* **X-Auth-Token**: The API key you received after signing up on the [Allmyles home page](http://allmyles.com/) `(ex. 12345678-1234.)`
+
+# Generic Response Codes
+The documentation has a number of different status codes listed as possible reponses to certain requests that are specific to that response. In addition to those, we can also return the following status codes:
+
+* **200 OK**: The request has succeeded.
+* **202 Accepted**: The request has been accepted for processing but the processing is not yet completed.
+* **301 Moved Permanently**: The resource at the endpoint URI has been moved permanently and the client must use the new address in the future.
+* **400 Bad Request**: Invalid request syntax, the error message will in most cases contain the exact reason. The client must not repeat the request in the same form.
+* **403 Forbidden**: The client failed to authorize themselves with a valid API key, and the request was rejected.
+* **404 Not Found**: Request contains an invalid URI endpoint, or the given resource does not exist.
+* **413 Rate Control**: Request limitation threshold violated.
+* **500 Internal Server Error**: The server has failed to complete the sent request—please report such errors to our support team at [support@allmyles.com](support@allmyles.com)!
+* **502 Bad Gateway**: The backend servers are down, or an update process is under way.
+* **503 Service Unavailable**: Servers are accessible, but overloaded. Try and repeat the request later.
+
+# Asynchronous Calls
+Long running requests, such as a flight search use asynchronous calls. This means that the the Allmyles API can—and in most cases, will—respond to the first request with an HTTP 202 status code, and no content. When this happens, the client is expected to periodically send the same request to the API, with a reasonable delay between the requests (5 seconds is a good baseline for this.) The Allmyles API will then reply with an HTTP 202 response code if processing is still underway, or any other status code and a content body if it is done processing the request.
+
+# /flights
+
+## Search Flights [POST]
+In most cases you’ll want to pass 00:00:00 as time for both your departure and your return date. Time filtering constraints will be very strict otherwise, often resulting in no matches for your query.
+
++ Request Search (application/json)
+    + Attributies
+        + fromLocation (String) – departure location, given as IATA code
+        + toLocation (String) – destination, given as IATA code
+        + departureDate (String) – date of departure, in ISO format, including a time code, even though whole day will be searched by default
+        + returnDate (String) – (optional) date of return, in ISO format, including a time code, even though whole day will be searched by default
+        + persons (Person) – a list of passengers, grouped by type code, containing Persons
+        + fromAirport (String) – (optional) departure airport, given as IATA code, must be in the city specified in fromLocation
+        + toAirport (String) – (optional) destination airport, given as IATA code, must be in the city specified in toLocation
+        + providerType (String) – (optional) type of results to retrieve
+        + preferredAirlines (String [ ]) – (optional) list of airlines to filter results to, given as their two character IATA code
+        + extraDays (Integer) – (optional) number of days to call Flexible Date Search with, between 1-3
+
+    
+    + Body
+
+            {
+                "fromLocation": "BUD",
+                "toLocation": "LON",
+                "departureDate": "2014-05-15T00:00:00",
+                "returnDate": "2014-05-20T00:00:00",
+                "persons":[
+                    {
+                        "passengerType":"ADT",
+                        "quantity": 2
+                    },
+                    {
+                        "passengerType":"CHD",
+                        "quantity": 1
+                    }
+                ]
+            }
+
++ Response 200 (application/json)
+    + Body
+
+            {
+              "flightResultSet": [
+                {
+                  "breakdown": [
+                    {
+                      "passengerFare": {
+                        "fare": 52.8627,
+                        "tax": 21.1229,
+                        "ticketDesignators": [],
+                        "type": "ADT",
+                        "quantity": 1
+                      }
+                    }
+                  ],
+                  "currency": "EUR",
+                  "total_fare": 57.8627,
+                  "combinations": [
+                    {
+                      "providerType": "TravelFusionProvider",
+                      "bookingId": "15_0_0",
+                      "comfortScore": 47,
+                      "firstLeg": {
+                        "elapsedTime": "0230",
+                        "flightSegments": [
+                          {
+                            "operatingAirlineName": "British Airways",
+                            "marketingAirlineName": "British Airways",
+                            "aircraft": "Airbus Industries A320",
+                            "arrival": {
+                              "airport": {
+                                "name": "Stansted",
+                                "terminal": null,
+                                "code": "STN"
+                              },
+                              "city": {
+                                "code": "LON",
+                                "name": "London"
+                              },
+                              "dateTime": "2014-06-05T23:00:00"
+                            },
+                            "marketingAirline": "BA",
+                            "operatingAirline": "FR",
+                            "departure": {
+                              "airport": {
+                                "terminal": null,
+                                "code": "BUD"
+                                "name": "Liszt Ferenc Intl",
+                              },
+                              "city": {
+                                "code": "BUD",
+                                "name": "Budapest"
+                              },
+                              "dateTime": "2014-06-05T21:30:00"
+                            },
+                            "flightNumber": "867",
+                            "availableSeats": 9,
+                            "cabin": "economy",
+                            "class": "Y",
+                          }
+                        ]
+                      },
+                      "serviceFeeAmount": 5.0,
+                      "comfortScore": 50
+                    }
+                  ]
+                }
+              ]
+            }
+
+# /flights
+
+## Flights Details
++ Request Details (application/json)
+    + rulesLink (String) – link to the airline’s rules page (hosted on the airline’s website)
+    + baggageTiers (BaggageTier [ ]) – contains the different options the passenger has for bringing baggages along. The book request will need to contain the ID of one of these objects in the baggage field.
+    + carryOnBaggageTiers (CarryOnBaggageTier) – contains the different options of cabin baggages. The book request will need to contain the ID of one of these objects in the carry-on baggage field.
+    + fields (Form Fields) – contains field validation data
+    + price (Price) – contains the final price of the ticket (including the credit card surcharge, but not the baggages)
+    + result (FlightResult) – contains an exact copy of the result from the Search call’s response
+    + options (FlightOptions) – contains whether certain options are enabled for this flight
+    + surcharge (Price) – contains the credit card surcharge for this flight
+
++ Response 200 (application/json)
+    {
+  "flightDetails": {
+    "rulesLink": null,
+    "baggageTiers": [
+        {
+            "tier": "0",
+            "price": {
+                "currency": null,
+                "amount": 0.0
+            },
+            "max_weights": []
+        },
+        {
+            "tier": "1",
+            "price": {
+                "currency": "HUF",
+                "amount": 15427.0
+            },
+            "max_weights": [15.0]
+        },
+        {
+            "tier": "2",
+            "price": {
+                "currency": "HUF",
+                "amount": 37024.8
+            },
+            "max_weights": [15.0, 20.0]
+        }
+    ],
+    "carryOnBaggageTiers": [
+        {
+            "tier": "1",
+            "price": {
+                "currency": "null",
+                "amount": 0.0
+            },
+            "description": "Small cabin bag",
+        },
+        {
+            "tier": "2",
+            "price": {
+                "currency": "HUF",
+                "amount": 8000.0
+            },
+            "description": "Large cabin bag",
+        }
+    ],
+    "fields": {
+      "passengers": [
+        {
+          "tag": "select",
+          "options": ["Mr", "Ms", "Mrs"],
+          "attributes": [
+            {
+              "key": "required",
+              "value": "required"
+            },
+            {
+              "key": "name",
+              "value": "persons/0/namePrefix"
+            },
+            {
+              "key": "data-label",
+              "value": "Name Prefix"
+            }
+          ],
+        },
+      ],
+      "contact_info": [
+        {
+          "tag": "input",
+          "attributes": [
+            {
+              "key": "maxLength",
+              "value": "30"
+            },
+            {
+              "key": "type",
+              "value": "text"
+            },
+            {
+             "key": "name",
+             "value": "billingInfo/name"
+            },
+            {
+              "key": "data-label",
+              "value": "Name"
+            }
+          ],
+        },
+      ],
+      "billing_info": [
+        {
+          "_comment": "trimmed in example for brevity's sake"
+        },
+      ]
+    },
+    "price": {
+      "currency": "EUR",
+      "amount": 4464.46
+    },
+    "result": {
+      "_comment": "trimmed in example for brevity's sake"
+    },
+    "options": {
+      "seatSelectionAvailable": false,
+      "travelfusionPrepayAvailable": false
+    },
+    "surcharge": {
+      "currency": "EUR",
+      "amount": 5.0
+    }
+  }
+}
+
+# /books
+
+## Flights Booking [POST]
+When booking LCC flights, the Allmyles API does not send the book request to the external provider until the ticketing call arrives, so there’s no response—an HTTP 204 No Content status code is returned.
+
++ Request Booking (application/json)
+    + Attributies
+        + bookingId (String) – the booking ID of the Combination to book
+        + billingInfo (Contact) – billing info for ticket creation
+        + contactInfo (Contact) – contact info for ticket creation
+        + passengers (Passenger [ ]) – the list of passengers
+
+    + Body
+          "bookingId": "1_0_0",
+          "billingInfo": {
+            "address": {
+              "addressLine1": "Váci út 13-14",
+              "cityName": "Budapest",
+              "countryCode": "HU",
+              "zipCode": "1234"
+            },
+            "email": "ccc@gmail.com",
+            "name": "Kovacs Gyula",
+            "phone": {
+              "areaCode": "30",
+              "countryCode": "36",
+              "phoneNumber": "1234567"
+            }
+          },
+          "contactInfo": {
+            "address": {
+              "addressLine1": "Váci út 13-14",
+              "cityName": "Budapest",
+              "countryCode": "HU"
+            },
+            "email": "bbb@gmail.com",
+            "name": "Kovacs Lajos",
+            "phone": {
+              "areaCode": "30",
+              "countryCode": "36",
+              "phoneNumber": "1234567"
+            }
+          },
+          "passengers": [
+            {
+              "baggageTier": "0",
+              "carryOnBaggageTier": "1",
+              "birthDate": "1974-04-03",
+              "document": {
+                "dateOfExpiry": "2016-09-03",
+                "id": "12345678",
+                "issueCountry": "HU",
+                "type": "Passport"
+              },
+              "email": "aaa@gmail.com",
+              "firstName": "Janos",
+              "gender": "MALE",
+              "lastName": "Kovacs",
+              "namePrefix": "Mr",
+              "passengerTypeCode": "ADT"
+            }
+          ]
+        }
+        
++ Response 200 (application/json)
+        {
+          "bookingReferenceId": "req-cfd7963b187a4fe99702c0373c89cb16",
+          "contactInfo": {
+            "address": {
+              "city": "Budapest",
+              "countryCode": "HU",
+              "line1": "Madach ut 13-14",
+              "line2": null,
+              "line3": null
+            },
+            "email": "testy@gmail.com",
+            "name": "Kovacs Lajos",
+            "phone": {
+              "areaCode": "30",
+              "countryCode": "36",
+              "number": "1234567"
+            }
+          },
+          "flightData": {
+            "_comment": "trimmed in example for brevity's sake"
+          },
+          "lastTicketingDate": "2014-05-16T23:59:59Z",
+          "pnr": "6YESST"
+        }
+
+# /payment
+
+## Flights Payment [POST]
+If payment is required—that is, if the flight is an LCC one—this is where Allmyles gets the payment data.
+
+The only supported payment provider at the moment is PayU. When we receive a transaction ID that points to a successful payment by the passenger, we essentially take that money from PayU, and forward it to the provider to buy a ticket in the Ticketing step.
+
++ Request Payment (application/json)
+    + Attributies
+        + payuId (String) – the transaction ID identifying the successful transaction at PayU
+        + basket (String[ ]) – the booking IDs the payment is for
+
+    + Body
+        {
+            "payuId": "12345678",
+            "basket": ["2_1_0"]
+        }
+
+# /tickets/:booking_id
+
+## Ticketing [GET]
+Two important notes:
+
+1. Call this only when the passenger’s payment completely went through! (That is, after the payment provider’s IPN has arrived, confirming that the transaction did not get caught by the fraud protection filter.)
+2. After this call has been made do not issue refunds unless the Allmyles API explicitly tells you to. It’s way better to just correct ticketing errors manually than to fire automatic refunds even if the ticket purchase might already be locked in for some reason.
+
++ Request (application/json)
+    + Attributies
+        + tickets (Ticket [ ]) – the purchased tickets
+        + passenger (String) – the name of the passenger the ticket was purchased for
+        + passenger_type (String) – one of PassengerTypes
+        + ticket (String) – the ticket number which allows the passenger to actually board the plane
+        + price (TicketPrice)
+            + currency (String)
+            + total_fare (Float) – The total amount of money the passenger paid for his ticket, including tax.
+            + tax (Float) – The total amount of tax the passenger had to pay for this ticket.
+        + baggage
+            + quantity (Int) – The maximum quantity of baggage the passenger can bring along
+            + unit (String) – Units of measurement
+            + flightData (FlightResult) – contains a copy of the result from the Search call’s response
+            + contactInfo (Contact) – contains a copy of the data received in the Booking call
+            
+    + Body
+        "body": {
+          "tickets": [
+            {
+              "passenger": "Mr Janos kovcas",
+              "passenger_type": "ADT",
+              "ticket": "125-4838843038",
+              "price": {
+                "currency": "HUF",
+                "total_fare": 26000.0,
+                "tax": 17800.0
+              }
+              "baggage": {
+                "quantity": 1,
+                "unit": "PC",
+              }
+            },
+            {
+              "passenger": "Mr Janos kascvo",
+              "passenger_type": "ADT",
+              "ticket": "125-4838843039",
+              "price": {
+                "currency": "HUF",
+                "total_fare": 26000.0,
+                "tax": 17800.0
+              }
+              "baggage": {
+                "quantity": 1,
+                "unit": "PC",
+              }
+            }
+          ],
+          "flightData": {
+            "_comment": "trimmed in example for brevity's sake"
+          },
+          "contactInfo": {
+            "address": {
+              "city": "Budapest",
+              "countryCode": "HU",
+              "line1": "Madach ut 13-14",
+              "line2": null,
+              "line3": null
+            },
+            "email": "testytesty@gmail.com",
+            "name": "Kovacs Lajos",
+            "phone": {
+              "areaCode": "30",
+              "countryCode": "36",
+              "number": "1234567"
+            }
+          }
+        }
+
+# /tickets/:booking_id/status
+This call enables checking the result of a ticketing request. This is useful when it’s unclear whether the ticketing process went through, due to a failure at external providers, in Allmyles’ systems, on the client’s server, or anywhere in between. The request will identify the correct workflow based on the cookie header’s contents, which must match whatever was sent in the ticket request.
+
+The periodic checks should be made at most once every minute.
+
+## Ticketing Status [GET]
++ Request Ticketing (application/json)
+    + Attributes
+        + status (String) – one of the statuses
+        + pnr (PNR) – the pnr object that a Get Booking request would return about the flight — this includes the ticket number(s) as well
+            
++ Response 200 (application/json)
+        {
+            "status": "successful",
+            "pnr": {
+                "deleted": false,
+                "id": "3L4TMN",
+                "passengers": [
+                    {
+                        "birth_date": "1974-01-01",
+                        "email": "test@example.com",
+                        "name": "SMFDETH HYRASESN/MR",
+                        "traditional_ticket": "125-5249156160",
+                        "type": "ADT"
+                    },
+                    {
+                        "birth_date": "1974-01-01",
+                        "email": null,
+                        "name": "SMIATTASDH OSAJOEONHTDNHO/MR",
+                        "traditional_ticket": "125-5249156161",
+                        "type": "ADT"
+                    }
+                ]
+            }
+        }
+        
+# /flights/:booking_id/rules
+
+## Rules [GET]
+This call returns the terms and conditions of the flight in question, or a link to them if the raw text isn’t available (in case of LCC flights).
+
++ Response 200 (appication/json)
+    + Attributies
+        + rulesResultSet (RulesResultSet) – root container
+        + rules (Rule [ ]) – contains the flight rule texts, is returned only for traditional flights
+        + link (String) – contains a link to the airline’s rules page, is returned only for LCC flights
+
+    + Body
+        {
+          "rulesResultSet": {
+            "rules": [
+              {
+                "code": "OD",
+                "text": "NONE UNLESS OTHERWISE SPECIFIED",
+                "title": "OTHER DISCOUNTS"
+              },
+              {
+                "code": "SO",
+                "text": "STOPOVERS NOT PERMITTED ON THE FARE COMPONENT.",
+                "title": "STOPOVERS"
+              },
+            ]
+          }
+        }
+
+# /books/:pnr_locator
+
+## Get Booking [GET]
+This call returns the details of a booking identified by a PNR locator. This makes it possible to re-open an expired session and send a ticketing request based on the PNR locator after the initial session is closed.
+
++ Response 200 (application/json)
+    + Attributies
+        + pnr (pnr) – root container
+        + passengers (Passenger [ ]) – the list of passengers
+        + birth_date (String) – format is YYYY-MM-DD
+        + traditional_ticket (String) - the ticket number which allows the passenger to actually board the plane (or null if flight is LCC)
+        + type (String) – one of PassengerTypes
+        + email (String)
+        + name (String) – the name of the passenger the booking was made for
+        + id (String) – the PNR locator which identifies the booking
+        + lcc_ticket (String) – the ticket number which allows the passenger to actually board the plane (or null if flight is traditional)
+
+    + Body
+        {
+          "pnr": {
+            "passengers": [
+              {
+                "birth_date": "1974-01-01",
+                "traditional_ticket": "123-5249155974",
+                "type": "ADT",
+                "email": "test@gmail.com",
+                "name": "KOVACS JANOS/MR"
+              }
+            ],
+            "id": "3KWQUK",
+            "lcc_ticket": null
+          }
+        }
+        
+# /hotels
+
+## Search Hotel [POST]
++ Request (application/json)
+    + Attributies
+        + hotel_id (String) –
+        + hotel_name (String) –
+        + chain_name (String) –
+        + amenities (Amenities) – An associative array mapping each amenity listed below to a boolean value based on whether the hotel has given amenity. List of keys: ‘restaurant’, ‘bar’, ‘laundry’, ‘room_service’, ‘safe_deposit_box’, ‘parking’, ‘swimming’, ‘internet’, ‘gym’, ‘air_conditioning’, ‘business_center’, ‘meeting_rooms’, ‘spa’, ‘pets_allowed’
+        + latitude (Float) – The latitude component of the coordinates of the hotel
+        + longitude (Float) – The latitude component of the coordinates of the hotel
+        + max_rate (Price)
+            + amount (Float) –
+            + currency (String) –
+        + min_rate (Price) –
+            + amount (Float) –
+            + currency (String) –
+        + stars (Integer) – The amount of stars the hotel has been awarded
+        + thumbnail (String) – Link to a small image representing the hotel
+
+    + Body
+        {
+          "cityCode": "LON",
+          "occupancy": 1,
+          "arrivalDate": "2014-09-29",
+          "leaveDate": "2014-09-30"
+        }
+
++ Response 200 (application/json)
+    + Body
+        {
+          "hotelResultSet": [
+            {
+              "amenities": {
+                "air_conditioning": false,
+                "bar": true,
+                "business_center": false,
+                "gym": false,
+                "internet": false,
+                "laundry": false,
+                "meeting_rooms": true,
+                "parking": true,
+                "restaurant": false,
+                "room_service": false,
+                "safe_deposit_box": true,
+                "spa": true,
+                "swimming": false
+              },
+              "chain_name": "ACCOR HOTELS",
+              "hotel_id": "12_2",
+              "hotel_name": "MERCURE PARIS PLACE ITALIE 3*",
+              "latitude": 48.8303,
+              "longitude": 2.35283,
+              "max_rate": {
+                "amount": 21951.12,
+                "currency": "HUF"
+              },
+              "min_rate": {
+                "amount": 18024.3,
+                "currency": "HUF"
+              },
+              "stars": 3,
+              "thumbnail": "https://static.allmyles.com/hotels/e4ba87c0/12_2.jpg"
+            }
+          ]
+        }
+
+# /hotels/:hotel_id
+
+## Hotel Details [GET]
++ Response 200 (application/json)
+    + Attributes
+        + chain_code (String)
+        + chain_name (String)
+        + hotel_code (String)
+        + hotel_name (String)
+        + location (HotelLocation) – contains info about the hotel’s location.
+        + points_of_interest (POI [ ]) – contains a list of notable locations around the hotel
+        + description (String) – A short text describing the hotel
+        + contact_info (HotelContactInfo) –
+            + phone_numbers (String [ ])
+            + email (String)
+            + website (String)
+        + price (PriceRange) – contains the lowest and highest rates available for a room at this hotel
+            + minimum (Float) – Rate of the cheapest room at the hotel
+            + maximum (Float) – Rate of the most expensive room at the hotel
+            + currency (String)
+        + thumbnail (String) – Contains a URL pointing to a small image of the hotel
+        + photos (String [ ]) – Contains an array of URLs pointing to a larger photos of the hotel
+        + amenities (Amenities) – Contains an associative array, mapping each amenity listed below to a boolean value based on whether the hotel has given amenity. List of keys: ‘restaurant’, ‘bar’, ‘laundry’, ‘room_service’, ‘safe_deposit_box’, ‘parking’, ‘swimming’, ‘internet’, ‘gym’, ‘air_conditioning’, ‘business_center’, ‘meeting_rooms’, ‘spa’, ‘pets_allowed’
+        + stars (Integer) – Contains the amount of stars this hotel has been awarded.
+        + rules (Rules) – Contains an associative array, mapping each rule type listed below to the relevant text. List of keys: ‘guarantee’, ‘safety’, ‘extra_occupants’, ‘policy’, ‘charges’, ‘deposit’, ‘meals’, ‘stay’, ‘tax’
+        + rooms (Room [ ]) – contains the available rooms
+
+    + Body
+            {
+              "hotel_details": {
+                "amenities": {
+                  "air_conditioning": false,
+                  "bar": true,
+                  "business_center": false,
+                  "gym": true,
+                  "internet": false,
+                  "laundry": false,
+                  "meeting_rooms": true,
+                  "parking": true,
+                  "restaurant": false,
+                  "room_service": false,
+                  "safe_deposit_box": true,
+                  "spa": true,
+                  "swimming": false
+                },
+                "category": "tourist",
+                "chain_code": "RT",
+                "chain_name": "ACCOR HOTELS",
+                "contact_info": {
+                  "phone_numbers": [
+                    "33/1/40851919",
+                    "33/1/40859900"
+                  ]
+                },
+                "description": "the ibis paris gennevilliers hotel boasts an ideal location just outside paris just a stone's throw away from the les agnettes metro stop, you'll find yourself in the center of paris in just over 15 minutes this 3-star hotel has everything you need foran enjoyable stay: fully equipped rooms, gourmet restaurant, 24-hour bar, conference rooms and an ideal location with shops nearby and a shopping center opposite the hotel.",
+                "hotel_code": "GVL",
+                "hotel_name": "Ibis paris gennevilliers.",
+                "location": {
+                  "address": "32 36 rue louis calmel.",
+                  "area": "downtown",
+                  "city": "PAR",
+                  "country": "FR",
+                  "recommended_transport": "taxi",
+                  "state": "",
+                  "zip_code": "92230"
+                },
+                "photos": [
+                  "https://static.allmyles.com/hotels/81bf3a6c/55_0_EXT_01.jpg",
+                  "https://static.allmyles.com/hotels/81bf3a6c/55_0_EXT_02.jpg",
+                  "https://static.allmyles.com/hotels/81bf3a6c/55_0_LOUNGE_01.jpg",
+                  "https://static.allmyles.com/hotels/81bf3a6c/55_0_LOUNGE_02.jpg",
+                  "https://static.allmyles.com/hotels/81bf3a6c/55_0_REST_01.jpg",
+                  "https://static.allmyles.com/hotels/81bf3a6c/55_0_REST_02.jpg",
+                  "https://static.allmyles.com/hotels/81bf3a6c/55_0_CONF_01.jpg",
+                  "https://static.allmyles.com/hotels/81bf3a6c/55_0_REC_01.jpg"
+                ],
+                "points_of_interest": {
+                  "airports": [
+                    {
+                      "airport_code": "CDG",
+                      "airport_name": "CHARLES DE GAULLE",
+                      "direction": "NE",
+                      "distance": "14.9",
+                      "unit": "MI"
+                    },
+                    {
+                      "airport_code": "ORY",
+                      "airport_name": "ORLY",
+                      "direction": "S",
+                      "distance": "21.7",
+                      "unit": "MI"
+                    }
+                  ],
+                  "city_center": {
+                    "distance": "0.4",
+                    "unit": "MI"
+                  },
+                  "miscellaneous": [
+                    {
+                      "direction": "NE",
+                      "distance": "1.8",
+                      "name": "EIFFEL TOWER",
+                      "type": "tourist",
+                      "unit": "KM"
+                    },
+                    {
+                      "direction": "W",
+                      "distance": "1.0",
+                      "name": "LE LOUVRE",
+                      "type": "tourist",
+                      "unit": "KM"
+                    }
+                  ]
+                },
+                "price": {
+                  "currency": "HUF",
+                  "maximum": 20308.52,
+                  "minimum": 14634.08
+                },
+                "rooms": [
+                  {
+                    "bed_type": "twin",
+                    "booking_id": "55_0/85_0",
+                    "description": "STANDARD ROOM WITH 2 SINGLE BEDS",
+                    "price": {
+                      "amount": 14634.08,
+                      "covers": "trip",
+                      "rate_varies": false
+                    },
+                    "quantity": 2,
+                    "room_id": "85_0",
+                    "room_type": {
+                      "bath": true,
+                      "category": "standard",
+                      "nonsmoking": false,
+                      "shower": true,
+                      "suite": false
+                    }
+                  }
+                ],
+                "rules": {
+                  "charges": "FAX CHARGE: -INCOMING FAX COMPLIMENTARY : COMPLIMENTARY -OUTGOING FAX COMPLIMENTARY : COMPLIMENTARY",
+                  "deposit": "NO DEPOSIT REQUIRED",
+                  "extra_occupants": null,
+                  "guarantee": "FROM 26:10:2006 UNTIL 31:12:2050 MONDAY TUESDAYWEDNESDAY THURSDAY FRIDAY SATURDAY SUNDAYHOLD TIME: 19:00GUESTS ARRIVING AFTER 19:00 (LOCAL TIME) MUST PROVIDE A GUARANTEE.ACCEPTED FORM OF GUARANTEE - 26:10:2006 - 31:12:2050 CREDIT CARDCREDIT CARD ACCEPTED FOR GUARANTEE AX - CA - DC - EC - IK - VINO GUARANTEE REQUIREDFROM 24:10:2006 UNTIL 31:12:2050CANCELLATION POLICIES:CANCEL BY 19:00(24 HOUR CLOCK) ON DAY OF ARRIVAL,LOCAL HOTEL TIMECANCEL 0 DAY BEFORE ARRIVALNO CANCELLATION CHARGE APPLIES PRIOR TO 19:00(LOCAL TIME) ON THE DAY OF ARRIVAL. BEYOND THAT TIME, THE FIRST NIGHT WILL BE CHARGED.",
+                  "meals": null,
+                  "policy": "CHECK-IN TIME: 12:00CHECK-IN TIME 12:00CHECK-OUT TIME: 12:00CHECK-OUT TIME 12:00NO SPECIAL CONDITIONS FOR CHILDREN.ACCEPTED FORM OF PAYMENT - 26:10:2006 - 31:12:2050 CREDIT CARDCREDIT CARD ACCEPTED FOR PAYMENT AX - CA - DC - EC - IK - VI",
+                  "safety": "-SAFE DEP BOX             -SMOKE DETECTOR-FIRE SAFETY              -ELEC GENERATOR-FIRE DETECTORS-EMERG LIGHTING           -SAFE",
+                  "stay": null,
+                  "tax": "CITY TAX 1.00 EUR PER PERSON PER NIGHT -FOOD & BEVERAGE TAX PER ROOM PER NIGHTINCLUSIVE - COUNTRY TAX PER ROOM PER NIGHTINCLUSIVE"
+                },
+                "stars": 3,
+                "thumbnail": "https://static.allmyles.com/hotels/81bf3a6c/55_0.jpg"
+              }
+            }
+
+
+# /hotels/:hotel_id/rooms/:room_id
+
+## Room Details [GET]
++ Response
+    + Attributes
+        + rules (Rules) – Contains an associative array, mapping each rule type listed below to the relevant text, or a relevant boolean value. List of keys: ‘cancellation’, ‘notes’, ‘needs_guarantee’, ‘needs_deposit’
+        + price (RoomPrice) –
+            + total (Float) – The total cost of booking the hotel for the guest. This includes the charge we require right now.
+            + charge (Float) – The amount of money we need to charge the guest to complete the booking. If this amount is zero, no transaction needs to be made and you can go on to booking straight away.
+        + includes (String [ ]) – Contains what services or extras are included in the price.
+    
+    + Body
+        {
+          "hotel_room_details": {
+            "price": {
+              "amount": "12887.08",
+              "includes": [
+                "Extra Adult",
+                "Value Added Tax"
+              ]
+            },
+            "rules": {
+              "cancellation": "CANCEL LATEST BY 01-MAR-15 12PM TO AVOID PENALTY OF 36.00<br>",
+              "needs_deposit": false,
+              "needs_guarantee": true,
+              "notes": "NON SMOKING DOUBLE EN SUITE<br>MAX OCCUPANCY 2 ADULTS<br>1 DOUBLE BED<br> BAR FLEXIBLE RATE<br>GUARANTEE IS MANDATORY,AX,CA,MC,TG,VI<br>A DEPOSIT IS NOT REQUIRED.<br>Minimum Duration, 1, Days<br>Maximum Duration, 28, Days<br>"
+            }
+          }
+        }
+
+# /payment
+
+## Hotel Payment [POST]
+If payment is required—that is, if the room’s charge field was not zero—this is where Allmyles gets the payment data.
+
+The only supported payment provider at the moment is PayU. When we receive a transaction ID that points to a successful payment by the passenger, we essentially take that money from PayU, and forward it to the provider to book a hotel room in the Booking step.
+
++ Request (application/json)
+    + Attributes
+        + payuId (String) – the transaction ID identifying the successful transaction at PayU
+        + basket (String[ ]) – the booking IDs the payment is for
+        
+    + Body
+        {
+            "payuId": "12345678",
+            "basket": ["2_1_0"]
+        }
+
+# /books
+
+## Hotel booking [POST]
+
++ Request (application/json)
+    + Attributes
+        + bookBasket (String [ ]) – an array containing only the booking ID of the Room to book
+        + billingInfo (Contact) – billing info for the booking
+        + contactInfo (Contact) – contact info for the booking
+        + persons (Person [ ]) – the list of occupants
+        
+    + Body
+        {
+          "bookBasket": ["1_0/2_0"],
+          "billingInfo": {
+            "address": {
+              "addressLine1": "Váci út 13-14",
+              "cityName": "Budapest",
+              "countryCode": "HU",
+              "zipCode": "1234"
+            },
+            "email": "ccc@gmail.com",
+            "name": "Kovacs Gyula",
+            "phone": {
+              "areaCode": 30,
+              "countryCode": 36,
+              "phoneNumber": 1234567
+            }
+          },
+          "contactInfo": {
+            "address": {
+              "addressLine1": "Váci út 13-14",
+              "cityName": "Budapest",
+              "countryCode": "HU"
+            },
+            "email": "bbb@gmail.com",
+            "name": "Kovacs Lajos",
+            "phone": {
+              "areaCode": 30,
+              "countryCode": 36,
+              "phoneNumber": 1234567
+            }
+          },
+          "passengers": [
+            {
+              "birthDate": "1974-04-03",
+              "email": "aaa@gmail.com",
+              "firstName": "Janos",
+              "gender": "MALE",
+              "lastName": "Kovacs",
+              "namePrefix": "Mr"
+            }
+          ]
+        }
+
++ Response 200 (application/json)
+    + Attributes
+        + confirmation (String) – the ID of the booking, this is what the occupant can use at the hotel to refer to his booking
+        + pnr (String) – the PNR locator of the record in which the booking was made
+        
+    + Body
+        {
+            "confirmation": "305863919",
+            "pnr": "6JT3ZB"
+        }
+
+# /cars
+
+## Search Cars [POST]
++ Request (application/json)
+    + Attributes
+        + airport_code (String) – the IATA code of the airport to find available cars at
+        + start_date (String) – pickup date and time, in ISO format ex. 2014-12-24T12:00:00Z)
+        + end_date (String) – return date and time, in ISO format (ex. 2014-12-26T12:00:00Z)
+        + filters (Filter) – (optional) search filter for different car properties
+        
+    + Body
+        {
+          "airport_code": "LHR",
+          "start_date": "2015-03-01T00:00:00Z",
+          "end_date": "2015-03-04T00:00:00Z",
+          "filters": {
+            "type": [
+              "crossover"
+            ]
+          }
+        }
+
++ Response 200 (application/json)
+    + Body
+        {
+              "car_results": [
+                {
+                  "available": true,
+                  "traits": {
+                    "transmission": "manual",
+                    "air_conditioning": true,
+                    "type": "2/4 door car",
+                    "class": "mini"
+                  },
+                  "vehicle_id": "1_0_0",
+                  "vendor_name": "NATIONAL",
+                  "overage_fee": {
+                    "currency": "EUR",
+                    "amount": null,
+                    "unit": null,
+                    "included_distance": null
+                  },
+                  "price": {
+                    "currency": "EUR",
+                    "amount": "75.48"
+                  },
+                  "vendor_id": "0",
+                  "unlimited": true,
+                  "vendor_code": "ZL"
+                },
+                {
+                  "available": true,
+                  "traits": {
+                    "transmission": "manual",
+                    "air_conditioning": true,
+                    "type": "4-5 door car",
+                    "class": "compact"
+                  },
+                  "vehicle_id": "2_1_0",
+                  "vendor_name": "EUROPCAR",
+                  "overage_fee": {
+                    "currency": "EUR",
+                    "amount": "0.14",
+                    "unit": "Mile",
+                    "included_distance": 300
+                  },
+                  "price": {
+                    "currency": "EUR",
+                    "amount": "98.90"
+                  },
+                  "vendor_id": "1",
+                  "unlimited": false,
+                  "vendor_code": "EP"
+                }
+              ]
+            }
+
+# /masterdata/search
+## Summary
+* Search is for general usage; this will search through all location data and find appropriate entries for a given keyword, intended mostly to be used for autocompleting the location field for users.
+* Retrieval is the call used to retrieve all data of a certain type. This should not be used very often—data is cached for 24 hours, but downloading these once or twice a month should be sufficient.
+
+## Masterdata search [GET]
++ Request
+    + Attributes
+        + keyword – the string to find locations for
+        + limit – (optional) the number of results to retrieve (default: 10, maximum: 100)
+        + locales – (optional) the languages to search in in addition to English (which is on by default.) Multiple locale codes can be given, separated by commas (ex. ?locales=hu-HU,cs-CZ) See the available locale codes below.
+
++ Response 200 (application/json)
+    + Attributes
+        + locationSearchResult (SearchResult [ ]) – root container
+            + canonicalName – the complete name of the airport/multiairport
+            + htmlFragment – the canonical name, preformatted by bolding the searched substring. You can inject this string directly into your HTML source.
+            + iataCode – the code identifying the matched location—either an airport’s, or a city’s IATA code
+            + category – one of the following: airport, multiairport, locality, state, country
+            + cityName
+            + countryCode
+            + countryName
+
+    + Body
+        {
+          "locationSearchResult": [
+            {
+              "canonicalName": "Budapest, HU - Liszt Ferenc Intl (BUD)",
+              "category": "airport",
+              "cityName": "Budapest",
+              "countryCode": "HU",
+              "countryName": "Hungary",
+              "htmlFragment": "<strong>Bud</strong>apest, HU - Liszt Ferenc Intl (<strong>BUD</strong>)",
+              "iataCode": "BUD"
+            }
+          ]
+        }
+        
+# /masterdata/:category
+
+## Masterdata Retrieval [GET]
++ Request (application/json)
+    + Attributes
+        + keyword – the string to find locations for
+        + limit – (optional) the number of results to retrieve (default: 10, maximum: 100)
+        + locales – (optional) the languages to search in in addition to English (which is on by default.) Multiple locale codes can be given, separated by commas (ex. ?locales=hu-HU,cs-CZ) See the available locale codes below.
+
++ Response 200 (application/json)
+    + Attributes
+        + airlines
+        + airplanes
+        + airports
+        + categories
+        + cities
+        + localised_cities
+        + countries
+        + states
+        + hotel_chains
+        + hotels
+        + rule_links
+        + eticket_rules
+
+    + Body
+        {
+          "Airlines": [
+            {
+              "Active": "true",
+              "AirLineCode": "01",
+              "AirLineName": "RailEasy",
+              "ProviderType": "TravelFusion2Provider"
+            },
+            {
+              "Active": "true",
+              "AirLineCode": "08",
+              "AirLineName": "Air Southwest",
+              "CountryCode": "GB",
+              "ProviderType": "ERetailWebFareProvider"
+            }
+          ]
+        }
+
+# Data Structures
+
+## Person (object)
++ passengerType (string) - One of passenger types
++ quantity (number) – number of travelers of passengerType
+
+## Breakdown (object)
++ fare (Float[ ]) – total price of the tickets for passengers of type (including tax)
++ tax (Float[ ]) – total tax on the tickets for passengers of type
++ type (string) – type of passengers the breakdown is for, see (see PassengerTypes)
++ quantity (number) – number of passengers of type
++ ticketDesignators (TicketDesignator [ ]) – ticket designators applicable for passengers of type
+
+## Combination (object)
++ providerType (string) – the provider the result is from
++ bookingId (string) – the unique identifier of this combination (this is later used to identify the combination when booking, for example.)
++ firstLeg (Leg) – the outbound leg of the itinerary
++ returnLeg (Leg) – the inbound leg of the itinerary
++ serviceFeeAmount (Float) – ticket designator’s description
++ comfortScore (Comfort score) – the comfort score of the combination
+
+## Leg (object)
++ elapsedTime (String) – The total time between the leg’s first departure, and last arrival (including time spent waiting when transferring). It is given in the format HHMM.
++ flightSegments (Segment [ ]) – The list of segments this leg is made up of.
+
+## Segment (object)
++ departure (Stop) – data about the flight’s departure
++ arrival (Stop) – data about the flight’s arrival
++ aircraft (string) – Planned aircraft scheduled for the specific segment
++ availableSeats (Integer) – the number of seats available for this price tier—the maximum number we can know of is 9, so when 9 is returned, that means 9 or more seats are available.
++ cabin (string) – one of ‘economy’, ‘first’, or ‘business’
++ class (string) – an airline-specific identifier used in fare pricing. The code related to comfort score is cabin code.
++ marketingAirline (string) – two character IATA code of the marketing airline that publishes and markets the flight booked under its own airline designator and flight number. The marketing airline should be displayed to travelers as the primary airline.
++ operatingAirline (string) – two character IATA code of the airline operating this specific segment
++ marketingAirlineName (string) – The name of the airline that publishes and markets the flight booked under its own airline designator and flight number
++ operatingAirlineName (string) – The airline operating this specific segment
++ flightNumber (string) - the flight number for the specific flight, normally displayed as XXYYYY, where XX is the marketing airline’s code, and YYYY is this number
+
+## Stop (object)
++ dateTime (string) – time of the stop (in ISO format)
++ airport (Airport) – location of the stop
+    + terminal – the relevant terminal of the airport specified below (this will be null is the airport has only one terminal)
+    + name (String) – official airport name of the specific stop
+    + code – the three letter IATA code of the airport the stop is at
++ city (City) – location city name of the stop
+    + name (String) – official city name of the specific stop
+    + code – the three letter IATA code of the city the stop belongs to
+
+## FlightDetails (object)
++ rulesLink (string) – link to the airline’s rules page (hosted on the airline’s website)
++ baggageTiers (BaggageTier [ ]) – contains the different options the passenger has for bringing baggages along. The book request will need to contain the ID of one of these objects in the baggage field.
++ carryOnBaggageTiers (CarryOnBaggageTier) – contains the different options of cabin baggages. The book request will need to contain the ID of one of these objects in the carry-on baggage field.
++ fields (Form Fields) – contains field validation data
++ price (Price) – contains the final price of the ticket (including the credit card surcharge, but not the baggages)
++ result (FlightResult) – contains an exact copy of the result from the Search call’s response
++ options (FlightOptions) – contains whether certain options are enabled for this flight
++ surcharge (Price) – contains the credit card surcharge for this flight
+
+## BaggageTier (object)
++ tier (string) – the ID for this baggage tier (this is used to refer to it when booking)
++ price (Price) – contains the price of the baggage tier
++ max_weights (Float [ ]) – the maximum weight of each piece of baggage a passenger can take in this tier in kg, can be an empty array if there’s no limit. Having multiple items in this array means that for the specified price, the passenger can check in as many baggages as there are items in the array.
+
+## CarryOnBaggageTier (object)
++ tier (string) – the ID for this baggage tier (this is used to refer to it when booking)
++ price (Price) – contains the price of the baggage tier
++ description (String) – A basic description of the carry-on baggage’s size, e.g. Small cabin bag. Exact dimensions should be checked on the airline’s website.
+
+## Address (object)
++ addressLine1 (string)
++ addressLine2 (string) – (optional)
++ addressLine3 (string) – (optional)
++ cityName (string)
++ zipCode (string)
++ countryCode (string) – the two letter code of the country
+
+## Phone (object)
++ countryCode (string)
++ areaCode (string)
++ phoneNumber (string)
+
+## Passenger (object)
++ irthDate (string) – format is YYYY-MM-DD
++ document (Document) – data about the identifying document the passenger wishes to travel with
++ email (string)
++ namePrefix (string) – one of Mr, Ms, or Mrs
++ firstName (string)
++ lastName (string)
++ gender (string) – one of MALE or FEMALE
++ passengerTypeCode (string) – one of PassengerTypes
++ baggageTier (string) – one of the tier IDs returned in the flight details response
++ carryOnBaggageTier (string) – one of the tier IDs returned in the flight details response
+
+## Document (object)
++ id (String) – document’s ID number
++ dateOfExpiry (string) – format is YYYY-MM-DD
++ issueCountry (string) – two letter code of issuing country
++ type (String) – one of DocumentTypes
+
+## Rule (object)
++ code (string) - the machine readable identifier code for the given section in the rules
++ title (string) - the human readable section title for the block
++ text (string) - the section’s raw rule text body
+
+## Hotel (object)
++ hotel_id (string) –
++ hotel_name (string) –
++ chain_name (string) –
++ amenities (Amenities) – An associative array mapping each amenity listed below to a boolean value based on whether the hotel has given amenity. List of keys: ‘restaurant’, ‘bar’, ‘laundry’, ‘room_service’, ‘safe_deposit_box’, ‘parking’, ‘swimming’, ‘internet’, ‘gym’, ‘air_conditioning’, ‘business_center’, ‘meeting_rooms’, ‘spa’, ‘pets_allowed’
++ latitude (Float) – The latitude component of the coordinates of the hotel
++ longitude (Float) – The latitude component of the coordinates of the hotel
++ max_rate (Price)
+    + amount (Float) –
+    + currency (string) –
++ min_rate (Price) –
+    + amount (Float) –
+    + currency (string) –
++ stars (number) – The amount of stars the hotel has been awarded
++ thumbnail (string) – Link to a small image representing the hotel
+
+## HotelLocation (object)
++ country (string)
++ state (string)
++ city (string)
++ address (string)
++ zip_code (string)
++ area (string) – one of: ‘north’, ‘east’, ‘south’, ‘west’, ‘downtown’, ‘airport’, ‘resort’
++ recommended_transport (string) – one of: ‘boat’, ‘coach’, ‘train’, ‘free’, ‘helicopter’, ‘limousine’, ‘plane’, ‘rental car’, ‘taxi’, ‘subway’, ‘walking’
+
+## Room (object)
++ room_id (string) – ID of the room in question
++ booking_id (string) – ID to use when booking this room
++ price (RoomPrice) – Contains data about the price of the room
+    + amount (string) – !!! float !!!
+    + covers (string) – One of ‘day’ or ‘trip’, specifies which duration the price covers
+    + rate_varies (boolean) – True if the rate is not going to be the same for each day during the occupant’s stay. In this case, the above given amount is the highest one during the trip.
++ room_type (string) – !!! traits !!! Contains the traits of the given room, including the category, bed/shower availability, whether smoking is allowed, and whether it is a suite. The keys are the following: ‘bath’, ‘shower’, ‘nonsmoking’, ‘suite’, ‘category’. The first four have boolean values, while ‘category’ can be one of: ‘minimum’, ‘standard’, ‘moderate’, ‘superior’, ‘executive’
++ bed_type (string) – One of: ‘single’, ‘double’, ‘twin’, ‘king size’, ‘queen size’, ‘pullout’, ‘water bed’
++ description (string) – Contains a short text about the room
++ quantity (number) – Contains the amount left to be booked of this room
+
+## Person (object)
++ birthDate (string) – format is YYYY-MM-DD
++ email (string)
++ namePrefix (string) – one of Mr, Ms, or Mrs
++ firstName (string)
++ lastName (string)
++ gender (string) – one of MALE or FEMALE
+
+## Filter (object)
++ type (string [ ]) – one of the Available Car Types listed below
+
+## Location (object)
++ city (string)
++ address (string)
++ phone (string)
++ fax (string)
++ opens_at (string) – In the format ‘HH:MM’
++ closes_at (string) – In the format ‘HH:MM’
+
+## Contact (object)
++ address (Address) – address of the entity in question
++ email (string) – email of the entity in question
++ name (string) – name of the entity in question
++ phone (Phone) – phone number of the entity in question
