@@ -52,7 +52,7 @@ In most cases you’ll want to pass 00:00:00 as time for both your departure and
         + toLocation (string) – destination, given as IATA code
         + departureDate (string) – date of departure, in ISO format, including a time code, even though whole day will be searched by default
         + returnDate (string) – (optional) date of return, in ISO format, including a time code, even though whole day will be searched by default
-        + persons (Person) – a list of passengers, grouped by type code, containing Persons
+        + persons (FlightPerson) – a list of passengers, grouped by type code, containing Persons
         + fromAirport (string) – (optional) departure airport, given as IATA code, must be in the city specified in fromLocation
         + toAirport (string) – (optional) destination airport, given as IATA code, must be in the city specified in toLocation
         + providerType (string) – (optional) type of results to retrieve
@@ -856,7 +856,7 @@ The only supported payment provider at the moment is PayU. When we receive a tra
         + bookBasket (string [ ]) – an array containing only the booking ID of the Room to book
         + billingInfo (Contact) – billing info for the booking
         + contactInfo (Contact) – contact info for the booking
-        + persons (Person [ ]) – the list of occupants
+        + persons (HotelPerson [ ]) – the list of occupants
 
     + Body
 
@@ -1079,7 +1079,7 @@ The only supported payment provider at the moment is PayU. When we receive a tra
 
 # Data Structures
 
-## Person (object)
+## FlightPerson (object)
 + passengerType (string) - One of passenger types
 + quantity (number) – number of travelers of passengerType
 
@@ -1214,7 +1214,7 @@ The only supported payment provider at the moment is PayU. When we receive a tra
 + description (string) – Contains a short text about the room
 + quantity (number) – Contains the amount left to be booked of this room
 
-## Person (object)
+## HotelPerson (object)
 + birthDate (string) – format is YYYY-MM-DD
 + email (string)
 + namePrefix (string) – one of Mr, Ms, or Mrs
