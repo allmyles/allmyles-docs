@@ -151,7 +151,9 @@ In most cases you’ll want to pass 00:00:00 as time for both your departure and
               ]
             }
 
+
 ## Flights Details
+
 + Request Details (application/json)
     + Parameters
       + rulesLink (String) – link to the airline’s rules page (hosted on the airline’s website)
@@ -404,7 +406,7 @@ Two important notes:
 
 + Request (application/json)
     + Attributes
-        + tickets (object [ ]) – the purchased tickets
+        + tickets (array [object]) – the purchased tickets
         + passenger (string) – the name of the passenger the ticket was purchased for
         + passenger_type (string) – one of PassengerTypes
         + ticket (string) – the ticket number which allows the passenger to actually board the plane
@@ -650,10 +652,10 @@ This call returns the details of a booking identified by a PNR locator. This mak
         + hotel_code (string)
         + hotel_name (string)
         + location (HotelLocation) – contains info about the hotel’s location.
-        + points_of_interest (object [ ]) – contains a list of notable locations around the hotel
+        + points_of_interest (array [object]) – contains a list of notable locations around the hotel
         + description (string) – A short text describing the hotel
         + contact_info (object) –
-            + phone_numbers (string [ ])
+            + phone_numbers (array[string])
             + email (string)
             + website (string)
         + price (object) – contains the lowest and highest rates available for a room at this hotel
@@ -661,11 +663,11 @@ This call returns the details of a booking identified by a PNR locator. This mak
             + maximum (number) – Rate of the most expensive room at the hotel
             + currency (string)
         + thumbnail (string) – Contains a URL pointing to a small image of the hotel
-        + photos (string [ ]) – Contains an array of URLs pointing to a larger photos of the hotel
+        + photos (array[string]) – Contains an array of URLs pointing to a larger photos of the hotel
         + amenities (object) – Contains an associative array, mapping each amenity listed below to a boolean value based on whether the hotel has given amenity. List of keys: ‘restaurant’, ‘bar’, ‘laundry’, ‘room_service’, ‘safe_deposit_box’, ‘parking’, ‘swimming’, ‘internet’, ‘gym’, ‘air_conditioning’, ‘business_center’, ‘meeting_rooms’, ‘spa’, ‘pets_allowed’
         + stars (number) – Contains the amount of stars this hotel has been awarded.
         + rules (object) – Contains an associative array, mapping each rule type listed below to the relevant text. List of keys: ‘guarantee’, ‘safety’, ‘extra_occupants’, ‘policy’, ‘charges’, ‘deposit’, ‘meals’, ‘stay’, ‘tax’
-        + rooms (Room [ ]) – contains the available rooms
+        + rooms (array [Room]) – contains the available rooms
 
     + Body
 
@@ -800,13 +802,13 @@ This call returns the details of a booking identified by a PNR locator. This mak
 # /hotels/:hotel_id/rooms/:room_id
 
 ## Room Details [GET]
-+ Response
++ Response 200
     + Attributes
         + rules (object) – Contains an associative array, mapping each rule type listed below to the relevant text, or a relevant boolean value. List of keys: ‘cancellation’, ‘notes’, ‘needs_guarantee’, ‘needs_deposit’
         + price (object) –
             + total (number) – The total cost of booking the hotel for the guest. This includes the charge we require right now.
             + charge (number) – The amount of money we need to charge the guest to complete the booking. If this amount is zero, no transaction needs to be made and you can go on to booking straight away.
-        + includes (string [ ]) – Contains what services or extras are included in the price.
+        + includes (array [string]) – Contains what services or extras are included in the price.
 
     + Body
 
@@ -838,7 +840,7 @@ The only supported payment provider at the moment is PayU. When we receive a tra
 + Request (application/json)
     + Attributes
         + payuId (string) – the transaction ID identifying the successful transaction at PayU
-        + basket (string[ ]) – the booking IDs the payment is for
+        + basket (array[string]) – the booking IDs the payment is for
 
     + Body
 
@@ -853,10 +855,10 @@ The only supported payment provider at the moment is PayU. When we receive a tra
 
 + Request (application/json)
     + Attributes
-        + bookBasket (string [ ]) – an array containing only the booking ID of the Room to book
+        + bookBasket (array [string]) – an array containing only the booking ID of the Room to book
         + billingInfo (Contact) – billing info for the booking
         + contactInfo (Contact) – contact info for the booking
-        + persons (HotelPerson [ ]) – the list of occupants
+        + persons (array [HotelPerson]) – the list of occupants
 
     + Body
 
@@ -1009,7 +1011,7 @@ The only supported payment provider at the moment is PayU. When we receive a tra
 
 + Response 200 (application/json)
     + Attributes
-        + locationSearchResult (SearchResult [ ]) – root container
+        + locationSearchResult (array [SearchResult]) – root container
             + canonicalName – the complete name of the airport/multiairport
             + htmlFragment – the canonical name, preformatted by bolding the searched substring. You can inject this string directly into your HTML source.
             + iataCode – the code identifying the matched location—either an airport’s, or a city’s IATA code
@@ -1084,11 +1086,11 @@ The only supported payment provider at the moment is PayU. When we receive a tra
 + quantity (number) – number of travelers of passengerType
 
 ## Breakdown (object)
-+ fare (number[ ]) – total price of the tickets for passengers of type (including tax)
-+ tax (number[ ]) – total tax on the tickets for passengers of type
++ fare (array [number]) – total price of the tickets for passengers of type (including tax)
++ tax (array [number]) – total tax on the tickets for passengers of type
 + type (string) – type of passengers the breakdown is for, see (see PassengerTypes)
 + quantity (number) – number of passengers of type
-+ ticketDesignators (TicketDesignator [ ]) – ticket designators applicable for passengers of type
++ ticketDesignators (array [TicketDesignator]) – ticket designators applicable for passengers of type
 
 ## Combination (object)
 + providerType (string) – the provider the result is from
@@ -1100,7 +1102,7 @@ The only supported payment provider at the moment is PayU. When we receive a tra
 
 ## Leg (object)
 + elapsedTime (string) – The total time between the leg’s first departure, and last arrival (including time spent waiting when transferring). It is given in the format HHMM.
-+ flightSegments (Segment [ ]) – The list of segments this leg is made up of.
++ flightSegments (array [Segment]) – The list of segments this leg is made up of.
 
 ## Segment (object)
 + departure (Stop) – data about the flight’s departure
@@ -1127,7 +1129,7 @@ The only supported payment provider at the moment is PayU. When we receive a tra
 
 ## FlightDetails (object)
 + rulesLink (string) – link to the airline’s rules page (hosted on the airline’s website)
-+ baggageTiers (BaggageTier [ ]) – contains the different options the passenger has for bringing baggages along. The book request will need to contain the ID of one of these objects in the baggage field.
++ baggageTiers (array [BaggageTier]) – contains the different options the passenger has for bringing baggages along. The book request will need to contain the ID of one of these objects in the baggage field.
 + carryOnBaggageTiers (CarryOnBaggageTier) – contains the different options of cabin baggages. The book request will need to contain the ID of one of these objects in the carry-on baggage field.
 + fields (Form Fields) – contains field validation data
 + price (Price) – contains the final price of the ticket (including the credit card surcharge, but not the baggages)
@@ -1138,7 +1140,7 @@ The only supported payment provider at the moment is PayU. When we receive a tra
 ## BaggageTier (object)
 + tier (string) – the ID for this baggage tier (this is used to refer to it when booking)
 + price (Price) – contains the price of the baggage tier
-+ max_weights (number [ ]) – the maximum weight of each piece of baggage a passenger can take in this tier in kg, can be an empty array if there’s no limit. Having multiple items in this array means that for the specified price, the passenger can check in as many baggages as there are items in the array.
++ max_weights (array [number]) – the maximum weight of each piece of baggage a passenger can take in this tier in kg, can be an empty array if there’s no limit. Having multiple items in this array means that for the specified price, the passenger can check in as many baggages as there are items in the array.
 
 ## CarryOnBaggageTier (object)
 + tier (string) – the ID for this baggage tier (this is used to refer to it when booking)
@@ -1223,7 +1225,7 @@ The only supported payment provider at the moment is PayU. When we receive a tra
 + gender (string) – one of MALE or FEMALE
 
 ## Filter (object)
-+ type (string [ ]) – one of the Available Car Types listed below
++ type (array [string]) – one of the Available Car Types listed below
 
 ## Location (object)
 + city (string)
@@ -1247,12 +1249,12 @@ The only supported payment provider at the moment is PayU. When we receive a tra
 + bookingId (string) – the booking ID of the Combination to book
 + billingInfo (Contact) – billing info for ticket creation
 + contactInfo (Contact) – contact info for ticket creation
-+ passengers (Passenger [ ]) – the list of passengers
++ passengers (array [Passenger]) – the list of passengers
 
 ## Form Fields (object)
 + tag (string) – HTML tag type, in this case select
-+ options (string [ ]) – empty if `tag` equals `input`
-+ attributes (Attributes [ ]) – attributes of the field
++ options (array [string]) – empty if `tag` equals `input`
++ attributes (array [Attributes]) – attributes of the field
 
 ## Attributes (object)
 + name (string) – one of Field Names
@@ -1276,7 +1278,7 @@ The only supported payment provider at the moment is PayU. When we receive a tra
 + countryName
 
 ## PNR (object)
-+ passengers (Passenger [ ]) – the list of passengers
++ passengers (array [Passenger]) – the list of passengers
 + birth_date (string) – format is YYYY-MM-DD
 + traditional_ticket (string) - the ticket number which allows the passenger to actually board the plane (or null if flight is LCC)
 + type (string) – one of PassengerTypes
