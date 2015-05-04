@@ -396,6 +396,8 @@ The only supported payment provider at the moment is PayU. When we receive a tra
                     "basket": ["2_1_0"]
                 }
 
++ Response 204
+
 # /tickets/{booking_id}
 
 ## Ticketing [GET]
@@ -474,7 +476,9 @@ Two important notes:
                   }
                 }
 
-# /tickets/:booking_id/status
++ Response 204
+
+# /tickets/{booking_id/status}
 
 This call enables checking the result of a ticketing request. This is useful when it’s unclear whether the ticketing process went through, due to a failure at external providers, in Allmyles’ systems, on the client’s server, or anywhere in between. The request will identify the correct workflow based on the cookie header’s contents, which must match whatever was sent in the ticket request.
 
@@ -513,7 +517,7 @@ The periodic checks should be made at most once every minute.
                     }
                 }
 
-# /flights/:booking_id/rules
+# /flights/{booking_id/rules}
 
 ## Rules [GET]
 This call returns the terms and conditions of the flight in question, or a link to them if the raw text isn’t available (in case of LCC flights).
@@ -543,7 +547,7 @@ This call returns the terms and conditions of the flight in question, or a link 
                   }
                 }
 
-# /books/:pnr_locator
+# /books/{pnr_locator}
 
 ## Get Booking [GET]
 This call returns the details of a booking identified by a PNR locator. This makes it possible to re-open an expired session and send a ticketing request based on the PNR locator after the initial session is closed.
@@ -643,7 +647,7 @@ This call returns the details of a booking identified by a PNR locator. This mak
                   ]
                 }
 
-# /hotels/:hotel_id
+# /hotels/{hotel_id}
 
 ## Hotel Details [GET]
 + Response 200 (application/json)
@@ -800,7 +804,7 @@ This call returns the details of a booking identified by a PNR locator. This mak
                   }
                 }
 
-# /hotels/:hotel_id/rooms/:room_id
+# /hotels/{hotel_id/rooms/:room_id}
 
 ## Room Details [GET]
 + Response 200
@@ -849,6 +853,8 @@ The only supported payment provider at the moment is PayU. When we receive a tra
                     "payuId": "12345678",
                     "basket": ["2_1_0"]
                 }
+
++ Response 204
 
 # /books
 
@@ -1036,7 +1042,7 @@ The only supported payment provider at the moment is PayU. When we receive a tra
                     }
                   ]
                 }
-# /masterdata/:category
+# {/masterdata/:category}
 
 ## Masterdata Retrieval [GET]
 + Request (application/json)
