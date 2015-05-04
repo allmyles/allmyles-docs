@@ -155,15 +155,15 @@ In most cases you’ll want to pass 00:00:00 as time for both your departure and
 ## Flights Details
 
 + Request Details (application/json)
-    + Parameters
-      + rulesLink (String) – link to the airline’s rules page (hosted on the airline’s website)
-      + baggageTiers (BaggageTier [ ]) – contains the different options the passenger has for bringing baggages along. The book request will need to contain the ID of one of these objects in the baggage field.
-      + carryOnBaggageTiers (CarryOnBaggageTier) – contains the different options of cabin baggages. The book request will need to contain the ID of one of these objects in the carry-on baggage field.
-      + fields (Form Fields) – contains field validation data
-      + price (Price) – contains the final price of the ticket (including the credit card surcharge, but not the baggages)
-      + result (FlightResult) – contains an exact copy of the result from the Search call’s response
-      + options (FlightOptions) – contains whether certain options are enabled for this flight
-      + surcharge (Price) – contains the credit card surcharge for this flight
+    + Attributes
+        + rulesLink (string) – link to the airline’s rules page (hosted on the airline’s website)
+        + baggageTiers (array [BaggageTier]) – contains the different options the passenger has for bringing baggages along. The book request will need to contain the ID of one of these objects in the baggage field.
+        + carryOnBaggageTiers (CarryOnBaggageTier) – contains the different options of cabin baggages. The book request will need to contain the ID of one of these objects in the carry-on baggage field.
+        + fields (Form Fields) – contains field validation data
+        + price (Price) – contains the final price of the ticket (including the credit card surcharge, but not the baggages)
+        + result (FlightResult) – contains an exact copy of the result from the Search call’s response
+        + options (object) – contains whether certain options are enabled for this flight
+        + surcharge (Price) – contains the credit card surcharge for this flight
 
 + Response 200 (application/json)
       + Body
@@ -396,7 +396,7 @@ The only supported payment provider at the moment is PayU. When we receive a tra
                     "basket": ["2_1_0"]
                 }
 
-# /tickets/:booking_id
+# /tickets/{booking_id}
 
 ## Ticketing [GET]
 Two important notes:
@@ -475,6 +475,7 @@ Two important notes:
                 }
 
 # /tickets/:booking_id/status
+
 This call enables checking the result of a ticketing request. This is useful when it’s unclear whether the ticketing process went through, due to a failure at external providers, in Allmyles’ systems, on the client’s server, or anywhere in between. The request will identify the correct workflow based on the cookie header’s contents, which must match whatever was sent in the ticket request.
 
 The periodic checks should be made at most once every minute.
