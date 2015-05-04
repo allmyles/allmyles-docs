@@ -1132,7 +1132,7 @@ The only supported payment provider at the moment is PayU. When we receive a tra
 + fields (Form Fields) – contains field validation data
 + price (Price) – contains the final price of the ticket (including the credit card surcharge, but not the baggages)
 + result (FlightResult) – contains an exact copy of the result from the Search call’s response
-+ options (FlightOptions) – contains whether certain options are enabled for this flight
++ options (object) – contains whether certain options are enabled for this flight
 + surcharge (Price) – contains the credit card surcharge for this flight
 
 ## BaggageTier (object)
@@ -1242,3 +1242,9 @@ The only supported payment provider at the moment is PayU. When we receive a tra
 ## Price (object)
 + amount (number)
 + currency (string)
+
+## FlightResult (object)
++ bookingId (string) – the booking ID of the Combination to book
++ billingInfo (Contact) – billing info for ticket creation
++ contactInfo (Contact) – contact info for ticket creation
++ passengers (Passenger [ ]) – the list of passengers
