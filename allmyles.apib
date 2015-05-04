@@ -404,7 +404,7 @@ Two important notes:
 
 + Request (application/json)
     + Attributes
-        + tickets (Ticket [ ]) – the purchased tickets
+        + tickets (object [ ]) – the purchased tickets
         + passenger (string) – the name of the passenger the ticket was purchased for
         + passenger_type (string) – one of PassengerTypes
         + ticket (string) – the ticket number which allows the passenger to actually board the plane
@@ -650,10 +650,10 @@ This call returns the details of a booking identified by a PNR locator. This mak
         + hotel_code (string)
         + hotel_name (string)
         + location (HotelLocation) – contains info about the hotel’s location.
-        + points_of_interest (POI [ ]) – contains a list of notable locations around the hotel
+        + points_of_interest (object [ ]) – contains a list of notable locations around the hotel
         + description (string) – A short text describing the hotel
-        + contact_info (HotelContactInfo) –
-            + phone_numbers (String [ ])
+        + contact_info (object) –
+            + phone_numbers (string [ ])
             + email (string)
             + website (string)
         + price (object) – contains the lowest and highest rates available for a room at this hotel
@@ -662,9 +662,9 @@ This call returns the details of a booking identified by a PNR locator. This mak
             + currency (string)
         + thumbnail (string) – Contains a URL pointing to a small image of the hotel
         + photos (string [ ]) – Contains an array of URLs pointing to a larger photos of the hotel
-        + amenities (Amenities) – Contains an associative array, mapping each amenity listed below to a boolean value based on whether the hotel has given amenity. List of keys: ‘restaurant’, ‘bar’, ‘laundry’, ‘room_service’, ‘safe_deposit_box’, ‘parking’, ‘swimming’, ‘internet’, ‘gym’, ‘air_conditioning’, ‘business_center’, ‘meeting_rooms’, ‘spa’, ‘pets_allowed’
+        + amenities (object) – Contains an associative array, mapping each amenity listed below to a boolean value based on whether the hotel has given amenity. List of keys: ‘restaurant’, ‘bar’, ‘laundry’, ‘room_service’, ‘safe_deposit_box’, ‘parking’, ‘swimming’, ‘internet’, ‘gym’, ‘air_conditioning’, ‘business_center’, ‘meeting_rooms’, ‘spa’, ‘pets_allowed’
         + stars (number) – Contains the amount of stars this hotel has been awarded.
-        + rules (Rules) – Contains an associative array, mapping each rule type listed below to the relevant text. List of keys: ‘guarantee’, ‘safety’, ‘extra_occupants’, ‘policy’, ‘charges’, ‘deposit’, ‘meals’, ‘stay’, ‘tax’
+        + rules (object) – Contains an associative array, mapping each rule type listed below to the relevant text. List of keys: ‘guarantee’, ‘safety’, ‘extra_occupants’, ‘policy’, ‘charges’, ‘deposit’, ‘meals’, ‘stay’, ‘tax’
         + rooms (Room [ ]) – contains the available rooms
 
     + Body
@@ -802,7 +802,7 @@ This call returns the details of a booking identified by a PNR locator. This mak
 ## Room Details [GET]
 + Response
     + Attributes
-        + rules (Rules) – Contains an associative array, mapping each rule type listed below to the relevant text, or a relevant boolean value. List of keys: ‘cancellation’, ‘notes’, ‘needs_guarantee’, ‘needs_deposit’
+        + rules (object) – Contains an associative array, mapping each rule type listed below to the relevant text, or a relevant boolean value. List of keys: ‘cancellation’, ‘notes’, ‘needs_guarantee’, ‘needs_deposit’
         + price (object) –
             + total (number) – The total cost of booking the hotel for the guest. This includes the charge we require right now.
             + charge (number) – The amount of money we need to charge the guest to complete the booking. If this amount is zero, no transaction needs to be made and you can go on to booking straight away.
@@ -1096,7 +1096,7 @@ The only supported payment provider at the moment is PayU. When we receive a tra
 + firstLeg (Leg) – the outbound leg of the itinerary
 + returnLeg (Leg) – the inbound leg of the itinerary
 + serviceFeeAmount (number) – ticket designator’s description
-+ comfortScore (Comfort score) – the comfort score of the combination
++ comfortScore (object) – the comfort score of the combination
 
 ## Leg (object)
 + elapsedTime (string) – The total time between the leg’s first departure, and last arrival (including time spent waiting when transferring). It is given in the format HHMM.
@@ -1117,11 +1117,11 @@ The only supported payment provider at the moment is PayU. When we receive a tra
 
 ## Stop (object)
 + dateTime (string) – time of the stop (in ISO format)
-+ airport (Airport) – location of the stop
-    + terminal – the relevant terminal of the airport specified below (this will be null is the airport has only one terminal)
++ airport (object) – location of the stop
+    + terminal (string) – the relevant terminal of the airport specified below (this will be null is the airport has only one terminal)
     + name (string) – official airport name of the specific stop
     + code – the three letter IATA code of the airport the stop is at
-+ city (City) – location city name of the stop
++ city (object) – location city name of the stop
     + name (string) – official city name of the specific stop
     + code – the three letter IATA code of the city the stop belongs to
 
@@ -1248,3 +1248,39 @@ The only supported payment provider at the moment is PayU. When we receive a tra
 + billingInfo (Contact) – billing info for ticket creation
 + contactInfo (Contact) – contact info for ticket creation
 + passengers (Passenger [ ]) – the list of passengers
+
+## Form Fields (object)
++ tag (string) – HTML tag type, in this case select
++ options (string [ ]) – empty if `tag` equals `input`
++ attributes (Attributes [ ]) – attributes of the field
+
+## Attributes (object)
++ name (string) – one of Field Names
++ data-label (string) – user friendly field label
++ type (string) – type of input data (†ext or email)
++ maxLength (number)
++ required (string) – if present, field is required
++ pattern (string) – regex pattern of valid data
+
+## TicketDesignator (object)
++ code (string) – ticket designator’s code
++ extension (string) – ticket designator’s description
+
+## SearchResult (object)
++ canonicalName – the complete name of the airport/multiairport
++ htmlFragment – the canonical name, preformatted by bolding the searched substring. You can inject this string directly into your HTML source.
++ iataCode – the code identifying the matched location—either an airport’s, or a city’s IATA code
++ category – one of the following: airport, multiairport, locality, state, country
++ cityName
++ countryCode
++ countryName
+
+## PNR (object)
++ passengers (Passenger [ ]) – the list of passengers
++ birth_date (string) – format is YYYY-MM-DD
++ traditional_ticket (string) - the ticket number which allows the passenger to actually board the plane (or null if flight is LCC)
++ type (string) – one of PassengerTypes
++ email (string)
++ name (string) – the name of the passenger the booking was made for
++ id (string) – the PNR locator which identifies the booking
++ lcc_ticket (string) – the ticket number which allows the passenger to actually board the plane (or null if flight is traditional)
