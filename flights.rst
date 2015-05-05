@@ -752,11 +752,11 @@ Request
 .. http:post:: /books
 
     :JSON Parameters:
-        - **bookingId** (*String*) -- the booking ID of the :ref:`Combination`
+        - **bookBasket** (*String*) -- the booking ID of the :ref:`Combination`
           to book
         - **billingInfo** (:ref:`Flight_Contact`) -- billing info for ticket creation
         - **contactInfo** (:ref:`Flight_Contact`) -- contact info for ticket creation
-        - **passengers** (:ref:`Passenger` *\[ \]*) -- the list of passengers
+        - **persons** (:ref:`Passenger` *\[ \]*) -- the list of passengers
 
 .. _Flight_Contact:
 
@@ -807,9 +807,9 @@ Passenger
         - **lastName** (*String*)
         - **gender** (*String*) -- one of ``MALE`` or ``FEMALE``
         - **passengerTypeCode** (*String*) -- one of :ref:`PassengerTypes`
-        - **baggageTier** (*String*) -- one of the tier IDs returned in the
+        - **baggage** (*String*) -- one of the tier IDs returned in the
           flight details response
-        - **carryOnBaggageTier** (*String*) -- one of the tier IDs returned
+        - **carryOnBaggage** (*String*) -- one of the tier IDs returned
           in the flight details response
 
 .. _FlightDocument:
@@ -887,7 +887,7 @@ Request
     .. sourcecode:: json
 
         {
-          "bookingId": "1_0_0",
+          "bookBasket": ["1_0_0"],
           "billingInfo": {
             "address": {
               "addressLine1": "Váci út 13-14",
@@ -917,10 +917,10 @@ Request
               "phoneNumber": "1234567"
             }
           },
-          "passengers": [
+          "persons": [
             {
-              "baggageTier": "0",
-              "carryOnBaggageTier": "1",
+              "baggage": "0",
+              "carryOnBaggage": "1",
               "birthDate": "1974-04-03",
               "document": {
                 "dateOfExpiry": "2016-09-03",
