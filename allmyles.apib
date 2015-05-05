@@ -282,35 +282,6 @@ In most cases you’ll want to pass 00:00:00 as time for both your departure and
               }
             }
 
-+ Response 200 (application/json)
-  + Body
-
-              {
-                "bookingReferenceId": "req-cfd7963b187a4fe99702c0373c89cb16",
-                "contactInfo": {
-                  "address": {
-                    "city": "Budapest",
-                    "countryCode": "HU",
-                    "line1": "Madach ut 13-14",
-                    "line2": null,
-                    "line3": null
-                  },
-                  "email": "testy@gmail.com",
-                  "name": "Kovacs Lajos",
-                  "phone": {
-                    "areaCode": "30",
-                    "countryCode": "36",
-                    "number": "1234567"
-                  }
-                },
-                "flightData": {
-                  "_comment": "trimmed in example for brevity's sake"
-                },
-                "lastTicketingDate": "2014-05-16T23:59:59Z",
-                "pnr": "6YESST"
-              }
-
-
 # /tickets/{booking_id}
 
 ## Ticketing [GET]
@@ -391,7 +362,7 @@ Two important notes:
 
 + Response 204
 
-# /tickets/{booking_id/status}
+# /tickets/:booking_id/status
 
 This call enables checking the result of a ticketing request. This is useful when it’s unclear whether the ticketing process went through, due to a failure at external providers, in Allmyles’ systems, on the client’s server, or anywhere in between. The request will identify the correct workflow based on the cookie header’s contents, which must match whatever was sent in the ticket request.
 
@@ -430,7 +401,7 @@ The periodic checks should be made at most once every minute.
                     }
                 }
 
-# /flights/{booking_id/rules}
+# /flights/:booking_id/rules
 
 ## Rules [GET]
 This call returns the terms and conditions of the flight in question, or a link to them if the raw text isn’t available (in case of LCC flights).
@@ -717,7 +688,7 @@ This call returns the details of a booking identified by a PNR locator. This mak
                   }
                 }
 
-# /hotels/{hotel_id/rooms/{room_id}}
+# /hotels/:hotel_id/rooms/:room_id
 
 ## Room Details [GET]
 + Response 200
