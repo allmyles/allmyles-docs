@@ -47,7 +47,7 @@ Long running requests, such as a flight search use asynchronous calls. This mean
 In most cases you’ll want to pass 00:00:00 as time for both your departure and your return date. Time filtering constraints will be very strict otherwise, often resulting in no matches for your query.
 
 + Request Search (application/json)
-    + Attributies
+    + Attributes
         + fromLocation (string) – departure location, given as IATA code
         + toLocation (string) – destination, given as IATA code
         + departureDate (string) – date of departure, in ISO format, including a time code, even though whole day will be searched by default
@@ -56,7 +56,7 @@ In most cases you’ll want to pass 00:00:00 as time for both your departure and
         + fromAirport (string) – (optional) departure airport, given as IATA code, must be in the city specified in fromLocation
         + toAirport (string) – (optional) destination airport, given as IATA code, must be in the city specified in toLocation
         + providerType (string) – (optional) type of results to retrieve
-        + preferredAirlines (string [ ]) – (optional) list of airlines to filter results to, given as their two character IATA code
+        + preferredAirlines (array [string]) – (optional) list of airlines to filter results to, given as their two character IATA code
         + extraDays (number) – (optional) number of days to call Flexible Date Search with, between 1-3
 
 
@@ -288,11 +288,11 @@ In most cases you’ll want to pass 00:00:00 as time for both your departure and
 When booking LCC flights, the Allmyles API does not send the book request to the external provider until the ticketing call arrives, so there’s no response—an HTTP 204 No Content status code is returned.
 
 + Request Booking (application/json)
-  + Attributies
+  + Attributes
         + bookingId (string) – the booking ID of the Combination to book
         + billingInfo (Contact) – billing info for ticket creation
         + contactInfo (Contact) – contact info for ticket creation
-        + passengers (Passenger [ ]) – the list of passengers
+        + passengers  (array [Passenger]) – the list of passengers
 
   + Body
 
@@ -384,9 +384,9 @@ If payment is required—that is, if the flight is an LCC one—this is where Al
 The only supported payment provider at the moment is PayU. When we receive a transaction ID that points to a successful payment by the passenger, we essentially take that money from PayU, and forward it to the provider to buy a ticket in the Ticketing step.
 
 + Request Payment (application/json)
-    + Attributies
+    + Attributes
         + payuId (string) – the transaction ID identifying the successful transaction at PayU
-        + basket (string[ ]) – the booking IDs the payment is for
+        + basket (array [string]) – the booking IDs the payment is for
 
     + Body
 
@@ -522,10 +522,10 @@ The periodic checks should be made at most once every minute.
 This call returns the terms and conditions of the flight in question, or a link to them if the raw text isn’t available (in case of LCC flights).
 
 + Response 200 (appication/json)
-    + Attributies
-        + rulesResultSet (RulesResultSet) – root container
-        + rules (Rule [ ]) – contains the flight rule texts, is returned only for traditional flights
-        + link (String) – contains a link to the airline’s rules page, is returned only for LCC flights
+    + Attributes
+        + rulesResultSet (object) – root container
+            + rules (array [Rule]) – contains the flight rule texts, is returned only for traditional flights
+            + link (string) – contains a link to the airline’s rules page, is returned only for LCC flights
 
     + Body
 
@@ -552,16 +552,16 @@ This call returns the terms and conditions of the flight in question, or a link 
 This call returns the details of a booking identified by a PNR locator. This makes it possible to re-open an expired session and send a ticketing request based on the PNR locator after the initial session is closed.
 
 + Response 200 (application/json)
-    + Attributies
-        + pnr (pnr) – root container
-        + passengers (Passenger [ ]) – the list of passengers
-        + birth_date (String) – format is YYYY-MM-DD
-        + traditional_ticket (String) - the ticket number which allows the passenger to actually board the plane (or null if flight is LCC)
-        + type (String) – one of PassengerTypes
-        + email (String)
-        + name (String) – the name of the passenger the booking was made for
-        + id (String) – the PNR locator which identifies the booking
-        + lcc_ticket (String) – the ticket number which allows the passenger to actually board the plane (or null if flight is traditional)
+    + Attributes
+        + pnr (PNR) – root container
+        + passengers (array [Passenger]) – the list of passengers
+        + birth_date (string) – format is YYYY-MM-DD
+        + traditional_ticket (string) - the ticket number which allows the passenger to actually board the plane (or null if flight is LCC)
+        + type (string) – one of PassengerTypes
+        + email (string)
+        + name (string) – the name of the passenger the booking was made for
+        + id (string) – the PNR locator which identifies the booking
+        + lcc_ticket (string) – the ticket number which allows the passenger to actually board the plane (or null if flight is traditional)
 
     + Body
 
@@ -585,17 +585,17 @@ This call returns the details of a booking identified by a PNR locator. This mak
 
 ## Search Hotel [POST]
 + Request (application/json)
-    + Attributies
-        + hotel_id (String) –
-        + hotel_name (String) –
-        + chain_name (String) –
-        + amenities (Amenities) – An associative array mapping each amenity listed below to a boolean value based on whether the hotel has given amenity. List of keys: ‘restaurant’, ‘bar’, ‘laundry’, ‘room_service’, ‘safe_deposit_box’, ‘parking’, ‘swimming’, ‘internet’, ‘gym’, ‘air_conditioning’, ‘business_center’, ‘meeting_rooms’, ‘spa’, ‘pets_allowed’
+    + Attributes
+        + hotel_id (string) –
+        + hotel_name (string) –
+        + chain_name (string) –
+        + amenities (object) – An associative array mapping each amenity listed below to a boolean value based on whether the hotel has given amenity. List of keys: ‘restaurant’, ‘bar’, ‘laundry’, ‘room_service’, ‘safe_deposit_box’, ‘parking’, ‘swimming’, ‘internet’, ‘gym’, ‘air_conditioning’, ‘business_center’, ‘meeting_rooms’, ‘spa’, ‘pets_allowed’
         + latitude (number) – The latitude component of the coordinates of the hotel
         + longitude (number) – The latitude component of the coordinates of the hotel
         + max_rate (Price)
         + min_rate (Price)
-        + stars (Integer) – The amount of stars the hotel has been awarded
-        + thumbnail (String) – Link to a small image representing the hotel
+        + stars (number) – The amount of stars the hotel has been awarded
+        + thumbnail (string) – Link to a small image representing the hotel
 
     + Body
 
@@ -803,7 +803,7 @@ This call returns the details of a booking identified by a PNR locator. This mak
                   }
                 }
 
-# /hotels/{hotel_id/rooms/:room_id}
+# /hotels/{hotel_id/rooms/{room_id}}
 
 ## Room Details [GET]
 + Response 200
