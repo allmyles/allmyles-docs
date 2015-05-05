@@ -282,72 +282,6 @@ In most cases you’ll want to pass 00:00:00 as time for both your departure and
               }
             }
 
-# /books
-
-## Flights Booking [POST]
-When booking LCC flights, the Allmyles API does not send the book request to the external provider until the ticketing call arrives, so there’s no response—an HTTP 204 No Content status code is returned.
-
-+ Request Booking (application/json)
-  + Attributes
-        + bookingId (string) – the booking ID of the Combination to book
-        + billingInfo (Contact) – billing info for ticket creation
-        + contactInfo (Contact) – contact info for ticket creation
-        + passengers  (array [Passenger]) – the list of passengers
-
-  + Body
-
-                  {
-                    "bookingId": "1_0_0",
-                    "billingInfo": {
-                      "address": {
-                        "addressLine1": "Váci út 13-14",
-                        "cityName": "Budapest",
-                        "countryCode": "HU",
-                        "zipCode": "1234"
-                      },
-                      "email": "ccc@gmail.com",
-                      "name": "Kovacs Gyula",
-                      "phone": {
-                        "areaCode": "30",
-                        "countryCode": "36",
-                        "phoneNumber": "1234567"
-                      }
-                    },
-                    "contactInfo": {
-                      "address": {
-                        "addressLine1": "Váci út 13-14",
-                        "cityName": "Budapest",
-                        "countryCode": "HU"
-                      },
-                      "email": "bbb@gmail.com",
-                      "name": "Kovacs Lajos",
-                      "phone": {
-                        "areaCode": "30",
-                        "countryCode": "36",
-                        "phoneNumber": "1234567"
-                      }
-                    },
-                    "passengers": [
-                      {
-                        "baggageTier": "0",
-                        "carryOnBaggageTier": "1",
-                        "birthDate": "1974-04-03",
-                        "document": {
-                          "dateOfExpiry": "2016-09-03",
-                          "id": "12345678",
-                          "issueCountry": "HU",
-                          "type": "Passport"
-                        },
-                        "email": "aaa@gmail.com",
-                        "firstName": "Janos",
-                        "gender": "MALE",
-                        "lastName": "Kovacs",
-                        "namePrefix": "Mr",
-                        "passengerTypeCode": "ADT"
-                      }
-                    ]
-                  }
-
 + Response 200 (application/json)
   + Body
 
@@ -376,26 +310,6 @@ When booking LCC flights, the Allmyles API does not send the book request to the
                 "pnr": "6YESST"
               }
 
-# /payment
-
-## Flights Payment [POST]
-If payment is required—that is, if the flight is an LCC one—this is where Allmyles gets the payment data.
-
-The only supported payment provider at the moment is PayU. When we receive a transaction ID that points to a successful payment by the passenger, we essentially take that money from PayU, and forward it to the provider to buy a ticket in the Ticketing step.
-
-+ Request Payment (application/json)
-    + Attributes
-        + payuId (string) – the transaction ID identifying the successful transaction at PayU
-        + basket (array [string]) – the booking IDs the payment is for
-
-    + Body
-
-                {
-                    "payuId": "12345678",
-                    "basket": ["2_1_0"]
-                }
-
-+ Response 204
 
 # /tickets/{booking_id}
 
@@ -834,94 +748,6 @@ This call returns the details of a booking identified by a PNR locator. This mak
                   }
                 }
 
-# /payment
-
-## Hotel Payment [POST]
-If payment is required—that is, if the room’s charge field was not zero—this is where Allmyles gets the payment data.
-
-The only supported payment provider at the moment is PayU. When we receive a transaction ID that points to a successful payment by the passenger, we essentially take that money from PayU, and forward it to the provider to book a hotel room in the Booking step.
-
-+ Request (application/json)
-    + Attributes
-        + payuId (string) – the transaction ID identifying the successful transaction at PayU
-        + basket (array[string]) – the booking IDs the payment is for
-
-    + Body
-
-                {
-                    "payuId": "12345678",
-                    "basket": ["2_1_0"]
-                }
-
-+ Response 204
-
-# /books
-
-## Hotel booking [POST]
-
-+ Request (application/json)
-    + Attributes
-        + bookBasket (array [string]) – an array containing only the booking ID of the Room to book
-        + billingInfo (Contact) – billing info for the booking
-        + contactInfo (Contact) – contact info for the booking
-        + persons (array [HotelPerson]) – the list of occupants
-
-    + Body
-
-                {
-                  "bookBasket": ["1_0/2_0"],
-                  "billingInfo": {
-                    "address": {
-                      "addressLine1": "Váci út 13-14",
-                      "cityName": "Budapest",
-                      "countryCode": "HU",
-                      "zipCode": "1234"
-                    },
-                    "email": "ccc@gmail.com",
-                    "name": "Kovacs Gyula",
-                    "phone": {
-                      "areaCode": 30,
-                      "countryCode": 36,
-                      "phoneNumber": 1234567
-                    }
-                  },
-                  "contactInfo": {
-                    "address": {
-                      "addressLine1": "Váci út 13-14",
-                      "cityName": "Budapest",
-                      "countryCode": "HU"
-                    },
-                    "email": "bbb@gmail.com",
-                    "name": "Kovacs Lajos",
-                    "phone": {
-                      "areaCode": 30,
-                      "countryCode": 36,
-                      "phoneNumber": 1234567
-                    }
-                  },
-                  "passengers": [
-                    {
-                      "birthDate": "1974-04-03",
-                      "email": "aaa@gmail.com",
-                      "firstName": "Janos",
-                      "gender": "MALE",
-                      "lastName": "Kovacs",
-                      "namePrefix": "Mr"
-                    }
-                  ]
-                }
-
-+ Response 200 (application/json)
-    + Attributes
-        + confirmation (string) – the ID of the booking, this is what the occupant can use at the hotel to refer to his booking
-        + pnr (string) – the PNR locator of the record in which the booking was made
-
-    + Body
-
-                {
-                    "confirmation": "305863919",
-                    "pnr": "6JT3ZB"
-                }
 
 # /cars
 
@@ -1001,6 +827,93 @@ The only supported payment provider at the moment is PayU. When we receive a tra
                         }
                       ]
                     }
+
+# /books
+## Booking [POST]
++ Request (application/json)
+    + Attributes
+        + bookBasket (array [string]) – an array containing only the booking ID of the Room to book
+        + billingInfo (Contact) – billing info for the booking
+        + contactInfo (Contact) – contact info for the booking
+        + persons (array [HotelPerson]) – the list of occupants
+
+    + Body
+
+                {
+                  "bookBasket": ["1_0/2_0"],
+                  "billingInfo": {
+                    "address": {
+                      "addressLine1": "Váci út 13-14",
+                      "cityName": "Budapest",
+                      "countryCode": "HU",
+                      "zipCode": "1234"
+                    },
+                    "email": "ccc@gmail.com",
+                    "name": "Kovacs Gyula",
+                    "phone": {
+                      "areaCode": 30,
+                      "countryCode": 36,
+                      "phoneNumber": 1234567
+                    }
+                  },
+                  "contactInfo": {
+                    "address": {
+                      "addressLine1": "Váci út 13-14",
+                      "cityName": "Budapest",
+                      "countryCode": "HU"
+                    },
+                    "email": "bbb@gmail.com",
+                    "name": "Kovacs Lajos",
+                    "phone": {
+                      "areaCode": 30,
+                      "countryCode": 36,
+                      "phoneNumber": 1234567
+                    }
+                  },
+                  "passengers": [
+                    {
+                      "birthDate": "1974-04-03",
+                      "email": "aaa@gmail.com",
+                      "firstName": "Janos",
+                      "gender": "MALE",
+                      "lastName": "Kovacs",
+                      "namePrefix": "Mr"
+                    }
+                  ]
+                }
+
++ Response 200 (application/json)
+    + Attributes
+        + confirmation (string) – the ID of the booking, this is what the occupant can use at the hotel to refer to his booking
+        + pnr (string) – the PNR locator of the record in which the booking was made
+
+    + Body
+
+                {
+                    "confirmation": "305863919",
+                    "pnr": "6JT3ZB"
+                }
+
+
+# /payment
+## Payment [POST]
+If payment is required—that is, if the flight is an LCC one—this is where Allmyles gets the payment data.
+
+The only supported payment provider at the moment is PayU. When we receive a transaction ID that points to a successful payment by the passenger, we essentially take that money from PayU, and forward it to the provider to buy a ticket in the Ticketing step.
+
++ Request Payment (application/json)
+    + Attributes
+        + payuId (string) – the transaction ID identifying the successful transaction at PayU
+        + basket (array [string]) – the booking IDs the payment is for
+
+    + Body
+
+                {
+                    "payuId": "12345678",
+                    "basket": ["2_1_0"]
+                }
+
++ Response 204
 
 # /masterdata/search
 
