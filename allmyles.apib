@@ -48,16 +48,16 @@ In most cases you’ll want to pass 00:00:00 as time for both your departure and
 
 + Request Search (application/json)
     + Attributes
-        + fromLocation (string) – departure location, given as IATA code
-        + toLocation (string) – destination, given as IATA code
-        + departureDate (string) – date of departure, in ISO format, including a time code, even though whole day will be searched by default
-        + returnDate (string) – (optional) date of return, in ISO format, including a time code, even though whole day will be searched by default
-        + persons (FlightPerson) – a list of passengers, grouped by type code, containing Persons
-        + fromAirport (string) – (optional) departure airport, given as IATA code, must be in the city specified in fromLocation
-        + toAirport (string) – (optional) destination airport, given as IATA code, must be in the city specified in toLocation
-        + providerType (string) – (optional) type of results to retrieve
-        + preferredAirlines (array [string]) – (optional) list of airlines to filter results to, given as their two character IATA code
-        + extraDays (number) – (optional) number of days to call Flexible Date Search with, between 1-3
+        + fromLocation (string, required) - departure location, given as IATA code
+        + toLocation (string, required) - destination, given as IATA code
+        + departureDate (string, required) - date of departure, in ISO format, including a time code, even though whole day will be searched by default
+        + returnDate (string) - date of return, in ISO format, including a time code, even though whole day will be searched by default
+        + persons (FlightPerson, required) - a list of passengers, grouped by type code, containing Persons
+        + fromAirport (string) - departure airport, given as IATA code, must be in the city specified in fromLocation
+        + toAirport (string) - destination airport, given as IATA code, must be in the city specified in toLocation
+        + providerType (string) - type of results to retrieve
+        + preferredAirlines (array [string]) - list of airlines to filter results to, given as their two character IATA code
+        + extraDays (number) - number of days to call Flexible Date Search with, between 1-3
 
 
     + Body
@@ -155,14 +155,14 @@ In most cases you’ll want to pass 00:00:00 as time for both your departure and
 
 + Request Details (application/json)
     + Attributes
-        + rulesLink (string) – link to the airline’s rules page (hosted on the airline’s website)
-        + baggageTiers (array [BaggageTier]) – contains the different options the passenger has for bringing baggages along. The book request will need to contain the ID of one of these objects in the baggage field.
-        + carryOnBaggageTiers (CarryOnBaggageTier) – contains the different options of cabin baggages. The book request will need to contain the ID of one of these objects in the carry-on baggage field.
-        + fields (Form Fields) – contains field validation data
-        + price (Price) – contains the final price of the ticket (including the credit card surcharge, but not the baggages)
-        + result (FlightResult) – contains an exact copy of the result from the Search call’s response
-        + options (object) – contains whether certain options are enabled for this flight
-        + surcharge (Price) – contains the credit card surcharge for this flight
+        + rulesLink (string, required) - link to the airline’s rules page (hosted on the airline’s website)
+        + baggageTiers (array [BaggageTier], required) - contains the different options the passenger has for bringing baggages along. The book request will need to contain the ID of one of these objects in the baggage field.
+        + carryOnBaggageTiers (CarryOnBaggageTier, required) - contains the different options of cabin baggages. The book request will need to contain the ID of one of these objects in the carry-on baggage field.
+        + fields (Form Fields, required) - contains field validation data
+        + price (Price, required) - contains the final price of the ticket (including the credit card surcharge, but not the baggages)
+        + result (FlightResult, required) - contains an exact copy of the result from the Search call’s response
+        + options (object, required) - contains whether certain options are enabled for this flight
+        + surcharge (Price, required) - contains the credit card surcharge for this flight
 
 + Response 200 (application/json)
       + Body
@@ -292,19 +292,19 @@ Two important notes:
 
 + Request (application/json)
     + Attributes
-        + tickets (array [object]) – the purchased tickets
-        + passenger (string) – the name of the passenger the ticket was purchased for
-        + passenger_type (string) – one of PassengerTypes
-        + ticket (string) – the ticket number which allows the passenger to actually board the plane
-        + price (object)
-            + currency (string)
-            + total_fare (number) – The total amount of money the passenger paid for his ticket, including tax.
-            + tax (number) – The total amount of tax the passenger had to pay for this ticket.
+        + tickets (array [object], required) - the purchased tickets
+        + passenger (string, required) - the name of the passenger the ticket was purchased for
+        + passenger_type (string, required) - one of PassengerTypes
+        + ticket (string) - the ticket number which allows the passenger to actually board the plane
+        + price (object, required)
+            + currency (string, required)
+            + total_fare (number, required) - The total amount of money the passenger paid for his ticket, including tax.
+            + tax (number, required) - The total amount of tax the passenger had to pay for this ticket.
         + baggage
-            + quantity (number) – The maximum quantity of baggage the passenger can bring along
-            + unit (string) – Units of measurement
-            + flightData (FlightResult) – contains a copy of the result from the Search call’s response
-            + contactInfo (Contact) – contains a copy of the data received in the Booking call
+            + quantity (number, required) - The maximum quantity of baggage the passenger can bring along
+            + unit (string, required) - Units of measurement
+            + flightData (FlightResult, required) - contains a copy of the result from the Search call’s response
+            + contactInfo (Contact, required) - contains a copy of the data received in the Booking call
 
     + Body
 
@@ -371,8 +371,8 @@ The periodic checks should be made at most once every minute.
 ## Ticketing Status [GET]
 + Request Ticketing (application/json)
     + Attributes
-        + status (string) – one of the statuses
-        + pnr (PNR) – the pnr object that a Get Booking request would return about the flight — this includes the ticket number(s) as well
+        + status (string, required) - one of the statuses
+        + pnr (PNR, required) - the pnr object that a Get Booking request would return about the flight — this includes the ticket number(s) as well
 
 + Response 200 (application/json)
     + Body
@@ -408,9 +408,9 @@ This call returns the terms and conditions of the flight in question, or a link 
 
 + Response 200 (appication/json)
     + Attributes
-        + rulesResultSet (object) – root container
-            + rules (array [Rule]) – contains the flight rule texts, is returned only for traditional flights
-            + link (string) – contains a link to the airline’s rules page, is returned only for LCC flights
+        + rulesResultSet (object, required) - root container
+            + rules (array [Rule], required) - contains the flight rule texts, is returned only for traditional flights
+            + link (string, required) - contains a link to the airline’s rules page, is returned only for LCC flights
 
     + Body
 
@@ -438,15 +438,15 @@ This call returns the details of a booking identified by a PNR locator. This mak
 
 + Response 200 (application/json)
     + Attributes
-        + pnr (PNR) – root container
-        + passengers (array [Passenger]) – the list of passengers
-        + birth_date (string) – format is YYYY-MM-DD
-        + traditional_ticket (string) - the ticket number which allows the passenger to actually board the plane (or null if flight is LCC)
-        + type (string) – one of PassengerTypes
+        + pnr (PNR, required) - root container
+        + passengers (array [Passenger], required) - the list of passengers
+        + birth_date (string, required) - format is YYYY-MM-DD
+        + traditional_ticket (string, required) - the ticket number which allows the passenger to actually board the plane (or null if flight is LCC)
+        + type (string, required) - one of PassengerTypes
         + email (string)
-        + name (string) – the name of the passenger the booking was made for
-        + id (string) – the PNR locator which identifies the booking
-        + lcc_ticket (string) – the ticket number which allows the passenger to actually board the plane (or null if flight is traditional)
+        + name (string, required) - the name of the passenger the booking was made for
+        + id (string, required) - the PNR locator which identifies the booking
+        + lcc_ticket (string, required) - the ticket number which allows the passenger to actually board the plane (or null if flight is traditional)
 
     + Body
 
@@ -471,16 +471,16 @@ This call returns the details of a booking identified by a PNR locator. This mak
 ## Search Hotel [POST]
 + Request (application/json)
     + Attributes
-        + hotel_id (string) –
-        + hotel_name (string) –
-        + chain_name (string) –
-        + amenities (object) – An associative array mapping each amenity listed below to a boolean value based on whether the hotel has given amenity. List of keys: ‘restaurant’, ‘bar’, ‘laundry’, ‘room_service’, ‘safe_deposit_box’, ‘parking’, ‘swimming’, ‘internet’, ‘gym’, ‘air_conditioning’, ‘business_center’, ‘meeting_rooms’, ‘spa’, ‘pets_allowed’
-        + latitude (number) – The latitude component of the coordinates of the hotel
-        + longitude (number) – The latitude component of the coordinates of the hotel
-        + max_rate (Price)
-        + min_rate (Price)
-        + stars (number) – The amount of stars the hotel has been awarded
-        + thumbnail (string) – Link to a small image representing the hotel
+        + hotel_id (string, required)
+        + hotel_name (string, required)
+        + chain_name (string, required)
+        + amenities (object, required) - An associative array mapping each amenity listed below to a boolean value based on whether the hotel has given amenity. List of keys: ‘restaurant’, ‘bar’, ‘laundry’, ‘room_service’, ‘safe_deposit_box’, ‘parking’, ‘swimming’, ‘internet’, ‘gym’, ‘air_conditioning’, ‘business_center’, ‘meeting_rooms’, ‘spa’, ‘pets_allowed’
+        + latitude (number, required) - The latitude component of the coordinates of the hotel
+        + longitude (number, required) - The latitude component of the coordinates of the hotel
+        + max_rate (Price, required)
+        + min_rate (Price, required)
+        + stars (number, required) - The amount of stars the hotel has been awarded
+        + thumbnail (string, required) - Link to a small image representing the hotel
 
     + Body
 
@@ -536,27 +536,27 @@ This call returns the details of a booking identified by a PNR locator. This mak
 ## Hotel Details [GET]
 + Response 200 (application/json)
     + Attributes
-        + chain_code (string)
-        + chain_name (string)
-        + hotel_code (string)
-        + hotel_name (string)
-        + location (HotelLocation) – contains info about the hotel’s location.
-        + points_of_interest (array [object]) – contains a list of notable locations around the hotel
-        + description (string) – A short text describing the hotel
-        + contact_info (object) –
-            + phone_numbers (array[string])
-            + email (string)
-            + website (string)
-        + price (object) – contains the lowest and highest rates available for a room at this hotel
-            + minimum (number) – Rate of the cheapest room at the hotel
-            + maximum (number) – Rate of the most expensive room at the hotel
-            + currency (string)
-        + thumbnail (string) – Contains a URL pointing to a small image of the hotel
-        + photos (array[string]) – Contains an array of URLs pointing to a larger photos of the hotel
-        + amenities (object) – Contains an associative array, mapping each amenity listed below to a boolean value based on whether the hotel has given amenity. List of keys: ‘restaurant’, ‘bar’, ‘laundry’, ‘room_service’, ‘safe_deposit_box’, ‘parking’, ‘swimming’, ‘internet’, ‘gym’, ‘air_conditioning’, ‘business_center’, ‘meeting_rooms’, ‘spa’, ‘pets_allowed’
-        + stars (number) – Contains the amount of stars this hotel has been awarded.
-        + rules (object) – Contains an associative array, mapping each rule type listed below to the relevant text. List of keys: ‘guarantee’, ‘safety’, ‘extra_occupants’, ‘policy’, ‘charges’, ‘deposit’, ‘meals’, ‘stay’, ‘tax’
-        + rooms (array [Room]) – contains the available rooms
+        + chain_code (string, required)
+        + chain_name (string, required)
+        + hotel_code (string, required)
+        + hotel_name (string, required)
+        + location (HotelLocation, required) - Contains info about the hotel’s location.
+        + points_of_interest (array [object], required) - contains a list of notable locations around the hotel
+        + description (string) - A short text describing the hotel
+        + contact_info (object, required)
+            + phone_numbers (array[string], required)
+            + email (string, required)
+            + website (string, required)
+        + price (object, required) - Contains the lowest and highest rates available for a room at this hotel
+            + minimum (number, required) - Rate of the cheapest room at the hotel
+            + maximum (number, required) - Rate of the most expensive room at the hotel
+            + currency (string, required)
+        + thumbnail (string, required) - Contains a URL pointing to a small image of the hotel
+        + photos (array[string], required) – Contains an array of URLs pointing to a larger photos of the hotel
+        + amenities (object, required) – Contains an associative array, mapping each amenity listed below to a boolean value based on whether the hotel has given amenity. List of keys: ‘restaurant’, ‘bar’, ‘laundry’, ‘room_service’, ‘safe_deposit_box’, ‘parking’, ‘swimming’, ‘internet’, ‘gym’, ‘air_conditioning’, ‘business_center’, ‘meeting_rooms’, ‘spa’, ‘pets_allowed’
+        + stars (number, required) - Contains the amount of stars this hotel has been awarded.
+        + rules (object, required) - Contains an associative array, mapping each rule type listed below to the relevant text. List of keys: ‘guarantee’, ‘safety’, ‘extra_occupants’, ‘policy’, ‘charges’, ‘deposit’, ‘meals’, ‘stay’, ‘tax’
+        + rooms (array [Room], required) - Contains the available rooms
 
     + Body
 
@@ -693,11 +693,11 @@ This call returns the details of a booking identified by a PNR locator. This mak
 ## Room Details [GET]
 + Response 200
     + Attributes
-        + rules (object) – Contains an associative array, mapping each rule type listed below to the relevant text, or a relevant boolean value. List of keys: ‘cancellation’, ‘notes’, ‘needs_guarantee’, ‘needs_deposit’
-        + price (object) –
-            + total (number) – The total cost of booking the hotel for the guest. This includes the charge we require right now.
-            + charge (number) – The amount of money we need to charge the guest to complete the booking. If this amount is zero, no transaction needs to be made and you can go on to booking straight away.
-        + includes (array [string]) – Contains what services or extras are included in the price.
+        + rules (object, required) - Contains an associative array, mapping each rule type listed below to the relevant text, or a relevant boolean value. List of keys: ‘cancellation’, ‘notes’, ‘needs_guarantee’, ‘needs_deposit’
+        + price (object, required)
+            + total (number, required) - The total cost of booking the hotel for the guest. This includes the charge we require right now.
+            + charge (number, required) - The amount of money we need to charge the guest to complete the booking. If this amount is zero, no transaction needs to be made and you can go on to booking straight away.
+        + includes (array [string], required) - Contains what services or extras are included in the price.
 
     + Body
 
@@ -725,10 +725,10 @@ This call returns the details of a booking identified by a PNR locator. This mak
 ## Search Cars [POST]
 + Request (application/json)
     + Attributes
-        + airport_code (string) – the IATA code of the airport to find available cars at
-        + start_date (string) – pickup date and time, in ISO format ex. 2014-12-24T12:00:00Z)
-        + end_date (string) – return date and time, in ISO format (ex. 2014-12-26T12:00:00Z)
-        + filters (Filter) – (optional) search filter for different car properties
+        + airport_code (string, required) - the IATA code of the airport to find available cars at
+        + start_date (string, required) - pickup date and time, in ISO format ex. 2014-12-24T12:00:00Z)
+        + end_date (string, required) - return date and time, in ISO format (ex. 2014-12-26T12:00:00Z)
+        + filters (Filter) - search filter for different car properties
 
     + Body
 
@@ -803,10 +803,10 @@ This call returns the details of a booking identified by a PNR locator. This mak
 ## Booking [POST]
 + Request (application/json)
     + Attributes
-        + bookBasket (array [string]) – an array containing only the booking ID of the Room to book
-        + billingInfo (Contact) – billing info for the booking
-        + contactInfo (Contact) – contact info for the booking
-        + persons (array [HotelPerson]) – the list of occupants
+        + bookBasket (array [string], required) - an array containing only the booking ID of the Room to book
+        + billingInfo (Contact, required) - billing info for the booking
+        + contactInfo (Contact, required) - contact info for the booking
+        + persons (array [HotelPerson], required) - the list of occupants
 
     + Body
 
@@ -855,8 +855,8 @@ This call returns the details of a booking identified by a PNR locator. This mak
 
 + Response 200 (application/json)
     + Attributes
-        + confirmation (string) – the ID of the booking, this is what the occupant can use at the hotel to refer to his booking
-        + pnr (string) – the PNR locator of the record in which the booking was made
+        + confirmation (string, required) - the ID of the booking, this is what the occupant can use at the hotel to refer to his booking
+        + pnr (string, required) - the PNR locator of the record in which the booking was made
 
     + Body
 
@@ -874,8 +874,8 @@ The only supported payment provider at the moment is PayU. When we receive a tra
 
 + Request Payment (application/json)
     + Attributes
-        + payuId (string) – the transaction ID identifying the successful transaction at PayU
-        + basket (array [string]) – the booking IDs the payment is for
+        + payuId (string, required) - the transaction ID identifying the successful transaction at PayU
+        + basket (array [string], required) - the booking IDs the payment is for
 
     + Body
 
@@ -895,17 +895,17 @@ The only supported payment provider at the moment is PayU. When we receive a tra
 ## Masterdata search [GET]
 + Request
     + Attributes
-        + keyword – the string to find locations for
-        + limit – (optional) the number of results to retrieve (default: 10, maximum: 100)
-        + locales – (optional) the languages to search in in addition to English (which is on by default.) Multiple locale codes can be given, separated by commas (ex. ?locales=hu-HU,cs-CZ) See the available locale codes below.
+        + keyword (required) - the string to find locations for
+        + limit - the number of results to retrieve (default: 10, maximum: 100)
+        + locales - the languages to search in in addition to English (which is on by default.) Multiple locale codes can be given, separated by commas (ex. ?locales=hu-HU,cs-CZ) See the available locale codes below.
 
 + Response 200 (application/json)
     + Attributes
-        + locationSearchResult (array [SearchResult]) – root container
-            + canonicalName – the complete name of the airport/multiairport
-            + htmlFragment – the canonical name, preformatted by bolding the searched substring. You can inject this string directly into your HTML source.
-            + iataCode – the code identifying the matched location—either an airport’s, or a city’s IATA code
-            + category – one of the following: airport, multiairport, locality, state, country
+        + locationSearchResult (array [SearchResult], required) - root container
+            + canonicalName (required) - the complete name of the airport/multiairport
+            + htmlFragment (required) - the canonical name, preformatted by bolding the searched substring. You can inject this string directly into your HTML source.
+            + iataCode (required) - the code identifying the matched location—either an airport’s, or a city’s IATA code
+            + category (required) - one of the following: airport, multiairport, locality, state, country
             + cityName
             + countryCode
             + countryName
@@ -931,24 +931,24 @@ The only supported payment provider at the moment is PayU. When we receive a tra
 ## Masterdata Retrieval [GET]
 + Request (application/json)
     + Attributes
-        + keyword – the string to find locations for
-        + limit – (optional) the number of results to retrieve (default: 10, maximum: 100)
-        + locales – (optional) the languages to search in in addition to English (which is on by default.) Multiple locale codes can be given, separated by commas (ex. ?locales=hu-HU,cs-CZ) See the available locale codes below.
+        + keyword (required) - the string to find locations for
+        + limit -  the number of results to retrieve (default: 10, maximum: 100)
+        + locales - the languages to search in in addition to English (which is on by default.) Multiple locale codes can be given, separated by commas (ex. ?locales=hu-HU,cs-CZ) See the available locale codes below.
 
 + Response 200 (application/json)
     + Attributes
-        + airlines
-        + airplanes
-        + airports
-        + categories
-        + cities
-        + localised_cities
-        + countries
-        + states
-        + hotel_chains
-        + hotels
-        + rule_links
-        + eticket_rules
+        + airlines (required)
+        + airplanes (required)
+        + airports (required)
+        + categories (required)
+        + cities (required)
+        + localised_cities (required)
+        + countries (required)
+        + states (required)
+        + hotel_chains (required)
+        + hotels (required)
+        + rule_links (required)
+        + eticket_rules (required)
 
     + Body
 
