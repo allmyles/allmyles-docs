@@ -78,13 +78,13 @@ PassengerTypes
 
     One of ``ADT``, ``CHD`` or ``INF``
 
-.. Options:
+.. _Options:
 
 Options
 -------
 
     :JSON Parameters:
-        - **sort** (*String*) -- one of :ref:`sorting_options`
+        - **sort** (*String*) -- one of :ref:`Sorting Options`
 
 .. sorting_options:
 
@@ -117,7 +117,7 @@ FlightResult
         - **breakdown** (:ref:`Breakdown` *\[ \]*) -- summary of passenger data
           per type
         - **currency** (*String*) -- currency of all prices in response
-        - **ticketing_fee** (*Float) -- fee charged for ticketing
+        - **ticketing_fee** (*Float*) -- fee charged for ticketing
         - **total_fare** (*Float*) -- total fare, including service fee and ticketing fee
         - **combinations** (:ref:`Combination` *\[ \]*) -- list of combination
           objects
