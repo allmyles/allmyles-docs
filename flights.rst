@@ -91,9 +91,9 @@ Options
 Sorting Options
 ---------------
 
-    One of ``total_fare`` or ``comfort_score`` (:ref:`Comfort score`). Reverse-order
-    sorting is indicated with a `-` sign (e.g. `-total_fare` would return the most
-    expensive option first).
+    One of ``total_fare``, ``-total_fare``, ``comfort_score`` or ``-comfort_score``
+    (:ref:`Comfort score`). Reverse-order sorting is indicated with a ``-`` sign
+    (e.g. ``-total_fare`` would return the most expensive option first).
 
 Response Body
 =============
