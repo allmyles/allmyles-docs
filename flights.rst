@@ -86,7 +86,7 @@ Options
     :JSON Parameters:
         - **sort** (*String*) -- one of :ref:`Sorting Options`
 
-.. sorting_options:
+.. _sorting_options:
 
 Sorting Options
 ---------------
