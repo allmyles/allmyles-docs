@@ -60,6 +60,7 @@ Request
           airlines to filter results to, given as their two character IATA code
         - **extraDays** (*Integer*) -- *(optional)* number of days to call
           :ref:`Flexible_Date_Search` with, between 1-3
+        - **options** (:ref:`Options`) -- *(optional)* sorting and filtering options
 
 .. _Person:
 
@@ -76,6 +77,23 @@ PassengerTypes
 --------------
 
     One of ``ADT``, ``CHD`` or ``INF``
+
+.. Options:
+
+Options
+-------
+
+    :JSON Parameters:
+        - **sort** (*String*) -- one of :ref:`sorting_options`
+
+.. sorting_options:
+
+Sorting Options
+---------------
+
+    One of ``total_fare`` or ``comfort_score`` (:ref:`Comfort score`). Reverse-order
+    sorting is indicated with a `-` sign (e.g. `-total_fare` would return the most
+    expensive option first).
 
 Response Body
 =============
@@ -99,7 +117,8 @@ FlightResult
         - **breakdown** (:ref:`Breakdown` *\[ \]*) -- summary of passenger data
           per type
         - **currency** (*String*) -- currency of all prices in response
-        - **total_fare** (*Float*) -- total fare, including service fee
+        - **ticketing_fee** (*Float) -- fee charged for ticketing
+        - **total_fare** (*Float*) -- total fare, including service fee and ticketing fee
         - **combinations** (:ref:`Combination` *\[ \]*) -- list of combination
           objects
 
