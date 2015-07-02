@@ -111,7 +111,7 @@ Filters
 Cabin types
 -----------
 
-    One of ``economy``, ``first``, ``business`` or ``premium``
+    One of ``economy``, ``premium economy``, ``business`` or ``first``
 
 Response Body
 =============
