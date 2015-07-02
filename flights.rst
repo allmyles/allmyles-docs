@@ -85,6 +85,7 @@ Options
 
     :JSON Parameters:
         - **sort** (*String*) -- one of :ref:`Sorting Options`
+        - **filter** (:ref:`Filters`) -- filtering options
 
 .. _sorting_options:
 
@@ -94,6 +95,23 @@ Sorting Options
     One of ``total_fare``, ``-total_fare``, ``comfort_score`` or ``-comfort_score``
     (:ref:`Comfort score`). Reverse-order sorting is indicated with a ``-`` sign
     (e.g. ``-total_fare`` would return the most expensive option first).
+
+.. _Filters:
+
+Filters
+-------
+
+    :JSON Parameters:
+        - **cabin** (*String*) -- one of :ref:`Cabin types`. Filtering for a certain
+          cabin returns combinations that contain at least one leg with the desired
+          cabin type.
+
+.. _cabin_types:
+
+Cabin types
+-----------
+
+    One of ``economy``, ``first``, ``business`` or ``premium``
 
 Response Body
 =============
