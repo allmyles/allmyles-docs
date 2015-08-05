@@ -944,7 +944,8 @@ Request
             "address": {
               "addressLine1": "Váci út 13-14",
               "cityName": "Budapest",
-              "countryCode": "HU"
+              "countryCode": "HU",
+              "zipCode": "1234"
             },
             "email": "bbb@gmail.com",
             "name": "Kovacs Lajos",
