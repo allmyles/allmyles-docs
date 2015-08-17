@@ -186,8 +186,8 @@ Request
 
         {
           "airport_code": "LHR",
-          "start_date": "2015-03-01T00:00:00Z",
-          "end_date": "2015-03-04T00:00:00Z",
+          "start_date": "2015-03-01T10:00:00Z",
+          "end_date": "2015-03-04T10:00:00Z",
           "filters": {
             "type": [
               "crossover"
