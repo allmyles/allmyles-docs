@@ -2,6 +2,8 @@
  Certification Requirements
 ============================
 
+This document details the list of things to check on client's website before allowing them to use our API in production.
+
 ---------
  General
 ---------
