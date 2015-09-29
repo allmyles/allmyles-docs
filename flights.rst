@@ -139,6 +139,14 @@ FlightResult
         - **total_fare** (*Float*) -- total fare, including service fee and ticketing fee
         - **combinations** (:ref:`Combination` *\[ \]*) -- list of combination
           objects
+        - **total_fare_in_preferred_currencies** (*\[ \]*) -- total fare converted
+          to the client's preferred currencies, including service fee and ticketing fee
+          - **currency** (*String*)
+          - **total_fare** (*Float*)
+        - **ticketing_fee_in_preferred_currencies** (*\[ \]*) -- ticketing fee converted
+        to the client's preferred currencies, including service fee and ticketing fee
+          - **currency** (*String*)
+          - **ticketing_fee** (*Float*)
 
 .. _Breakdown:
 
@@ -155,6 +163,11 @@ Breakdown
         - **quantity** (*Integer*) -- number of passengers of ``type``
         - **ticketDesignators** (:ref:`TicketDesignator` *\[ \]*) -- ticket
           designators applicable for passengers of ``type``
+        - **fare_in_preferred_currencies** (*\[ \]*) -- fare converted
+          to the client's preferred currencies
+          - **currency** (*String*)
+          - **fare** (*Float*)
+          - **tax** (*Float*)
 
 .. _TicketDesignator:
 
@@ -192,6 +205,10 @@ Combination
         - **serviceFeeAmount** (*Float*) -- ticket designator's description
         - **comfortScore** (:ref:`Comfort score`) -- the comfort score of
           the combination
+        - **service_fee_in_preferred_currencies** (*\[ \]*) -- service fee
+          converted to the client's preferred currencies
+          - **currency** (*String*)
+          - **service_fee** (*Float*)
 
 .. _Leg:
 
@@ -338,12 +355,45 @@ Response
                     "tax": 21.1229,
                     "ticketDesignators": [],
                     "type": "ADT",
-                    "quantity": 1
+                    "quantity": 1,
+                    "fare_in_preferred_currencies": [
+                      {
+                        "currency":GBP",
+                        "fare": 72,
+                        "tax": 21.1229,
+                      },
+                      {
+                        "currency": "USD",
+                        "fare": 66,
+                        "tax": 21.1229,
+                      }
+                    ],
                   }
                 }
               ],
               "currency": "EUR",
               "total_fare": 57.8627,
+              "ticketing_fee": 5,
+              "total_fare_in_preferred_currencies": [
+                {
+                  "currency":GBP",
+                  "total_fare": 72,
+                },
+                {
+                  "currency": "USD",
+                  "total_fare": 66,
+                }
+              ],
+              "ticketing_fee_in_preferred_currencies": [
+                {
+                  "currency":GBP",
+                  "ticketing_fee": 3.66,
+                },
+                {
+                  "currency": "USD",
+                  "ticketing_fee": 5.74,
+                }
+              ],
               "combinations": [
                 {
                   "providerType": "TravelFusionProvider",
@@ -390,7 +440,17 @@ Response
                     ]
                   },
                   "serviceFeeAmount": 5.0,
-                  "comfortScore": 50
+                  "comfortScore": 50,
+                  "service_fee_in_preferred_currencies": [
+                    {
+                      "currency":GBP",
+                      "service_fee": 3.66,
+                    },
+                    {
+                      "currency": "USD",
+                      "service_fee": 5.74,
+                    }
+                  ],
                 }
               ]
             }
@@ -500,6 +560,12 @@ FlightDetails
           options are enabled for this flight
         - **surcharge** (:ref:`Price`) -- contains the credit card surcharge
           for this flight
+        - **price_in_preferred_currencies** (:ref:`Price` *\[ \]*) -- contains
+          the final price of the ticket converted to the client's preferred
+          currencies
+        - **surcharge_in_preferred_currencies** (:ref:`Price` *\[ \]*) -- contains
+          the credit card surcharge for this flight converted to the client's preferred
+          currencies
 
 .. _BaggageTier:
 
@@ -523,6 +589,9 @@ BaggageTier
           empty array if there's no limit. Having multiple items in this array
           means that for the specified price, the passenger can check in as many
           baggages as there are items in the array.
+        - **price_in_preferred_currencies** (:ref:`Price` *\[ \]*) -- contains
+          the price of the baggage tier converted to the client's preferred
+          currencies
 
 .. _carryOnBaggageTier:
 
@@ -538,6 +607,9 @@ CarryOnBaggageTier
         - **description** (*String*) -- A basic description of the carry-on
           baggage's size, e.g. `Small cabin bag`. Exact dimensions should be
           checked on the airline's website.
+        - **price_in_preferred_currencies** (:ref:`Price` *\[ \]*) -- contains
+          the price of the baggage tier converted to the client's preferred
+          currencies
 
 .. _FormFields:
 
@@ -666,7 +738,17 @@ Response
                         "currency": null,
                         "amount": 0.0
                     },
-                    "max_weights": []
+                    "max_weights": [],
+                    "price_in_preferred_currencies": [
+                      {
+                        "currency":GBP",
+                        "amount": 0.0
+                      },
+                      {
+                        "currency": "USD",
+                        "amount": 0.0 
+                      }
+                    ],
                 },
                 {
                     "tier": "1",
@@ -674,7 +756,17 @@ Response
                         "currency": "HUF",
                         "amount": 15427.0
                     },
-                    "max_weights": [15.0]
+                    "max_weights": [15.0],
+                    "price_in_preferred_currencies": [
+                      {
+                        "currency":GBP",
+                        "amount": 10.0
+                      },
+                      {
+                        "currency": "USD",
+                        "amount": 12.0 
+                      }
+                    ],
                 },
                 {
                     "tier": "2",
@@ -701,7 +793,17 @@ Response
                         "amount": 8000.0
                     },
                     "description": "Large cabin bag",
-                }
+                },
+                "price_in_preferred_currencies": [
+                      {
+                        "currency":GBP",
+                        "amount": 20.0
+                      },
+                      {
+                        "currency": "USD",
+                        "amount": 22.0 
+                      }
+                    ],
             ],
             "fields": {
               "passengers": [
@@ -767,7 +869,30 @@ Response
             "surcharge": {
               "currency": "EUR",
               "amount": 5.0
-            }
+              "card_type": "CA",
+            },
+            "price_in_preferred_currencies": [
+              {
+                "currency":GBP",
+                "amount": 3269
+              },
+              {
+                "currency": "USD",
+                "amount": 5162 
+              }
+            ],
+            "surcharge_in_preferred_currencies": [
+              {
+                "currency":GBP",
+                "amount": 5.0
+                "card_type": "CA",
+              },
+              {
+                "currency": "USD",
+                "amount": 5.0
+                "card_type": "CA", 
+              }
+            ],
           }
         }
 
@@ -1115,11 +1240,16 @@ Response Body
             - **quantity** (*Int*) -- The maximum quantity of baggage the
               passenger can bring along
             - **unit** (*String*) -- Units of measurement
+          - **price_in_preferred_currencies** (*TicketPrice [ ]*) -- the
+            ticket price converted to the client's preferred currencies
+            - **currency** (*String*)
+            - **total_fare** (*Float*)
+            - **tax** (*Float*)
         - **flightData** (:ref:`flight-result`) -- contains a copy of the
           result from the :ref:`Flight_Search` call's response
         - **contactInfo** (:ref:`Flight_Contact`) -- contains a copy of the data
           received in the :ref:`Flight_Booking` call
-
+        
     :JSON Parameters for LCC flights:
         - **ticket** (*String*) -- the ticket number (LCC PNR) for this booking
         - **pnr** (*String*) -- the PNR locator which identifies this booking
@@ -1190,7 +1320,19 @@ Response
               "baggage": {
                 "quantity": 1,
                 "unit": "PC",
+              },
+              "price_in_preferred_currencies": [
+              {
+                "currency":GBP",
+                "total_fare": 60.48,
+                "tax": 41.41
+              },
+              {
+                "currency": "USD",
+                "total_fare": 94.84,
+                "tax": 64.93
               }
+            ],
             },
             {
               "passenger": "Mr Janos kascvo",
@@ -1204,7 +1346,19 @@ Response
               "baggage": {
                 "quantity": 1,
                 "unit": "PC",
+              },
+              "price_in_preferred_currencies": [
+              {
+                "currency":GBP",
+                "total_fare": 60.48,
+                "tax": 41.41
+              },
+              {
+                "currency": "USD",
+                "total_fare": 94.84,
+                "tax": 64.93
               }
+            ],
             }
           ],
           "flightData": {
@@ -1262,7 +1416,17 @@ Response
             "price": {
               "amount": 37024.8,
               "currency": HUF
-            }
+            },
+            "price_in_preferred_currencies": [
+              {
+                "currency":GBP",
+                "amount": 10.0
+              },
+              {
+                "currency": "USD",
+                "amount": 12.0 
+              }
+            ],
           },
           "carryOnBaggageTiers": {
             "tier": "2",
@@ -1270,7 +1434,17 @@ Response
             "price": {
               "amount": 8000.0,
               "currency": HUF
-            }
+            },
+            "price_in_preferred_currencies": [
+              {
+                "currency":GBP",
+                "amount": 10.0
+              },
+              {
+                "currency": "USD",
+                "amount": 12.0 
+              }
+            ],
           }
         }
 
