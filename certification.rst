@@ -2,6 +2,8 @@
  Certification Requirements
 ============================
 
+This document details the list of things to check on client's website before allowing them to use our API in production.
+
 ---------
  General
 ---------
@@ -36,18 +38,31 @@ The site must send all required HTTP headers with correct values:
  Flights
 ---------
 
-- The asynchronous flight search calls should be handled properly as described in the documentation; infinite loops must never happen. 
-- There should be a reasonable amount of time spent sleeping between each flight search call for one search.
-- Once the flight result is retrieved once, it shouldn't be requested again later in the same workflow.
-- Flight details calls must only be made once the passenger has explicitly selected one of the results, no prefetching is allowed. (However, - making multiple details calls in one workflow is allowed.)
-- When the retrieved flight details are shown, the flight's updated price should be displayed to the passenger. This updated price must be clearly - visible.
-- When the passenger is sent to pay, the amount should match the sum of the total price given in the flight details call, and any extra fees that - the passenger selected, such as for baggages.
-- Ticket requests must be made only after payment has been confirmed to have been successful. (This is unrelated to the payment call, we are - referring to the payment from the passenger to the travel site.)
-- The passenger's transaction must not be refunded unless the Allmyles API explicitly says that it is okay to do so.
+- The asynchronous flight search calls should be handled properly as
+  described in the documentation; infinite loops must never happen. 
+- There should be a reasonable amount of time spent sleeping between
+  each flight search call for one search.
+- Once the flight result is retrieved once, it shouldn't be requested
+  again later in the same workflow.
+- Flight details calls must only be made once the passenger has explicitly
+  selected one of the results, no prefetching is allowed. (However, making
+  multiple details calls in one workflow is allowed.)
+- When the retrieved flight details are shown, the flight's updated price
+  should be displayed to the passenger. This updated price must be clearly
+  visible.
+- When the passenger is sent to pay, the amount should match the sum of
+  the total price given in the flight details call, and any extra fees
+  that the passenger selected, such as for baggages.
+- Ticket requests must be made only after payment has been confirmed
+  to have been successful. (This is unrelated to the payment call,
+  we are referring to the payment from the passenger to the travel site.)
+- The passenger's transaction must not be refunded unless the
+  Allmyles API explicitly says that it is okay to do so.
 
 ------------
  Masterdata
 ------------
 
-- The number of results retrieved and the number of locales searched for a search keyword must be reasonable.
+- The number of results retrieved and the number of locales searched
+  for a search keyword must be reasonable.
 - Masterdata repos should not be retrieved more than once a day.

@@ -481,6 +481,31 @@ Flexible Date Search
 Examples
 --------
 
+Request
+-------
+
+    **JSON:**
+
+    .. sourcecode:: json
+
+        {
+          "fromLocation": "BUD",
+          "toLocation": "LON",
+          "departureDate": "2014-05-15T00:00:00",
+          "returnDate": "2014-05-20T00:00:00",
+          "persons":[
+            {
+              "passengerType":"ADT",
+              "quantity": 2
+            },
+            {
+              "passengerType":"CHD",
+              "quantity": 1
+            }
+          ],
+          "extraDays": 3,
+        }
+
 Response
 --------
 
