@@ -131,6 +131,12 @@ FlightResult
 
         This surcharge is retrieved in the _`FlightDetails` call.
 
+    .. warning::
+        If you have chosen *alternative* providers, a **price_charged_by_provider**
+        field will be present in the search response. This displays the total fare in
+        currency the airline is charging. **Important**: this price might change later
+        as it is not yet updated with credit card and other surcharges.
+
     :JSON Parameters:
         - **breakdown** (:ref:`Breakdown` *\[ \]*) -- summary of passenger data
           per type
@@ -613,7 +619,14 @@ BaggageTier
           piece of baggage a passenger can take in this tier in kg, can be an
           empty array if there's no limit. Having multiple items in this array
           means that for the specified price, the passenger can check in as many
-          baggages as there are items in the array.
+          baggages as there are items in the array. Can be an empty list if data
+          is present in the *total* field.
+        - **total** -- Some airlines don't limit the weights of each bag, only
+          the total weight of all the bags, and the number of bags.
+          - **weight** (*Float*)v-- maximum summed weight of all the bags the
+            passenger can take
+          - **number_of_bags** (*Int*) -- number of bags that the passenger can
+            take
         - **price_in_preferred_currencies** (:ref:`Price` *\[ \]*) -- contains
           the price of the baggage tier converted to the client's preferred
           currencies
@@ -764,6 +777,10 @@ Response
                         "amount": 0.0
                     },
                     "max_weights": [],
+                    'total': {
+                        'weight': None,
+                        'number_of_bags': None,
+                    },
                     "price_in_preferred_currencies": [
                       {
                         "currency":GBP",
@@ -782,6 +799,10 @@ Response
                         "amount": 15427.0
                     },
                     "max_weights": [15.0],
+                    'total': {
+                        'weight': None,
+                        'number_of_bags': None,
+                    },
                     "price_in_preferred_currencies": [
                       {
                         "currency":GBP",
@@ -799,7 +820,21 @@ Response
                         "currency": "HUF",
                         "amount": 37024.8
                     },
-                    "max_weights": [15.0, 20.0]
+                    "max_weights": [], 
+                    'total': {
+                        'weight': 45,
+                        'number_of_bags': 2,
+                    },
+                    "price_in_preferred_currencies": [
+                      {
+                        "currency":GBP",
+                        "amount": 20.0
+                      },
+                      {
+                        "currency": "USD",
+                        "amount": 22.0 
+                      }
+                    ],
                 }
             ],
             "carryOnBaggageTiers": [
@@ -820,15 +855,15 @@ Response
                     "description": "Large cabin bag",
                 },
                 "price_in_preferred_currencies": [
-                      {
-                        "currency":GBP",
-                        "amount": 20.0
-                      },
-                      {
-                        "currency": "USD",
-                        "amount": 22.0 
-                      }
-                    ],
+                  {
+                    "currency":GBP",
+                    "amount": 20.0
+                  },
+                  {
+                    "currency": "USD",
+                    "amount": 22.0 
+                  }
+                ],
             ],
             "fields": {
               "passengers": [
@@ -928,9 +963,15 @@ Response
 ---------
 
     .. note::
-        When booking LCC flights, the Allmyles API does not send the book
-        request to the external provider until the ticketing call arrives, so
-        there's no response---an HTTP 204 No Content status code is returned.
+        When booking LCC flights, there are two possible scenarios.
+        By *default*, the Allmyles API does not send the book request to the
+        external provider until the ticketing call arrives, so there's no
+        response---an HTTP 204 No Content status code is returned.
+        If you have chosen *alternative* providers (you have to contact the Allmyles
+        support about this first), the booking flow of LCC flights is very similar to
+        that of traditional flights. In this case the book response differs just a bit
+        from the traditional book response - please refer to the book response
+        specifications for detailed information.
 
 
 Request
@@ -1014,9 +1055,15 @@ Response Body
 =============
 
     .. note::
-        Again: **there's no response body for LCC book requests!**
+        Again: **by default, there's no response body for LCC book requests!**
         An HTTP 204 No Content status code confirms that Allmyles saved the
         sent data for later use.
+
+    .. warning::
+        If you have chosen alternative providers - that means there IS a book response
+        for LCC flights, **this is the response that contains the exact final price** that
+        should be shown to the traveler. This price contains the baggage and hand luggage
+        surcharges, if applicable.
 
     .. warning::
         The format of :ref:`Flight_Contact` and :ref:`flight-result` objects contained
@@ -1024,6 +1071,8 @@ Response Body
         this documentation as requested. This will be fixed in a later version.
 
     :JSON Parameters:
+        - **price** (:ref:`Price`) -- *only in alternative LCC book response!*
+          final price updated with baggage surcharges
         - **pnr** (*String*) -- the PNR locator which identifies this booking
         - **lastTicketingDate** (*String*) -- the timestamp of when it's last
           possible to create a ticket for the booking, in ISO format
@@ -1240,10 +1289,14 @@ Request
 Response Body
 =============
 
-    As this is just an abstraction for the book call when buying an LCC ticket
-    (there's no separate book and ticketing calls for those flights), the
-    response differs greatly depending on whether the flight is traditional or
-    LCC.
+    By default, this is just an abstraction for the book call when buying an
+    LCC ticket (there's no separate book and ticketing calls for those flights).
+    This means the response differs greatly depending on whether the flight is
+    traditional or LCC booked through the *default* providers.
+
+    If you have chosen *alternative* providers (you would have to contact the
+    Allmyles support about this first), there **is** a separate book response for
+    LCC flights, but the ticket response is the same as described below.
 
     :JSON Parameters for traditional flights:
         - **tickets** (*Ticket [ ]*) -- the purchased tickets
