@@ -130,12 +130,16 @@ FlightResult
         flight can require an extra 5-10 second call to the external provider.
 
         This surcharge is retrieved in the _`FlightDetails` call.
-
-    .. warning::
-        If you have chosen *alternative* providers, a **price_charged_by_provider**
-        field will be present in the search response. This displays the total fare in
-        currency the airline is charging. **Important**: this price might change later
-        as it is not yet updated with credit card and other surcharges.
+        
+     .. warning::
+        The prices returned in the fields **total_fare** and **ticketing_fee** are
+        converted to HUF by default if the provider returns them in a different
+        currency. When displaying prices to the user, please refer to
+        **price_charged_by_provider** for a more accurate fare, where the total fare
+        is returned in the currency the airline is charging, or
+        **total_fare_in_preferred_currencies** for prices converted from the
+        original currency. **Important**: this price might change later
+        as it is not yet updated with credit card and other surcharges
 
     :JSON Parameters:
         - **breakdown** (:ref:`Breakdown` *\[ \]*) -- summary of passenger data
@@ -147,11 +151,19 @@ FlightResult
           objects
         - **total_fare_in_preferred_currencies** (*\[ \]*) -- total fare converted
           to the client's preferred currencies, including service fee and ticketing fee
+          
           - **currency** (*String*)
           - **total_fare** (*Float*)
         - **ticketing_fee_in_preferred_currencies** (*\[ \]*) -- ticketing fee converted
-        to the client's preferred currencies, including service fee and ticketing fee
+          to the client's preferred currencies, including service fee and ticketing fee
+          
           - **currency** (*String*)
+          - **ticketing_fee** (*Float*)
+        - **price_charged_by_provider** (*\[ \]*) -- fare and ticketing fee in the currency
+          the airline is charging
+          
+          - **currency** (*String*)
+          - **total_fare** (*Float*)
           - **ticketing_fee** (*Float*)
 
 .. _Breakdown:
@@ -400,6 +412,11 @@ Response
                   "ticketing_fee": 5.74,
                 }
               ],
+              "price_charged_by_provider": {
+                "currency":GBP",
+                 "ticketing_fee": 3.66,
+                 "total_fare": 72,
+              },
               "combinations": [
                 {
                   "providerType": "TravelFusionProvider",
