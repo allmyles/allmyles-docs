@@ -623,7 +623,8 @@ BaggageTier
           is present in the *total* field.
         - **total** -- Some airlines don't limit the weights of each bag, only
           the total weight of all the bags, and the number of bags.
-          - **weight** (*Float*)v-- maximum summed weight of all the bags the
+          
+          - **weight** (*Float*) -- maximum summed weight of all the bags the
             passenger can take
           - **number_of_bags** (*Int*) -- number of bags that the passenger can
             take
@@ -1071,8 +1072,8 @@ Response Body
         this documentation as requested. This will be fixed in a later version.
 
     :JSON Parameters:
-        - **price** (:ref:`Price`) -- *only in alternative LCC book response!*
-          final price updated with baggage surcharges
+        - **price** (:ref:`Price`) -- final price updated with baggage surcharges.
+          **Only in alternative LCC book response!**
         - **pnr** (*String*) -- the PNR locator which identifies this booking
         - **lastTicketingDate** (*String*) -- the timestamp of when it's last
           possible to create a ticket for the booking, in ISO format
