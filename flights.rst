@@ -139,7 +139,7 @@ FlightResult
         is returned in the currency the airline is charging, or
         **total_fare_in_preferred_currencies** for prices converted from the
         original currency. **Important**: this price might change later
-        as it is not yet updated with credit card and other surcharges
+        as it is not yet updated with credit card and other surcharges.
 
     :JSON Parameters:
         - **breakdown** (:ref:`Breakdown` *\[ \]*) -- summary of passenger data
