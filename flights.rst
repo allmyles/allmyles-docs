@@ -131,7 +131,7 @@ FlightResult
 
         This surcharge is retrieved in the _`FlightDetails` call.
         
-     .. warning::
+    .. warning::
         The prices returned in the fields **total_fare** and **ticketing_fee** are
         converted to HUF by default if the provider returns them in a different
         currency. When displaying prices to the user, please refer to
