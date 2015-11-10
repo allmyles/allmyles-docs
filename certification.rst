@@ -46,8 +46,12 @@ The site must send all required HTTP headers with correct values:
   a time. Parallel periodic requests must not be sent for different flight
   searches. When the processing of a flight search call is
   in progress (Allmyles API is responding with 202) and a new search request
-  is submitted with different parameters in the same client session,
-  periodic requesting of the result of the previous search should stop. 
+  is submitted with different parameters in the same client session, a HTTP 412
+  error will be returned.
+- After the Allmyles API returned a status other than 202 with a content body
+  in response to a search request, and a new search request is submitted in the 
+  same client session, periodic requesting of the result of the previous search
+  should stop. 
 - Once the flight result is retrieved once, it shouldn't be requested
   again later in the same workflow.
 - Flight details calls must only be made once the passenger has explicitly
