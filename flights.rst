@@ -1795,7 +1795,8 @@ Response
 ---------------
 
 This call cancels the booking identified in the request. Bookings can only
-be cancelled before a ticket is created.
+be cancelled before a ticket is created. **Only traditional flights can be
+cancelled!**
 
 Request
 =======
