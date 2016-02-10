@@ -1003,6 +1003,8 @@ Request
         - **contactInfo** (:ref:`Flight_Contact`) -- contact info for ticket creation
         - **persons** (:ref:`Passenger` *\[ \]*) -- the list of passengers
         - **userData** (:ref:`User_Data`) -- information about the end user
+        - **tenantReferenceId** (*String*) -- *(optional)* ID of the booking on the tenant's
+          side - can be useful for debugging purposes
 
 .. _Flight_Contact:
 
