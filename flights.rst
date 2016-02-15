@@ -1246,10 +1246,10 @@ Response
 If payment is required---that is, if the flight is an LCC one---this is where
 Allmyles gets the payment data.
 
-The only supported payment provider at the moment is PayU. When we receive a
+Allmyles is a payment platform agnostic solution. When we receive a
 transaction ID that points to a successful payment by the passenger, we
-essentially take that money from PayU, and forward it to the provider to buy a
-ticket in the :ref:`Flight_Ticketing` step.
+essentially take that money from any Payment Service Provider (PSP), 
+and forward it to the provider to buy a ticket in the :ref:`Flight_Ticketing` step.
 
 Request
 =======
@@ -1258,7 +1258,7 @@ Request
 
     :JSON Parameters:
         - **payuId** (*String*) -- the transaction ID identifying the
-          successful transaction at PayU
+          successful transaction at your PSP
         - **basket** (*String[ ]*) -- the booking IDs the payment is for
 
 Response Body
