@@ -79,8 +79,12 @@ Displaying Errors to Users
 - Error messages must include an identifier for debugging purposes, which must
   be the same as the session cookie.
 
-.. frontend error example:
-  An error has occured during the processing of your search. Session id: 12345
+.. note::
+
+  For example, an error during the search must return a message like this on the
+  frontend, regardless of the error you have received from our API:
+  
+  ``An error has occured during the processing of your search. Session id: 12345``
 
 ------------
  Masterdata
