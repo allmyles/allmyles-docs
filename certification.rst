@@ -51,7 +51,7 @@ The site must send all required HTTP headers with correct values:
 - After the Allmyles API returned a status other than 202 with a content body
   in response to a search request, and a new search request with different parameters
   is submitted in the same client session, periodic requesting of the result
-  of the previous search should stop. 
+  of the previous search should stop.
 - Once the flight result is retrieved once, it shouldn't be requested
   again later in the same workflow.
 - Flight details calls must only be made once the passenger has explicitly
@@ -68,6 +68,19 @@ The site must send all required HTTP headers with correct values:
   we are referring to the payment from the passenger to the travel site.)
 - The passenger's transaction must not be refunded unless the
   Allmyles API explicitly says that it is okay to do so.
+
+------------------------
+Displaying Errors to Users
+------------------------
+
+- Error messages on the frontend must not be the same as the message received
+  from our API.
+- Error messages must be meaningful for the end-user.
+- Error messages must include an identifier for debugging purposes, which must
+  be the same as the session cookie.
+
+.. frontend error example:
+  An error has occured during the processing of your search. Session id: 12345
 
 ------------
  Masterdata

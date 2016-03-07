@@ -92,6 +92,24 @@ to those, we can also return the following status codes:
  - **503 Service Unavailable**: Servers are accessible, but overloaded.
    Try and repeat the request later.
 
+------------------------
+Displaying Errors to Users
+------------------------
+
+When displaying errors to your users you must:
+
+ - **Not** directly display our errors on your frontend.
+ - Show a **meaningful** error message to the user.
+ - Include the **session cookie** in the error message as an error code or error
+   identifier.
+
+.. note::
+
+  Our error messages are meant to be information rich for the developers and are
+  not optimal for direct reproduction on the frontend. They might contain
+  information that is seen as cryptic to your users which is why we require that
+  you make them more user friendly and fitting for your service.
+
 --------------------
  Asynchronous Calls
 --------------------
