@@ -50,6 +50,7 @@ Request
           searched by default
         - **persons** (:ref:`Person`) -- a list of passengers, grouped by type
           code, containing Persons
+        - **userData** (:ref:`User_Data`) -- information about the end user
         - **fromAirport** (*String*) -- *(optional)* departure airport, given
           as IATA code, must be in the city specified in ``fromLocation``
         - **toAirport** (*String*) -- *(optional)* destination airport, given
@@ -112,6 +113,16 @@ Cabin types
 -----------
 
     One of ``economy``, ``premium economy``, ``business`` or ``first``
+    
+.. _User_Data:
+
+User Data
+---------
+    :JSON Parameters:
+        - **ip** (*String*) -- the end user's IP address, e.g. ``12.123.45.67.``
+        - **browser_agent** (*String*) -- the end user's browser agent based on
+          the User-Agent HTTP header, e.g. 
+          ``Mozilla/5.0 (X11; Linux x86_64; rv:12.0) Gecko/20100101 Firefox/21.0``
 
 Response Body
 =============
@@ -1070,16 +1081,6 @@ Document
         - **dateOfExpiry** (*String*) -- format is YYYY-MM-DD
         - **issueCountry** (*String*) -- two letter code of issuing country
         - **type** (*String*) -- one of :ref:`DocumentTypes`
-
-.. _User_Data:
-
-User Data
----------
-    :JSON Parameters:
-        - **ip** (*String*) -- the end user's IP address, e.g. ``12.123.45.67.``
-        - **browser_agent** (*String*) -- the end user's browser agent based on
-          the User-Agent HTTP header, e.g. 
-          ``Mozilla/5.0 (X11; Linux x86_64; rv:12.0) Gecko/20100101 Firefox/21.0``
 
 Response Body
 =============
