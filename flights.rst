@@ -38,6 +38,14 @@ Request
         In most cases you'll want to pass 00:00:00 as time for both your
         departure and your return date. Time filtering constraints will be
         very strict otherwise, often resulting in no matches for your query.
+        
+    .. note::
+        If you plan to present the results of :ref:`Flexible_Date_Search` and
+        regular search at the same time to your users, you have two options.
+        1. You send both requests in one session - you can only send the second
+           request when you already have the results of the first one.
+        2. You send the two requests in separate sessions - in this case you have to
+           include :ref:`Flexible_Date_Search_Reference` in the regular search request.
 
     :JSON Parameters:
         - **fromLocation** (*String*) -- departure location, given as IATA code
@@ -62,6 +70,9 @@ Request
         - **extraDays** (*Integer*) -- *(optional)* number of days to call
           :ref:`Flexible_Date_Search` with, between 1-3
         - **options** (:ref:`Options`) -- *(optional)* sorting and filtering options
+        - **flexible_date_search_reference** (:ref:`Flexible_Date_Search_Reference`) --
+          *(only in case of choosing option 2 described in the note above)* data about
+          the flexible date search made with the same parameters as the regular one
 
 .. _Person:
 
@@ -123,6 +134,16 @@ User Data
         - **browser_agent** (*String*) -- the end user's browser agent based on
           the User-Agent HTTP header, e.g. 
           ``Mozilla/5.0 (X11; Linux x86_64; rv:12.0) Gecko/20100101 Firefox/21.0``
+          
+ .. _Flexible_Date_Search_Reference:
+ 
+ Flexible Date Search Reference
+ ------------------------------
+     :JSON Parameters:
+        - **cookie** (*String*) -- the Cookie sent in the header of
+          the referenced flexible date search
+        - **extra_days** (*Integer*) -- number of days submitted in **extraDays** in
+          the referenced flexible date search 
 
 Response Body
 =============
@@ -364,7 +385,11 @@ Request
               "passengerType":"CHD",
               "quantity": 1
             }
-          ]
+          ],
+          "flexible_date_search_reference": {
+            "cookie": "1234567asdf",
+            "extra_days": 2
+          }
         }
 
 Response
@@ -503,7 +528,9 @@ Flexible Date Search
         To proceed with the flight workflow after a flexible date search, a
         regular search request must be sent with the parameters of the chosen
         option. It is not possible to make a booking based on booking IDs
-        returned in the flexible date search response!
+        returned in the flexible date search response! Please include the
+        **flexible_date_search_reference** parameters in the regular search sent
+        after a flexible date search.
 
     :JSON Parameters:
         - **fromLocation** (*String*) -- departure location, given as IATA code
