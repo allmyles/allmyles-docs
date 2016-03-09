@@ -38,11 +38,11 @@ Request
         In most cases you'll want to pass 00:00:00 as time for both your
         departure and your return date. Time filtering constraints will be
         very strict otherwise, often resulting in no matches for your query.
-        
+
     .. note::
         If you plan to present the results of :ref:`Flexible_Date_Search` and
         regular search at the same time to your users, you have two options.
-        
+
         1. You send both requests in one session - you can only send the second
           request when you already have the results of the first one.
         2. You send the two requests in separate sessions - in this case you have to
@@ -125,7 +125,7 @@ Cabin types
 -----------
 
     One of ``economy``, ``premium economy``, ``business`` or ``first``
-    
+
 .. _User_Data:
 
 User Data
@@ -133,18 +133,18 @@ User Data
     :JSON Parameters:
         - **ip** (*String*) -- the end user's IP address, e.g. ``12.123.45.67.``
         - **browser_agent** (*String*) -- the end user's browser agent based on
-          the User-Agent HTTP header, e.g. 
+          the User-Agent HTTP header, e.g.
           ``Mozilla/5.0 (X11; Linux x86_64; rv:12.0) Gecko/20100101 Firefox/21.0``
-          
+
 .. _Flexible_Date_Search_Reference:
- 
+
 Flexible Date Search Reference
 ------------------------------
     :JSON Parameters:
        - **cookie** (*String*) -- the Cookie sent in the header of
          the referenced flexible date search
        - **extra_days** (*Integer*) -- number of days submitted in **extraDays** in
-         the referenced flexible date search 
+         the referenced flexible date search
 
 Response Body
 =============
@@ -163,7 +163,7 @@ FlightResult
         flight can require an extra 5-10 second call to the external provider.
 
         This surcharge is retrieved in the _`FlightDetails` call.
-        
+
     .. warning::
         The prices returned in the fields **total_fare** and **ticketing_fee** are
         converted to HUF by default if the provider returns them in a different
@@ -184,17 +184,17 @@ FlightResult
           objects
         - **total_fare_in_preferred_currencies** (*\[ \]*) -- total fare converted
           to the client's preferred currencies, including service fee and ticketing fee
-          
+
           - **currency** (*String*)
           - **total_fare** (*Float*)
         - **ticketing_fee_in_preferred_currencies** (*\[ \]*) -- ticketing fee converted
           to the client's preferred currencies, including service fee and ticketing fee
-          
+
           - **currency** (*String*)
           - **ticketing_fee** (*Float*)
         - **price_charged_by_provider** (*\[ \]*) -- fare and ticketing fee in the currency
           the airline is charging
-          
+
           - **currency** (*String*)
           - **total_fare** (*Float*)
           - **ticketing_fee** (*Float*)
@@ -679,7 +679,7 @@ BaggageTier
           is present in the *total* field.
         - **total** -- Some airlines don't limit the weights of each bag, only
           the total weight of all the bags, and the number of bags.
-          
+
           - **weight** (*Float*) -- maximum summed weight of all the bags the
             passenger can take
           - **number_of_bags** (*Int*) -- number of bags that the passenger can
@@ -757,6 +757,7 @@ Field Names
     :Passenger:
         - namePrefix
         - firstName
+        - middleName
         - lastName
         - gender
         - birthDate
@@ -845,7 +846,7 @@ Response
                       },
                       {
                         "currency": "USD",
-                        "amount": 0.0 
+                        "amount": 0.0
                       }
                     ],
                 },
@@ -867,7 +868,7 @@ Response
                       },
                       {
                         "currency": "USD",
-                        "amount": 12.0 
+                        "amount": 12.0
                       }
                     ],
                 },
@@ -877,7 +878,7 @@ Response
                         "currency": "HUF",
                         "amount": 37024.8
                     },
-                    "max_weights": [], 
+                    "max_weights": [],
                     'total': {
                         'weight': 45,
                         'number_of_bags': 2,
@@ -889,7 +890,7 @@ Response
                       },
                       {
                         "currency": "USD",
-                        "amount": 22.0 
+                        "amount": 22.0
                       }
                     ],
                 }
@@ -918,7 +919,7 @@ Response
                   },
                   {
                     "currency": "USD",
-                    "amount": 22.0 
+                    "amount": 22.0
                   }
                 ],
             ],
@@ -995,7 +996,7 @@ Response
               },
               {
                 "currency": "USD",
-                "amount": 5162 
+                "amount": 5162
               }
             ],
             "surcharge_in_preferred_currencies": [
@@ -1007,7 +1008,7 @@ Response
               {
                 "currency": "USD",
                 "amount": 5.0
-                "card_type": "CA", 
+                "card_type": "CA",
               }
             ],
           }
@@ -1091,6 +1092,7 @@ Passenger
         - **email** (*String*)
         - **namePrefix** (*String*) -- one of ``Mr``, ``Ms``, or ``Mrs``
         - **firstName** (*String*)
+        - **middleName** (*String*) -- *(optional)*
         - **lastName** (*String*)
         - **gender** (*String*) -- one of ``MALE`` or ``FEMALE``
         - **passengerTypeCode** (*String*) -- one of :ref:`PassengerTypes`
@@ -1277,7 +1279,7 @@ Allmyles gets the payment data.
 
 Allmyles is a payment platform agnostic solution. When we receive a
 transaction ID that points to a successful payment by the passenger, we
-essentially take that money from any Payment Service Provider (PSP), 
+essentially take that money from any Payment Service Provider (PSP),
 and forward it to the provider to buy a ticket in the :ref:`Flight_Ticketing` step.
 
 Request
@@ -1386,7 +1388,7 @@ Response Body
           result from the :ref:`Flight_Search` call's response
         - **contactInfo** (:ref:`Flight_Contact`) -- contains a copy of the data
           received in the :ref:`Flight_Booking` call
-        
+
     :JSON Parameters for LCC flights:
         - **ticket** (*String*) -- the ticket number (LCC PNR) for this booking
         - **pnr** (*String*) -- the PNR locator which identifies this booking
@@ -1561,7 +1563,7 @@ Response
               },
               {
                 "currency": "USD",
-                "amount": 12.0 
+                "amount": 12.0
               }
             ],
           },
@@ -1579,7 +1581,7 @@ Response
               },
               {
                 "currency": "USD",
-                "amount": 12.0 
+                "amount": 12.0
               }
             ],
           }
