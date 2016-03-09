@@ -42,10 +42,11 @@ Request
     .. note::
         If you plan to present the results of :ref:`Flexible_Date_Search` and
         regular search at the same time to your users, you have two options.
+        
         1. You send both requests in one session - you can only send the second
-           request when you already have the results of the first one.
+          request when you already have the results of the first one.
         2. You send the two requests in separate sessions - in this case you have to
-           include :ref:`Flexible_Date_Search_Reference` in the regular search request.
+          include :ref:`Flexible_Date_Search_Reference` in the regular search request.
 
     :JSON Parameters:
         - **fromLocation** (*String*) -- departure location, given as IATA code
@@ -135,7 +136,7 @@ User Data
           the User-Agent HTTP header, e.g. 
           ``Mozilla/5.0 (X11; Linux x86_64; rv:12.0) Gecko/20100101 Firefox/21.0``
           
- .. _Flexible_Date_Search_Reference:
+.. _Flexible_Date_Search_Reference:
  
  Flexible Date Search Reference
  ------------------------------
