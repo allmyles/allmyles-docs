@@ -138,13 +138,13 @@ User Data
           
 .. _Flexible_Date_Search_Reference:
  
- Flexible Date Search Reference
- ------------------------------
-     :JSON Parameters:
-        - **cookie** (*String*) -- the Cookie sent in the header of
-          the referenced flexible date search
-        - **extra_days** (*Integer*) -- number of days submitted in **extraDays** in
-          the referenced flexible date search 
+Flexible Date Search Reference
+------------------------------
+    :JSON Parameters:
+       - **cookie** (*String*) -- the Cookie sent in the header of
+         the referenced flexible date search
+       - **extra_days** (*Integer*) -- number of days submitted in **extraDays** in
+         the referenced flexible date search 
 
 Response Body
 =============
