@@ -34,7 +34,11 @@ standard REST API (explained in later chapters) which can be easily fit with
 most common platforms used nowadays, including Ruby, node.js, Python, PHP
 (incl. Drupal), Java, C#/.Net, and so on.
 
+---------------------------
+ Wrappers and Example Code
+---------------------------
 
+* `PHP Allmyles API SDK <https://github.com/allmyles/allmyles-sdk-php/>`_
 
 --------------------
  Indices and tables
