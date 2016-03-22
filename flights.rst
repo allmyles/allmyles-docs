@@ -1599,7 +1599,13 @@ at external providers, in Allmyles' systems, on the client's server, or anywhere
 in between. The request will identify the correct workflow based on the cookie
 header's contents, which must match whatever was sent in the ticket request.
 
-The periodic checks should be made at most once every minute.
+If you're using **alternative providers** and an LCC booking returns with the
+status **pending** or **unknown**, keep in mind that the ticket could still be
+created successfully in the next 72 hours. You should keep making periodic
+:ref:`Flight_Ticketing_Status` requests at a reduced rated until a **successful**
+or **failed** status is returned or the 72-hour period is over.
+
+The periodic checks should be made at most once every 5 minutes.
 
 Available statuses
 ==================
