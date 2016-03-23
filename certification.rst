@@ -94,10 +94,10 @@ Attachments of the Certification
 You must include screenshots of the following on order to certify successfully:
 
 - Your booking page which includes fields for the first, middle and last names of each passenger.
-- Message displayed to users when booking has timed out
-- Message displayed to users when the external gateway has timed out
-- Message displayed to users when the flight is already booked
-- Message displayed to users when you receive an undefined error from the provider
+- Message displayed to users when booking has timed out.
+- Message displayed to users when the external gateway has timed out (http error code 504).
+- Message displayed to users when the flight is already booked (http error code 412).
+- Message displayed to users when you receive an undefined error from the provider (http error code 500).
 
 ------------
  Masterdata
