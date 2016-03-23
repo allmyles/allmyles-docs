@@ -42,6 +42,7 @@ The site must send all required HTTP headers with correct values:
   described in the documentation; infinite loops must never happen.
 - There should be a reasonable amount of time spent sleeping between
   each flight search call for one search.
+- The flight search request must contain the user data as it is explained in the documentation.
 - Within one client session only one flight search should be going on at
   a time. Parallel periodic requests must not be sent for different flight
   searches. When the processing of a flight search call is
@@ -92,6 +93,7 @@ Attachments of the Certification
 
 You must include screenshots of the following on order to certify successfully:
 
+- Your booking page which includes fields for the first, middle and last names of each passenger.
 - Message displayed to users when booking has timed out
 - Message displayed to users when the external gateway has timed out
 - Message displayed to users when the flight is already booked
