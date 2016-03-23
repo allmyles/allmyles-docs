@@ -86,6 +86,17 @@ Displaying Errors to Users
   
   ``An error has occured during the processing of your search. Session id: 12345``
 
+---------------------------------
+Attachments of the Certification
+---------------------------------
+
+You must include screenshots of the following on order to certify successfully:
+
+- Message displayed to users when booking has timed out
+- Message displayed to users when the external gateway has timed out
+- Message displayed to users when the flight is already booked
+- Message displayed to users when you receive an undefined error from the provider
+
 ------------
  Masterdata
 ------------
