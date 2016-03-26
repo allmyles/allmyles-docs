@@ -43,10 +43,8 @@ Request
         If you plan to present the results of :ref:`Flexible_Date_Search` and
         regular search at the same time to your users, you have two options.
 
-        1. You send both requests in one session - you can only send the second
-          request when you already have the results of the first one.
-        2. You send the two requests in separate sessions - in this case you have to
-          include :ref:`Flexible_Date_Search_Reference` in the regular search request.
+        1. You send both requests in one session - you can only send the second request when you already have the results of the first one.
+        2. You send the two requests in separate sessions - in this case you have to include :ref:`Flexible_Date_Search_Reference` in the regular search request, and set `to_be_referenced` to `True` in the flexible date search request.
 
     :JSON Parameters:
         - **fromLocation** (*String*) -- departure location, given as IATA code
@@ -74,6 +72,8 @@ Request
         - **flexible_date_search_reference** (:ref:`Flexible_Date_Search_Reference`) --
           *(only in case of choosing option 2 described in the note above)* data about
           the flexible date search made with the same parameters as the regular one
+        - **to_be_referenced** (*Boolean*) -- *(optional)* `True` if this is a flexible
+          date search and a regular search is to be called next with `flexible_date_search_reference`
 
 .. _Person:
 
