@@ -1039,7 +1039,7 @@ Request
     :JSON Parameters:
         - **bookBasket** (*String*) -- the booking ID of the :ref:`Combination`
           to book
-        - **billingInfo** (:ref:`Flight_Contact`) -- billing info for ticket creation
+        - **billingInfo** (:ref:`Flight_Billing`) -- billing info for ticket creation
         - **contactInfo** (:ref:`Flight_Contact`) -- contact info for ticket creation
         - **persons** (:ref:`Passenger` *\[ \]*) -- the list of passengers
         - **userData** (:ref:`User_Data`) -- information about the end user
@@ -1049,6 +1049,19 @@ Request
 .. _Flight_Contact:
 
 Contact
+-------
+
+    :JSON Parameters:
+        - **address** (:ref:`Flight_Address`) -- address of the the contact person
+        - **email** (*String*) -- email of the contact person
+        - **firstName** (*String*)
+        - **middleName** (*String*) -- *(optional)* submission of this parameter is mandatory if the person in question has a middle name
+        - **lastName** (*String*) 
+        - **phone** (:ref:`Flight_Phone`) -- phone number of the contact person
+        
+.. _Flight_Billing:
+
+Billing
 -------
 
     :JSON Parameters:
