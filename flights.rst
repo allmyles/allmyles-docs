@@ -1067,7 +1067,9 @@ Billing
     :JSON Parameters:
         - **address** (:ref:`Flight_Address`) -- address of the entity in question
         - **email** (*String*) -- email of the entity in question
-        - **name** (*String*) -- name of the entity in question
+        - **firstName** (*String*) -- name of the entity in question, if the entity is an organization this is the only name field that is required
+        - **middleName** (*String*) -- *(optional)* submission of this parameter is mandatory if the person in question has a middle name and must not be sent in if the entity in question is an organization
+        - **lastName** (*String*) -- *(optional)* submission of this parameter is mandatory if the entity in question is a person and it must not be included if the entity is an organization
         - **phone** (:ref:`Flight_Phone`) -- phone number of the entity in question
 
 .. _Flight_Address:
