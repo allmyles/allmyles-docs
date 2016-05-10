@@ -74,6 +74,7 @@ Request
           the flexible date search made with the same parameters as the regular one
         - **to_be_referenced** (*Boolean*) -- *(optional)* `True` if this is a flexible
           date search and a regular search is to be called next with `flexible_date_search_reference`
+        - **number_of_bags** (*Integer*) -- *(optional)* The number of bags to be bundled with the price of LCC flights **This option has no effect for searches with the default provider, please contact Allmyles for details on alternative providers.** 
 
 .. _Person:
 
