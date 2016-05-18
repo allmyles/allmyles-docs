@@ -74,7 +74,10 @@ Request
           the flexible date search made with the same parameters as the regular one
         - **to_be_referenced** (*Boolean*) -- *(optional)* `True` if this is a flexible
           date search and a regular search is to be called next with `flexible_date_search_reference`
-        - **number_of_bags** (*Integer*) -- *(optional)* The number of bags to be bundled with the price of LCC flights **This option has no effect for searches with the default provider, please contact Allmyles for details on alternative providers.** 
+        - **number_of_bags** (*Integer*) -- *(optional)* The number of bags to be bundled with the price of LCC flights. **This option has no effect for searches with the default provider, please contact Allmyles for details on alternative providers.** 
+        - **baggage_charges** (*Boolean*) -- *(optional)* Wheter or not you would like to receive the baggage price tiers in the search step of LCC flights. Baggage price tiers are always sent in the details step, only request this data if you are using it on search. **This option has no effect for searches with the default provider, please contact Allmyles for details on alternative providers.** 
+        - **check_in_charges** (*Boolean*) -- *(optional)* Wheter or not you would like to receive the check in price tiers in the search step of LCC flights. **This option has no effect for searches with the default provider, please contact Allmyles for details on alternative providers.** 
+        - **speedy_boarding_charges** (*Boolean*) -- *(optional)* Wheter or not you would like to receive the speedy boarding fee information in the search step of LCC flights. **This option has no effect for searches with the default provider, please contact Allmyles for details on alternative providers.** 
 
 .. _Person:
 
@@ -199,6 +202,10 @@ FlightResult
           - **currency** (*String*)
           - **total_fare** (*Float*)
           - **ticketing_fee** (*Float*)
+          - **baggageTiers** (:ref:`BaggageTier` *\[ \]*) -- contains the
+          different options the passenger has for bringing baggages along. May be requested to be included for LCC flights, otherwise not included in the results.
+          - **speedy_boarding_fee** (:ref:`Price` *\[ \]*) -- Only included in LCC results, and only when requested.
+          - **check_in_charges** (:ref:`CheckInCharges` *\[ \]*) -- Only included in LCC results, and only when requested.
 
 .. _Breakdown:
 
@@ -350,6 +357,16 @@ Comfort score
      - Red-eye flight status, meaning flight leaves or departs at an
        inconvenient time
      - The time elapsed between flight segments
+
+.. _CheckInCharges
+
+Check-in charges
+---------------
+
+    :JSON Parameters:
+        - **type** (*String*) - Usually "Airport Check-in" or "Web Check-in"
+        - **currency** (*String*)
+        - **amount** (*Float*)
 
 Response Codes
 ==============
