@@ -1105,7 +1105,7 @@ Phone
     :JSON Parameters:
         - **countryCode** (*String*)
         - **areaCode** (*String*)
-        - **phoneNumber** (*String*)
+        - **phoneNumber** (*String*) - Must be at least 7 characters long.
 
 .. _Passenger:
 
