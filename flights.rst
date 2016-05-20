@@ -202,6 +202,7 @@ FlightResult
           - **currency** (*String*)
           - **total_fare** (*Float*)
           - **ticketing_fee** (*Float*)
+          
         - **baggageTiers** (:ref:`BaggageTier` *\[ \]*) -- contains the different options the passenger has for bringing baggages along. May be requested to be included for LCC flights, otherwise not included in the results.
         - **speedy_boarding_fee** (:ref:`Price`) -- Only included in LCC results, and only when requested.
         - **check_in_charges** (:ref:`CheckInCharges` *\[ \]*) -- Only included in LCC results, and only when requested.
