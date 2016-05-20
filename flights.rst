@@ -358,7 +358,7 @@ Comfort score
        inconvenient time
      - The time elapsed between flight segments
 
-.. _CheckInCharges
+.. _CheckInCharges:
 
 Check-in charges
 ---------------
