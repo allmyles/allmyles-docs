@@ -250,12 +250,7 @@ Combination
     same total price, but the departure times, arrival times, and transfer
     locations can differ.
 
-    .. note::
-        As of May 2014, ``providerType`` can either be ``AmadeusProvider``, for
-        traditional flights, or ``TravelFusionProvider``, for LCC flights.
-
     :JSON Parameters:
-        - **providerType** (*String*) -- the provider the result is from
         - **bookingId** (*String*) -- the unique identifier of this
           combination (this is later used to identify the combination when
           booking, for example.)
@@ -474,7 +469,6 @@ Response
               },
               "combinations": [
                 {
-                  "providerType": "TravelFusionProvider",
                   "bookingId": "15_0_0",
                   "comfortScore": 47,
                   "firstLeg": {
