@@ -1301,8 +1301,7 @@ Response
  Payment
 ---------
 
-If payment is required---that is, if the flight is an LCC one---this is where
-Allmyles gets the payment data.
+This is where Allmyles gets the payment data.
 
 Allmyles is a payment platform agnostic solution. When we receive a
 transaction ID that points to a successful payment by the passenger, we
