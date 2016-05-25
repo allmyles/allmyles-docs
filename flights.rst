@@ -1314,7 +1314,7 @@ Request
 .. http:post:: /payment
 
     :JSON Parameters:
-        - **payuId** (*String*) -- the transaction ID identifying the
+        - **paymentId** (*String*) -- the transaction ID identifying the
           successful transaction at your PSP
         - **basket** (*String[ ]*) -- the booking IDs the payment is for
 
@@ -1345,7 +1345,7 @@ Request
     .. sourcecode:: json
 
         {
-          "payuId": "12345678",
+          "paymentId": "12345678",
           "basket": ["2_1_0"]
         }
 
