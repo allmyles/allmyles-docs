@@ -3,7 +3,7 @@
 ============================================
 
 **This version of the Allmyles API documentation is deprecated and will not be updated in the future.**
-**Please visit 'http://docs.allmyles.apiary.io <http://docs.allmyles.apiary.io/>'_ for the new version with autoamtically generated, ready to use code examples**
+**Please visit '<http://docs.allmyles.apiary.io/>'_ for the new version with autoamtically generated, ready to use code examples**
 
 ----------
  Contents
