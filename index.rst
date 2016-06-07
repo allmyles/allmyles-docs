@@ -2,6 +2,9 @@
  Welcome to the Allmyles API documentation!
 ============================================
 
+**This version of the Allmyles API documentation is deprecated and will not be updated in the future.**
+**Please visit http://docs.allmyles.apiary.io for the new version with autoamtically generated, ready to use code examples**
+
 ----------
  Contents
 ----------
