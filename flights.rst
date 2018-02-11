@@ -5,7 +5,7 @@
 ---------
  Summary
 ---------
-
+[![Run in Postman](https://run.pstmn.io/button.svg)](https://app.getpostman.com/run-collection/e15b607ef1d9df006339)
 The flight booking/ticket creation workflow consists of five steps.
 
  1. :ref:`Flight_Search`
