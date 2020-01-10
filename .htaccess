@@ -1,2 +1,3 @@
-#Redirect an entire site:
-Redirect 301 / https://allmyles.docs.apiary.io/
+RewriteEngine on
+RewriteBase /
+RewriteRule (.*) https://allmyles.docs.apiary.io/$1 [R=301,L]
