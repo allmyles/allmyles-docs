@@ -1,0 +1,2 @@
+#Redirect an entire site:
+Redirect 301 / https://allmyles.docs.apiary.io/
