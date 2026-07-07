@@ -1,0 +1,134 @@
+{
+  "env": {
+    "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1"
+  },
+  "permissions": {
+    "defaultMode": "bypassPermissions",
+    "allow": [
+      "Bash(.claude/hooks/pre-push-block-staging-merge.sh:*)",
+      "Bash(.claude/hooks/pre-push-format-check.sh:*)",
+      "Bash(.claude/scripts/auto_resolve_addressed_threads.sh:*)",
+      "Bash(.claude/scripts/cr_round_continuation.sh:*)",
+      "Bash(.claude/scripts/discover-targeted-tests.sh:*)",
+      "Bash(.claude/scripts/get-ci-formatters.sh:*)",
+      "Bash(.claude/scripts/jira_sprint_add.sh:*)",
+      "Bash(.claude/scripts/resolve_staging_conflict.sh:*)",
+      "Bash(.claude/scripts/run-all-formatters.sh:*)",
+      "Bash(.claude/scripts/wait_for_check_conclusion.sh:*)",
+      "Bash(.claude/scripts/wait_for_review_change.sh:*)",
+      "Bash(git merge-base:*)",
+      "Bash(git merge-file:*)",
+      "Bash(git merge-tree:*)",
+      "Bash(git show:*)",
+      "Bash(mkdir -p .gates/)",
+      "Bash(rm -rf .gates/)",
+      "Bash(touch .claude/*)",
+      "Bash(touch .gates/*)",
+      "Bash(touch .test-passed)"
+    ]
+  },
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"$CLAUDE_PROJECT_DIR/.claude/hooks/detect-jira-issue.sh\"",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash(git commit:*)",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"$CLAUDE_PROJECT_DIR/.claude/hooks/pre-commit-test-gate.sh\"",
+            "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "\"$CLAUDE_PROJECT_DIR/.claude/hooks/pre-commit-format-check.sh\"",
+            "timeout": 30
+          }
+        ]
+      },
+      {
+        "matcher": "Bash(git push:*)",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"$CLAUDE_PROJECT_DIR/.claude/hooks/pre-push-block-staging-merge.sh\"",
+            "timeout": 30
+          },
+          {
+            "type": "command",
+            "command": "\"$CLAUDE_PROJECT_DIR/.claude/hooks/pre-push-resolve-conflicts.sh\"",
+            "timeout": 60
+          },
+          {
+            "type": "command",
+            "command": "\"$CLAUDE_PROJECT_DIR/.claude/hooks/pre-push-run-tests.sh\"",
+            "timeout": 600
+          },
+          {
+            "type": "command",
+            "command": "\"$CLAUDE_PROJECT_DIR/.claude/hooks/pre-push-format-check.sh\"",
+            "timeout": 300
+          },
+          {
+            "type": "command",
+            "command": "\"$CLAUDE_PROJECT_DIR/.claude/hooks/pre-push-security-scan.sh\"",
+            "timeout": 30
+          },
+          {
+            "type": "command",
+            "command": "\"$CLAUDE_PROJECT_DIR/.claude/hooks/pre-push-coderabbit-review.sh\"",
+            "timeout": 30
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Bash(git push:*)",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"$CLAUDE_PROJECT_DIR/.claude/hooks/post-push-pr-check.sh\"",
+            "timeout": 600
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo 'AGENT STAFF ACTIVE. All agents enforced via hooks: QA (format check on commit), SecOps (security scan on push), Test (gate check on commit + test run on push), DevOps (PR check after push). Skills: /develop (all issue types incl. bugs), /review, /test. When user provides a Jira ticket key (e.g. DASH-XXXX, APY-XXXX, WHIT-XXXX), you MUST use the Skill tool.'"
+          },
+          {
+            "type": "command",
+            "command": "\"$CLAUDE_PROJECT_DIR/.claude/hooks/check-claude-version-drift.sh\"",
+            "timeout": 3
+          },
+          {
+            "type": "command",
+            "command": "\"$CLAUDE_PROJECT_DIR/.claude/hooks/check-kit-drift.sh\"",
+            "timeout": 8
+          },
+          {
+            "type": "command",
+            "command": "\"$CLAUDE_PROJECT_DIR/.claude/hooks/check-plugin-cache-drift.sh\"",
+            "timeout": 3
+          }
+        ]
+      }
+    ]
+  }
+}
