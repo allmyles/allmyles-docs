@@ -165,6 +165,81 @@ if [ ${#JS_FILES[@]} -gt 0 ]; then
     done <<< "$JS_FORMATTERS"
 fi
 
+# INF-174: actionlint pass for GitHub Actions workflow files.
+#
+# CI validates YAML syntax but NOT GitHub Actions semantics. A workflow
+# file can be valid YAML yet invalid to Actions — e.g. an empty ${{ }}
+# expression (even inside a run-block comment) invalidates the WHOLE file
+# at parse time, so it fails as a startup_failure with no job ever running.
+# DASH-2368 incident: PR #2965 passed PyYAML + Prettier + the full
+# CodeRabbit pipeline yet broke BOTH deploy pipelines on staging AND master
+# for ~35 min. actionlint (https://github.com/rhysd/actionlint) catches
+# invalid expressions, unknown keys, and type errors in workflow files.
+#
+# Runner resolution is portable and best-effort: prefer an `actionlint` on
+# PATH; else run the pinned Docker image; else emit a WARNING and skip. We
+# do NOT block a commit when the tool genuinely cannot be obtained — this
+# is local reinforcement of the CI check, not a hard dependency every
+# consumer must install. When the tool IS available and finds an error,
+# the finding lands in ERRORS and the existing exit-2 path blocks the
+# commit.
+WORKFLOW_FILES=()
+while IFS= read -r file; do
+    [ -n "$file" ] && WORKFLOW_FILES+=("$file")
+done < <( (git diff --cached --name-only --diff-filter=ACM -- '.github/workflows/*.yml' '.github/workflows/*.yaml' 2>/dev/null; git diff --name-only --diff-filter=ACM -- '.github/workflows/*.yml' '.github/workflows/*.yaml' 2>/dev/null) | sort -u )
+
+if [ ${#WORKFLOW_FILES[@]} -gt 0 ]; then
+    # The hook's REPO_ROOT points at the plugin/.claude dir, not the git
+    # repo root; resolve the actual repo root for the Docker bind mount.
+    GIT_ROOT="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
+    ACTIONLINT_RUNNER=""
+    if command -v actionlint >/dev/null 2>&1; then
+        ACTIONLINT_RUNNER="path"
+    elif docker ps >/dev/null 2>&1; then
+        ACTIONLINT_RUNNER="docker"
+    fi
+
+    if [ -z "$ACTIONLINT_RUNNER" ]; then
+        echo "WARNING: actionlint not on PATH and Docker not running — skipping" >&2
+        echo "         GitHub Actions workflow validation for: ${WORKFLOW_FILES[*]}" >&2
+        echo "         Install actionlint (https://github.com/rhysd/actionlint)" >&2
+        echo "         or start Docker to enable the INF-174 workflow-semantics check." >&2
+    else
+        if [ "$ACTIONLINT_RUNNER" = "path" ]; then
+            AL_OUTPUT=$(actionlint -no-color "${WORKFLOW_FILES[@]}" 2>&1)
+            AL_RC=$?
+        else
+            # Pinned image for reproducibility; repo mounted read-only at
+            # /repo (actionlint only reads), workflow paths are repo-root-
+            # relative so they resolve against `-w /repo`. _bounded (INF-164)
+            # so a hung/unresponsive Docker daemon cannot stall `git commit`.
+            AL_OUTPUT=$(_bounded 60 docker run --rm -v "$GIT_ROOT":/repo:ro -w /repo \
+                rhysd/actionlint:1.7.7 -no-color "${WORKFLOW_FILES[@]}" 2>&1)
+            AL_RC=$?
+            # CR round 1: Docker-LAYER failures are NOT actionlint verdicts.
+            # `docker run` returns 125 (daemon error / image-pull failure),
+            # 126 (entrypoint not executable), or 127 (entrypoint not found)
+            # before the container process ever runs; _bounded's timeout
+            # returns 124. actionlint's own finding exit code is 1. Treating
+            # 124-127 as a "workflow is broken" verdict would block commits on
+            # an image-pull miss or daemon flap. Reclassify them as the same
+            # best-effort skip as an unobtainable tool (never block).
+            if [ "$AL_RC" -ge 124 ] && [ "$AL_RC" -le 127 ]; then
+                echo "WARNING: actionlint Docker run failed (exit $AL_RC — image" >&2
+                echo "         pull / daemon / timeout, not a workflow error) —" >&2
+                echo "         skipping the INF-174 check for: ${WORKFLOW_FILES[*]}" >&2
+                AL_RC=0
+                AL_OUTPUT=""
+            fi
+        fi
+        if [ "$AL_RC" -ne 0 ]; then
+            ERRORS="${ERRORS}ACTIONLINT CHECK FAILED (INF-174 — GitHub Actions workflow semantics):\n"
+            ERRORS="${ERRORS}${AL_OUTPUT}\n"
+            ERRORS="${ERRORS}Fix: correct the workflow error above (e.g. an empty \${{ }} expression invalidates the whole file). See https://github.com/rhysd/actionlint.\n\n"
+        fi
+    fi
+fi
+
 # INF-138: tree-wide CI-parity check via run-all-formatters.sh.
 #
 # The per-file Black + flake8 above runs on the host's PATH (fast, ~1s)
