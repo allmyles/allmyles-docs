@@ -438,7 +438,7 @@ fi
 # emit a misleading "✅ Resolved … committed as …" line for a commit
 # that never happened. Fail loudly instead.
 if ! git commit -m "$COMMIT_MESSAGE"; then
-  echo "❌ git commit failed — see output above. Resolution files are still staged; investigate and commit manually, or `git reset` to discard." >&2
+  echo "❌ git commit failed — see output above. Resolution files are still staged; investigate and commit manually, or run 'git reset' to discard." >&2
   exit 2
 fi
 COMMIT_SHA=$(git rev-parse HEAD)
