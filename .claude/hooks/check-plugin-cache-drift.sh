@@ -25,8 +25,15 @@
 # Behavior:
 #   - Pin missing → SILENT (let check-kit-drift.sh emit the bootstrap
 #     advisory; this hook adds nothing on first-install).
-#   - installed_plugins.json missing → silent (no plugin installed,
-#     can't determine cache SHA).
+#   - Pin PRESENT but plugin not installed (installed_plugins.json
+#     missing, or no claude-kit entry in it) → LOUD advisory with the
+#     exact install commands (INF-195). The repo is kit-adopted — the
+#     fan-out delivered .claude/ — but this machine has never installed
+#     the plugin, so /develop and every other kit skill DOES NOT EXIST
+#     in the session and nothing else warns (the /develop cross-repo
+#     BLOCK can't fire without the skill; the mileometer-frontend
+#     MYST-9 incident, 2026-07-16). Repos WITHOUT the pin stay silent —
+#     they never adopted the kit and nagging them is noise.
 #   - Plugin SHA == pin SHA → silent (consumer is in sync with their
 #     installed plugin cache).
 #   - Plugin SHA != pin SHA → advisory "operator ran plugin update but
@@ -79,13 +86,21 @@ if [ ! -r "$PIN_FILE" ]; then
     exit 0
 fi
 
-# installed_plugins.json missing: plugin not installed via the
-# marketplace path, OR Claude Code's first-run before any install. We
-# can't determine the plugin cache SHA, so we can't detect drift.
-# Silent (the contract is "advise on detectable drift", not "advise on
-# every possible inconsistency").
-if [ ! -r "$INSTALLED_JSON" ]; then
+# INF-195: at this point the pin file EXISTS — this checkout is a
+# kit-adopted consumer. If the plugin is not installed on this machine,
+# no kit skill (/develop, /review, …) exists in the session and nothing
+# else warns; emit the exact remedy instead of staying silent. Shared by
+# the missing-file and missing-entry branches below.
+plugin_missing_advisory() {
+    touch "$MARKER_FILE" 2>/dev/null || true
+    printf '%s\n' "⚠️ This repo is claude-kit-adopted (pin present) but the claude-kit PLUGIN is not installed for this machine/project — kit skills like /develop are unavailable in this session. Fix: claude plugin marketplace update allmyles-claude-kit && claude plugin install claude-kit@allmyles-claude-kit --scope project — then RESTART Claude Code (skills load from the plugin cache at startup). Diagnose anytime with: bash .claude/scripts/kit-doctor.sh" >&2
     exit 0
+}
+
+# installed_plugins.json missing: no plugin has ever been installed on
+# this machine — but the pin says this repo expects one (INF-195).
+if [ ! -r "$INSTALLED_JSON" ]; then
+    plugin_missing_advisory
 fi
 
 # Read the pinned SHA. `// ""` normalizes a missing field or literal
@@ -120,8 +135,11 @@ fi
 
 if [ -z "$PLUGIN_SHA" ] || [ "$PLUGIN_SHA" = "null" ]; then
     # No claude-kit entry in installed_plugins.json — plugin not
-    # installed. Silent (same rationale as missing installed_plugins.json).
-    exit 0
+    # installed for any project on this machine, while the pin says this
+    # repo expects it. LOUD (INF-195; was silent pre-0.4.15, which is
+    # how the mileometer-frontend MYST-9 session ended up with no
+    # /develop skill and no warning).
+    plugin_missing_advisory
 fi
 
 # Match → silent. Consumer's pin file is in sync with the installed
