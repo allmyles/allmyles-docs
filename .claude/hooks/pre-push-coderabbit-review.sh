@@ -40,7 +40,11 @@ CHANGED_FILES=$(git diff "origin/${DEFAULT_BRANCH}...HEAD" --name-only --diff-fi
 # This prevents legacy patterns in untouched lines from blocking pushes.
 get_added_lines_for_file() {
     local file="$1"
-    git diff --unified=0 origin/master...HEAD -- "$file" 2>/dev/null \
+    # INF-187: diff against the DETECTED default branch, matching the
+    # rest of the hook. The previous hardcoded origin/master made every
+    # heuristic silently short-circuit on main-default repos ("No issues
+    # found" without inspecting a single line).
+    git diff --unified=0 "origin/${DEFAULT_BRANCH}...HEAD" -- "$file" 2>/dev/null \
       | grep '^+' \
       | grep -v '^\+\+\+' \
       | sed 's/^+//'

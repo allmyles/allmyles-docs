@@ -79,9 +79,14 @@ while read -r local_ref local_sha remote_ref remote_sha; do
     master | staging | main) continue ;;
   esac
 
-  # The branch's own ticket. If the branch name carries no DASH-XXXX,
-  # we can't determine ownership — skip (nothing to enforce).
-  branch_ticket=$(printf '%s' "$branch" | grep -oE 'DASH-[0-9]+' | head -1 || true)
+  # The branch's own ticket. If the branch name carries no ticket key,
+  # we can't determine ownership — skip (nothing to enforce). INF-187:
+  # prefix set covers every org board (previously DASH-only, which
+  # silently no-oped the anti-stacking check on APY/WHIT/INF/MYST
+  # branches — including the kit's own). Keep in sync with the
+  # PROJECT_KEY lookup in scripts/jira_sprint_add.sh (canonical list).
+  TICKET_PREFIXES='DASH|APY|WHIT|INF|MYST'
+  branch_ticket=$(printf '%s' "$branch" | grep -oE "($TICKET_PREFIXES)-[0-9]+" | head -1 || true)
   if [ -z "$branch_ticket" ]; then
     continue
   fi
@@ -96,9 +101,9 @@ while read -r local_ref local_sha remote_ref remote_sha; do
     [ -z "$sha" ] && continue
     subj=$(git log -1 --format='%s' "$sha" 2>/dev/null || true)
     # Extract ONLY the leading conventional-commit scope ticket
-    # (`type(DASH-XXXX):` or the breaking-change `type(DASH-XXXX)!:`).
-    # Empty for unscoped commits.
-    scope_ticket=$(printf '%s' "$subj" | sed -nE 's/^[a-zA-Z]+\((DASH-[0-9]+)\)!?:.*/\1/p' | head -1)
+    # (`type(KEY-XXXX):` or the breaking-change `type(KEY-XXXX)!:`).
+    # Empty for unscoped commits. Same INF-187 prefix set as above.
+    scope_ticket=$(printf '%s' "$subj" | sed -nE "s/^[a-zA-Z]+\((($TICKET_PREFIXES)-[0-9]+)\)!?:.*/\1/p" | head -1)
     if [ -n "$scope_ticket" ] && [ "$scope_ticket" != "$branch_ticket" ]; then
       VIOLATION=1
       # Capture the first violating branch so the message below names the

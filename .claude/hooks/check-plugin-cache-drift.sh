@@ -134,7 +134,27 @@ fi
 # `claude plugin marketplace update`) but the `.claude/` tree hasn't
 # been refreshed by `setup-project.sh`. Hooks and helper scripts in
 # `.claude/{hooks,scripts}/` may be behind the current plugin's version.
+#
+# INF-187: resolve setup-project.sh from the plugin's actual installPath
+# in installed_plugins.json (same source upgrade-kit.sh uses) — installed
+# plugins are cached OUTSIDE the project tree, so the previously
+# hardcoded `.claude/plugins/claude-kit/...` path never exists on a
+# standard install. Prefer the project-scoped entry; fall back to the
+# /upgrade-kit skill when no resolvable path is found.
+SETUP_PATH="$(jq -r --arg pwd "$PROJECT_DIR" '
+    (.plugins["claude-kit@allmyles-claude-kit"] // [])
+    | (map(select(.projectPath == $pwd)) + .)
+    | first
+    | .installPath // empty
+' "$INSTALLED_JSON" 2>/dev/null || echo "")"
+if [ -n "$SETUP_PATH" ] && [ -f "${SETUP_PATH}/scripts/setup-project.sh" ]; then
+    # Quote the resolved path in the copy-pasteable command — plugin
+    # cache paths can contain spaces (CR round 1.1).
+    REMEDY="run: bash '${SETUP_PATH}/scripts/setup-project.sh'"
+else
+    REMEDY="run the /upgrade-kit skill (setup-project.sh path could not be resolved from installed_plugins.json)"
+fi
 touch "$MARKER_FILE" 2>/dev/null || true
-printf '%s\n' "⚠️ claude-kit plugin cache (${PLUGIN_SHA:0:8}) is ahead of consumer pin (${PINNED_SHA:0:8}) — run: bash .claude/plugins/claude-kit/scripts/setup-project.sh && restart Claude Code so the refreshed hooks + scripts take effect." >&2
+printf '%s\n' "⚠️ claude-kit plugin cache (${PLUGIN_SHA:0:8}) is ahead of consumer pin (${PINNED_SHA:0:8}) — ${REMEDY} && restart Claude Code so the refreshed hooks + scripts take effect." >&2
 
 exit 0

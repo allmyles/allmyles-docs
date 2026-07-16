@@ -215,27 +215,62 @@ capped_sleep() {
   fi
 }
 
+# ── Shared response scratch file (INF-187, CWE-377) ───────────────────
+# mktemp + trap replaces the predictable PID-based
+# "$RESP_FILE" — a pre-created symlink at a
+# guessable path could redirect curl's -o write. The trap also retires
+# the per-branch rm calls (cleanup happens exactly once, on any exit).
+RESP_FILE=$(mktemp -t jira-sprint-add-resp-XXXXXX.json) || {
+  warn "mktemp failed for response scratch file"
+  emit "EXIT_REASON=API_ERROR"
+  exit 2
+}
+trap 'rm -f "$RESP_FILE"' EXIT
+
 # ── Step A: discover the latest active sprint matching PREFIX ─────────
 # The Agile API requires `Accept: application/json` (without it, agile
 # endpoints return 401 even with valid creds — REST v3 does not).
+#
+# INF-187: HTTP-status-aware, matching Step B's retry discipline. A
+# non-429 4xx (bad creds, missing board, revoked token) is permanent —
+# the previous indiscriminate retry burned the whole deadline window on
+# a failure that could never succeed.
 discover_sprint() {
-  local timeout="$1" resp
-  resp=$(curl -sS \
+  local timeout="$1" http_code
+  http_code=$(curl -sS -o "$RESP_FILE" -w "%{http_code}" \
               --connect-timeout "$timeout" \
               --max-time "$timeout" \
               -u "$JIRA_EMAIL:$JIRA_API_TOKEN" \
               -H "Accept: application/json" \
               "https://allmyles.atlassian.net/rest/agile/1.0/board/${BOARD_ID}/sprint?state=active" 2>>"$LOG")
-  if [ -z "$resp" ]; then
-    return 1
-  fi
-  # Pick the matching sprint with the latest startDate. Fail if none.
-  echo "$resp" | jq -r --arg prefix "$PREFIX" '
-    [.values[]
-     | select(.name | startswith($prefix))]
-    | sort_by(.startDate) | reverse
-    | first
-    | if . == null then "NONE" else "\(.id)\t\(.name)" end' 2>>"$LOG"
+  case "$http_code" in
+    2*)
+      # Pick the matching sprint with the latest startDate. Fail if none.
+      jq -r --arg prefix "$PREFIX" '
+        [.values[]
+         | select(.name | startswith($prefix))]
+        | sort_by(.startDate) | reverse
+        | first
+        | if . == null then "NONE" else "\(.id)\t\(.name)" end' \
+        < "$RESP_FILE" 2>>"$LOG"
+      ;;
+    429)
+      # Rate limit — transient, retry helps.
+      cat "$RESP_FILE" >> "$LOG" 2>/dev/null
+      return 1
+      ;;
+    4*)
+      # Permanent (auth/permissions/unknown board) — signal the caller
+      # to fail fast instead of retrying to the deadline.
+      cat "$RESP_FILE" >> "$LOG" 2>/dev/null
+      echo "PERMANENT:${http_code}"
+      ;;
+    *)
+      # 5xx / 000 (network) — transient.
+      cat "$RESP_FILE" >> "$LOG" 2>/dev/null
+      return 1
+      ;;
+  esac
 }
 
 SPRINT_LINE=""
@@ -248,6 +283,15 @@ while : ; do
   fi
   ATTEMPT=$((ATTEMPT + 1))
   SPRINT_LINE=$(discover_sprint "$(attempt_timeout "$REMAINING")" || echo "")
+  case "$SPRINT_LINE" in
+    PERMANENT:*)
+      # INF-187: non-429 4xx from the board endpoint — retrying cannot
+      # succeed; fail fast with the same EXIT_REASON Step B uses.
+      warn "sprint discovery permanent failure http=${SPRINT_LINE#PERMANENT:}"
+      emit "EXIT_REASON=API_ERROR"
+      exit 1
+      ;;
+  esac
   if [ -n "$SPRINT_LINE" ] && [ "$SPRINT_LINE" != "NONE" ]; then
     break
   fi
@@ -289,7 +333,7 @@ while : ; do
   fi
   ATTEMPT=$((ATTEMPT + 1))
   EFFECTIVE_TIMEOUT=$(attempt_timeout "$REMAINING")
-  HTTP_CODE=$(curl -sS -o /tmp/jira-sprint-add-resp-$$.json -w "%{http_code}" \
+  HTTP_CODE=$(curl -sS -o "$RESP_FILE" -w "%{http_code}" \
                    --connect-timeout "$EFFECTIVE_TIMEOUT" \
                    --max-time "$EFFECTIVE_TIMEOUT" \
                    -u "$JIRA_EMAIL:$JIRA_API_TOKEN" \
@@ -301,7 +345,6 @@ while : ; do
   emit "POST attempt=${ATTEMPT} http=${HTTP_CODE} timeout=${EFFECTIVE_TIMEOUT}"
   case "$HTTP_CODE" in
     204)
-      rm -f /tmp/jira-sprint-add-resp-$$.json
       # Defense-in-depth (INF-127): verify the assigned sprint's name
       # actually starts with the prefix we filtered on. The
       # discover_sprint jq filter is supposed to guarantee this — but the
@@ -332,8 +375,7 @@ while : ; do
       # batch. Retry with the same exponential backoff as the transient
       # branch, but emit EXIT_REASON=RATE_LIMIT if the deadline expires
       # before a 204.
-      cat /tmp/jira-sprint-add-resp-$$.json >> "$LOG" 2>/dev/null
-      rm -f /tmp/jira-sprint-add-resp-$$.json
+      cat "$RESP_FILE" >> "$LOG" 2>/dev/null
       RATE_LIMITED=1
       REMAINING=$(( DEADLINE - $(date +%s) ))
       ACTUAL_SLEEP=$(capped_sleep "$BACKOFF" "$REMAINING")
@@ -345,15 +387,13 @@ while : ; do
     4*)
       # Permanent failure (auth/permissions/bad payload). Retrying
       # won't help; fail fast so the caller surfaces the warning.
-      cat /tmp/jira-sprint-add-resp-$$.json >> "$LOG" 2>/dev/null
-      rm -f /tmp/jira-sprint-add-resp-$$.json
+      cat "$RESP_FILE" >> "$LOG" 2>/dev/null
       warn "permanent failure http=${HTTP_CODE}"
       emit "EXIT_REASON=API_ERROR"
       exit 2
       ;;
     *)
-      cat /tmp/jira-sprint-add-resp-$$.json >> "$LOG" 2>/dev/null
-      rm -f /tmp/jira-sprint-add-resp-$$.json
+      cat "$RESP_FILE" >> "$LOG" 2>/dev/null
       REMAINING=$(( DEADLINE - $(date +%s) ))
       ACTUAL_SLEEP=$(capped_sleep "$BACKOFF" "$REMAINING")
       warn "transient http=${HTTP_CODE}; retrying in ${ACTUAL_SLEEP}s (capped from ${BACKOFF}s by remaining ${REMAINING}s)"

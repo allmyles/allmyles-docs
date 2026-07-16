@@ -26,9 +26,16 @@ except:
     pass
 " 2>/dev/null)
 
-# Check if the prompt contains a Jira issue key (DASH-XXXX pattern)
-if echo "$PROMPT" | grep -qiE 'DASH-[0-9]+'; then
-    ISSUE_KEY=$(echo "$PROMPT" | grep -oiE 'DASH-[0-9]+' | head -1 | tr '[:lower:]' '[:upper:]')
+# Check if the prompt contains a Jira issue key. INF-187: the prefix set
+# covers every org board (previously DASH-only, which silently missed the
+# kit's own INF tickets and every APY/WHIT/MYST cross-repo run). Keep in
+# sync with the PROJECT_KEY lookup in scripts/jira_sprint_add.sh — that
+# lookup is the canonical board list.
+TICKET_PREFIXES='DASH|APY|WHIT|INF|MYST'
+# \b boundaries keep embedded tokens (fooINF-123, INF-123abc) from
+# matching while standalone keys still do (CR round 1.1).
+if echo "$PROMPT" | grep -qiE "\b($TICKET_PREFIXES)-[0-9]+\b"; then
+    ISSUE_KEY=$(echo "$PROMPT" | grep -oiE "\b($TICKET_PREFIXES)-[0-9]+\b" | head -1 | tr '[:lower:]' '[:upper:]')
     echo "JIRA ISSUE DETECTED: $ISSUE_KEY"
     echo ""
     echo "MANDATORY: You MUST use the Skill tool to invoke the /develop skill:"

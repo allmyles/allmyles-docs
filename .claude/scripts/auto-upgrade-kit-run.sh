@@ -48,6 +48,32 @@ cd "$PROJECT_ROOT" 2>/dev/null || { log "cannot cd to $PROJECT_ROOT"; exit 0; }
 git rev-parse --show-toplevel >/dev/null 2>&1 || { log "$PROJECT_ROOT is not a git repo"; exit 0; }
 log "auto-upgrade worker starting in $PROJECT_ROOT"
 
+# INF-187: EVERY network-touching call in this detached worker is bounded
+# by a finite timeout (previously only the plugin-refresh calls were —
+# a hung `git fetch`/`git push`/`gh pr create` could park the worker
+# forever with the operator none the wiser). When no timeout/gtimeout
+# binary exists, `_bounded` degrades to a shell watchdog (background the
+# command, kill it at the deadline) instead of running unbounded — the
+# worker is detached, so an unbounded hang is invisible (CR round 1.1).
+TIMEOUT_BIN=""
+for _t in timeout gtimeout; do command -v "$_t" >/dev/null 2>&1 && { TIMEOUT_BIN="$_t"; break; }; done
+_bounded() {
+    local _secs="$1"; shift
+    if [ -n "$TIMEOUT_BIN" ]; then
+        "$TIMEOUT_BIN" "$_secs" "$@"
+        return $?
+    fi
+    "$@" &
+    local _pid=$!
+    ( sleep "$_secs"; kill "$_pid" 2>/dev/null ) &
+    local _wd=$!
+    local _rc=0
+    wait "$_pid" || _rc=$?
+    kill "$_wd" 2>/dev/null
+    wait "$_wd" 2>/dev/null
+    return "$_rc"
+}
+
 # --- Advance the plugin BEFORE copying files (INF-162) ---
 # `claude plugin marketplace update` alone only refreshes the marketplace CACHE;
 # it does NOT advance the *installed* plugin (so skills would stay on the old
@@ -80,10 +106,9 @@ if command -v "$CLAUDE_BIN" >/dev/null 2>&1; then
     # can't hang this detached worker forever. Both degrade gracefully: if
     # another worker holds the lock, or a call times out/fails, we log and
     # proceed with whatever is cached (the guardrail still protects the copy).
-    TIMEOUT_BIN=""
-    for _t in timeout gtimeout; do command -v "$_t" >/dev/null 2>&1 && { TIMEOUT_BIN="$_t"; break; }; done
+    # TIMEOUT_BIN is resolved top-level (INF-187) — reuse it here.
     run_claude() {  # bounded when a timeout binary exists, plain otherwise
-        if [ -n "$TIMEOUT_BIN" ]; then "$TIMEOUT_BIN" 120 "$CLAUDE_BIN" "$@"; else "$CLAUDE_BIN" "$@"; fi
+        _bounded 120 "$CLAUDE_BIN" "$@"
     }
     LOCK="${HOME}/.claude/plugins/.kit-refresh.lock"
     mkdir -p "$(dirname "$LOCK")" 2>/dev/null
@@ -119,14 +144,14 @@ fi
 DEFAULT="$(git symbolic-ref --short refs/remotes/origin/HEAD 2>/dev/null | sed 's#^origin/##')"
 [ -z "$DEFAULT" ] && DEFAULT="$(git rev-parse --abbrev-ref HEAD 2>/dev/null)"
 [ -z "$DEFAULT" ] && { log "cannot resolve default branch"; exit 0; }
-git fetch -q origin "$DEFAULT" 2>>"$LOG" || true
+_bounded 60 git fetch -q origin "$DEFAULT" 2>>"$LOG" || true
 BASE_SHA="$(git rev-parse --short "origin/${DEFAULT}" 2>/dev/null || git rev-parse --short HEAD)"
 BR="kit-upgrade/${BASE_SHA}"
 
 # --- Isolated worktree: all work happens here, NOT in the operator's checkout ---
 WT_PARENT="$(mktemp -d -t kit-upg-wt-XXXXXX 2>/dev/null)" || { log "mktemp failed"; exit 0; }
 WT="${WT_PARENT}/wt"
-if ! git worktree add -q -b "$BR" "$WT" "origin/${DEFAULT}" 2>>"$LOG"; then
+if ! _bounded 60 git worktree add -q -b "$BR" "$WT" "origin/${DEFAULT}" 2>>"$LOG"; then
     log "could not create worktree at $WT (branch $BR may exist) — aborting"; exit 0
 fi
 
@@ -148,18 +173,18 @@ if [ -z "$(git -C "$WT" diff --cached --name-only)" ]; then
     log "no staged .claude changes after OK — nothing to commit"; exit 0
 fi
 git -C "$WT" commit -q -m "chore: auto-upgrade claude-kit (only .claude/ changed)" 2>>"$LOG"
-if ! git -C "$WT" push -q -u origin "$BR" 2>>"$LOG"; then
-    log "push failed"; exit 0
+if ! _bounded 120 git -C "$WT" push -q -u origin "$BR" 2>>"$LOG"; then
+    log "push failed/timed out"; exit 0
 fi
 
 # Open the PR and enable native auto-merge. gh resolves the repo from the
 # current directory (PROJECT_ROOT — same repo/remote as the worktree), and the
 # head branch $BR is already on origin.
-PR_URL="$("$GH" pr create --base "$DEFAULT" --head "$BR" \
+PR_URL="$(_bounded 120 "$GH" pr create --base "$DEFAULT" --head "$BR" \
     --title "chore: auto-upgrade claude-kit" \
     --body "Automated kit upgrade (INF-155). Only \`.claude/\` changed — the upgrade-kit guardrail refuses anything else. Set to auto-merge." 2>>"$LOG")"
 log "opened PR: ${PR_URL:-<none>}"
-"$GH" pr merge --auto --merge "$BR" >>"$LOG" 2>&1 \
+_bounded 120 "$GH" pr merge --auto --merge "$BR" >>"$LOG" 2>&1 \
     && log "auto-merge enabled" \
     || log "could not enable auto-merge (repo may require review — merges once mergeable, or run /upgrade-kit)"
 exit 0
