@@ -34,7 +34,10 @@ PROJECT_DIR="${CLAUDE_PROJECT_DIR:-$PWD}"
 DOCTOR_HOME="${KIT_DOCTOR_HOME:-$HOME}"
 INSTALLED_JSON="${DOCTOR_HOME}/.claude/plugins/installed_plugins.json"
 PLUGIN_KEY="claude-kit@allmyles-claude-kit"
-INSTALL_PAIR="claude plugin marketplace update allmyles-claude-kit && claude plugin install claude-kit@allmyles-claude-kit --scope project"
+# INF-196: prefer the ONE-TIME user-scope install — it makes the kit
+# available in EVERY repo on this machine (current and future consumers),
+# with each repo's committed enabledPlugins declaration keeping it active.
+INSTALL_PAIR="claude plugin marketplace update allmyles-claude-kit && claude plugin install claude-kit@allmyles-claude-kit --scope user"
 
 PASS=0; FAIL=0; WARNINGS=0
 ok()    { printf '✅ %s\n' "$1"; PASS=$((PASS + 1)); }
@@ -117,9 +120,13 @@ INSTALL_PATH=""
 if [ ! -r "$INSTALLED_JSON" ]; then
     bad "claude-kit plugin is NOT installed on this machine — kit skills (/develop, /review, …) do not exist in your sessions" "${INSTALL_PAIR} — then RESTART Claude Code"
 else
+    # Selection order (INF-196): exact project match → user-scope
+    # (machine-wide, the recommended steady state) → any other entry.
     ENTRY="$(jq -r --arg pwd "$PROJECT_DIR" --arg key "$PLUGIN_KEY" '
         (.plugins[$key] // [])
-        | (map(select(.projectPath == $pwd)) + .)
+        | (map(select(.projectPath == $pwd))
+           + map(select(.scope == "user"))
+           + .)
         | first // empty
         | @json' "$INSTALLED_JSON" 2>/dev/null)"
     if [ -z "$ENTRY" ]; then
@@ -130,10 +137,15 @@ else
         PLUGIN_SHA="$(printf '%s' "$ENTRY" | jq -r '.gitCommitSha // ""' 2>/dev/null)"
         INSTALL_PATH="$(printf '%s' "$ENTRY" | jq -r '.installPath // ""' 2>/dev/null)"
         PROJECT_MATCH="$(printf '%s' "$ENTRY" | jq -r --arg pwd "$PROJECT_DIR" 'if .projectPath == $pwd then "yes" else "no" end' 2>/dev/null)"
+        ENTRY_SCOPE="$(printf '%s' "$ENTRY" | jq -r '.scope // ""' 2>/dev/null)"
         if [ "$PROJECT_MATCH" = "yes" ]; then
             ok "plugin installed for THIS project (${PLUGIN_SHA:0:8})"
+        elif [ "$ENTRY_SCOPE" = "user" ]; then
+            # INF-196: a user-scope install covers every repo on the
+            # machine — this is the RECOMMENDED steady state, not a warning.
+            ok "plugin installed machine-wide (user scope, ${PLUGIN_SHA:0:8}) — covers this and every consumer repo"
         else
-            warnl "plugin installed on this machine (${PLUGIN_SHA:0:8}) but not scoped to this project" "if skills are missing in this repo's sessions: ${INSTALL_PAIR} — then restart Claude Code"
+            warnl "plugin installed on this machine (${PLUGIN_SHA:0:8}) but only for other projects (scope: ${ENTRY_SCOPE:-unknown})" "one-time fix for ALL repos: ${INSTALL_PAIR} — then restart Claude Code"
         fi
         if [ -n "$INSTALL_PATH" ] && [ -d "$INSTALL_PATH" ]; then
             ok "plugin cache exists on disk"

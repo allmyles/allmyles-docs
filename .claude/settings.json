@@ -130,5 +130,16 @@
         ]
       }
     ]
+  },
+  "extraKnownMarketplaces": {
+    "allmyles-claude-kit": {
+      "source": {
+        "source": "github",
+        "repo": "allmyles/claude-kit"
+      }
+    }
+  },
+  "enabledPlugins": {
+    "claude-kit@allmyles-claude-kit": true
   }
 }
