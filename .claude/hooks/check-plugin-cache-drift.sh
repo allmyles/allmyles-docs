@@ -93,7 +93,7 @@ fi
 # the missing-file and missing-entry branches below.
 plugin_missing_advisory() {
     touch "$MARKER_FILE" 2>/dev/null || true
-    printf '%s\n' "⚠️ This repo is claude-kit-adopted (pin present) but the claude-kit PLUGIN is not installed for this machine/project — kit skills like /develop are unavailable in this session. Fix: claude plugin marketplace update allmyles-claude-kit && claude plugin install claude-kit@allmyles-claude-kit --scope project — then RESTART Claude Code (skills load from the plugin cache at startup). Diagnose anytime with: bash .claude/scripts/kit-doctor.sh" >&2
+    printf '%s\n' "⚠️ This repo is claude-kit-adopted (pin present) but the claude-kit PLUGIN is not installed for this machine/project — kit skills like /develop are unavailable in this session. One-time fix for ALL repos on this machine (INF-196): claude plugin marketplace update allmyles-claude-kit && claude plugin install claude-kit@allmyles-claude-kit --scope user — then RESTART Claude Code (skills load from the plugin cache at startup). Diagnose anytime with: bash .claude/scripts/kit-doctor.sh" >&2
     exit 0
 }
 
