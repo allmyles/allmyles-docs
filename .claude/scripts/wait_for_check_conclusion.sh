@@ -8,7 +8,11 @@
 # for rationale and invocation pattern.
 #
 # Args: PR_NUMBER CHECK_NAME [TIMEOUT_SECONDS=1800]
-# Exit: 0 with EXIT_REASON=success|failure on conclusion,
+# Exit: 0 with EXIT_REASON=<conclusion> on ANY terminal conclusion
+#       (success | failure | cancelled | timed_out | action_required |
+#       stale — INF-187: the non-success/failure terminals previously
+#       polled until the full TIMEOUT even though the check would never
+#       conclude differently),
 #       1 with EXIT_REASON=TIMEOUT after the hard deadline.
 
 set -u
@@ -84,8 +88,14 @@ while [ $SECONDS -lt $DEADLINE ]; do
     PREV_CONCLUSION=$CONCLUSION
   fi
 
+  # INF-187: every terminal conclusion exits immediately with its actual
+  # value. `cancelled`/`timed_out`/`action_required`/`stale` previously
+  # fell through and polled until the 30-min TIMEOUT — the check-run was
+  # already concluded and could never flip to success/failure. Downstream
+  # (SKILL.md Step 9b item 7b) routes any non-success/failure token into
+  # the leftover-findings degrade path, so new values are safe to emit.
   case "$CONCLUSION" in
-    success|failure)
+    success|failure|cancelled|timed_out|action_required|stale)
       emit "EXIT_REASON=$CONCLUSION"
       exit 0
       ;;

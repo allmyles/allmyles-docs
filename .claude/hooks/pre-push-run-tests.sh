@@ -20,18 +20,24 @@ fi
 # Self-no-op: this hook enforces /develop's gate-file + branch-naming
 # convention. Consumers that don't enable /develop (or that aren't on a
 # Jira-driven workflow) shouldn't be blocked. Skip if neither the gates
-# directory nor a DASH-XXXX branch prefix is present — both are needed for
-# the gate enforcement to make sense.
+# directory nor a ticket-key branch prefix is present — both are needed
+# for the gate enforcement to make sense.
 # (DASH-2122: kit consumers opt in to /develop via their CLAUDE.md overlay.)
+# INF-187: prefix set covers every org board (previously DASH-only — the
+# branch-name gate would have BLOCKED legitimate APY/WHIT/INF/MYST
+# branches on gate-adopting repos). Keep in sync with the PROJECT_KEY
+# lookup in scripts/jira_sprint_add.sh (canonical board list).
+TICKET_PREFIXES='DASH|APY|WHIT|INF|MYST'
 BRANCH=$(git branch --show-current)
-if [ ! -d "$PROJECT_ROOT/.gates" ] && ! [[ "$BRANCH" =~ ^DASH-[0-9]+ ]]; then
+if [ ! -d "$PROJECT_ROOT/.gates" ] && ! [[ "$BRANCH" =~ ^($TICKET_PREFIXES)-[0-9]+ ]]; then
     exit 0
 fi
 
 # Validate branch name follows Jira naming convention (now that we know the
-# repo IS using /develop's workflow — gates dir exists OR branch is DASH-*).
-if [[ ! "$BRANCH" =~ ^DASH-[0-9]+ ]]; then
-    echo "BLOCKED: Branch name '$BRANCH' must start with a JIRA issue key (e.g. DASH-1234-description)" >&2
+# repo IS using /develop's workflow — gates dir exists OR branch carries a
+# ticket key).
+if [[ ! "$BRANCH" =~ ^($TICKET_PREFIXES)-[0-9]+ ]]; then
+    echo "BLOCKED: Branch name '$BRANCH' must start with a JIRA issue key (e.g. DASH-1234-description, INF-123/description)" >&2
     exit 2
 fi
 
@@ -101,7 +107,12 @@ if [ ${#MISSING_GATES[@]} -gt 0 ]; then
     echo "Complete the missing steps before pushing." >&2
     echo "" >&2
     echo "If this is a docs/config-only change, create missing gates:" >&2
-    echo "  touch $GATES_DIR/{$(IFS=,; echo "${MISSING_GATES[*]}")}" >&2
+    # INF-187: one `touch` line per gate. The previous single brace-list
+    # line didn't expand when only ONE gate was missing — `touch
+    # .gates/{db-synced}` creates a literal `{db-synced}` file.
+    for gate in "${MISSING_GATES[@]}"; do
+        echo "  touch $GATES_DIR/$gate" >&2
+    done
     exit 2
 fi
 

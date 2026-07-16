@@ -58,10 +58,29 @@ fi
 
 declare -a FORMATTERS=()
 
+# INF-187 drift trip-wire: the entries below hardcode CI's command shapes,
+# gated only by a step-NAME grep — exactly the silent-drift risk this
+# script exists to eliminate. verify_ci_cmd extracts the step's actual
+# `run:` line and warns loudly (stderr, non-fatal) when it no longer
+# contains the hardcoded shape, so a CI-side command change surfaces at
+# the next local run instead of as a local-passes-CI-fails surprise.
+verify_ci_cmd() {
+    local step="$1" expect="$2" actual
+    actual="$(awk -v s="name: ${step}" '
+        index($0, s) { f = 1; next }
+        f && /run:/ { sub(/.*run:[[:space:]]*/, ""); print; exit }
+        f && /- name:/ { exit }
+    ' "$PIPELINE_FILE")"
+    if [ -n "$actual" ] && ! printf '%s' "$actual" | grep -qF "$expect"; then
+        echo "WARN: CI step '${step}' now runs '${actual}' which no longer contains '${expect}' — get-ci-formatters.sh's hardcoded shape has drifted from CI; update it (INF-187)" >&2
+    fi
+}
+
 # --- Python formatters (from "lint" job, runs from repo root) -------------
 
 if grep -q "Run black" "$PIPELINE_FILE"; then
     # CI exact: ``black --check --config pyproject.toml .`` (feature_pipeline.yaml:358)
+    verify_ci_cmd "Run black" "black --check --config pyproject.toml"
     FORMATTERS+=("black|black --check --config pyproject.toml|black --config pyproject.toml|python|.")
 fi
 
@@ -69,6 +88,7 @@ if grep -q "Run flake8" "$PIPELINE_FILE"; then
     # CI exact: ``flake8 . --count --show-source --statistics`` (feature_pipeline.yaml:361)
     # No fix mode for flake8 — same command for check; emit it twice so
     # callers iterating over the entry don't need to special-case.
+    verify_ci_cmd "Run flake8" "flake8"
     FORMATTERS+=("flake8|flake8 --count --show-source --statistics|flake8 --count --show-source --statistics|python|.")
 fi
 
@@ -79,12 +99,14 @@ if grep -q "Run Prettier" "$PIPELINE_FILE"; then
     # which resolves via package.json's "format:check" script. Keep the
     # script-invocation shape so any future package.json change to that
     # script (e.g., new --ignore-path flag) propagates automatically.
+    verify_ci_cmd "Run Prettier" "npm run format:check"
     FORMATTERS+=("prettier|npm run format:check|npm run format|js|mileometer")
 fi
 
 if grep -q "Run ESLint" "$PIPELINE_FILE"; then
     # CI exact: ``npm run lint`` from ./mileometer (feature_pipeline.yaml:387-388)
     # Same package.json-indirection rationale as prettier.
+    verify_ci_cmd "Run ESLint" "npm run lint"
     FORMATTERS+=("eslint|npm run lint|npm run lint:fix|js|mileometer")
 fi
 

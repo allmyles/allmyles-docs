@@ -146,6 +146,19 @@ if [ ${#JS_FILES[@]} -gt 0 ]; then
         # diagnostic.
         if [ "$TOOL_BIN" = "npm" ]; then
             if [ -n "${_cwd:-}" ] && [ "$_cwd" != "." ]; then
+                # INF-187: _cwd is interpolated into a bash -c string —
+                # constrain it to a safe repo-relative shape first so a
+                # malformed formatter entry (quote, `..`, leading dash,
+                # absolute path) can't inject shell syntax or escape the
+                # repo. Dot-prefixed relative paths (`./packages`) are
+                # legitimate (CR round 1.1); `..` is rejected as a PATH
+                # COMPONENT, not a substring, so a literal `a..b`
+                # directory name stays usable.
+                if ! printf '%s' "$_cwd" | grep -qE '^(\./)?[A-Za-z0-9_][A-Za-z0-9_./-]*$' \
+                   || printf '%s' "$_cwd" | grep -qE '(^|/)\.\.(/|$)'; then
+                    echo "WARN: skipping formatter '$name' — unsafe cwd '$_cwd' (INF-187 guard)" >&2
+                    continue
+                fi
                 NPM_RUN=( bash -c "cd '$_cwd' && exec ${CHECK_CMD_ARR[*]}" )
             else
                 NPM_RUN=( "${CHECK_CMD_ARR[@]}" )
