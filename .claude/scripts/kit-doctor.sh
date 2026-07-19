@@ -101,6 +101,22 @@ if [ -f "${PROJECT_DIR}/.claude/settings.json" ]; then
 else
     bad ".claude/settings.json missing — hooks are not registered" "pull the latest default branch, or run setup-project.sh"
 fi
+# INF-198: playwright-first testing gate readiness. Warning-level — the
+# /develop Step 8/10 gates degrade gracefully to the manual prompt when the
+# playwright MCP server is absent, so a missing declaration never blocks.
+# CR round 1.1: validate SHAPE, not just presence — `"playwright": {}` has
+# no runnable command and must not report ready. Runnable = object with a
+# non-empty command AND a version-pinned @playwright/mcp package in args.
+if [ -f "${PROJECT_DIR}/.mcp.json" ] && jq -e '
+        .mcpServers.playwright
+        | (type == "object")
+          and ((.command // "") != "")
+          and (((.args // []) | map(tostring)) | any(startswith("@playwright/mcp@")))
+    ' "${PROJECT_DIR}/.mcp.json" >/dev/null 2>&1; then
+    ok ".mcp.json declares a runnable, version-pinned playwright MCP server (playwright-first testing gate ready)"
+else
+    warnl ".mcp.json missing or its playwright server is absent/not runnable — /develop testing gates fall back to the manual prompt" "re-run setup-project.sh (ships the kit's mcp.template.json), restart Claude Code; ensure Google Chrome is installed (the pinned MCP drives the chrome channel)"
+fi
 PIN_SHA=""
 if [ -f "${PROJECT_DIR}/.claude/claude-kit-pin.json" ]; then
     PIN_SHA="$(jq -r '.kitSha // ""' "${PROJECT_DIR}/.claude/claude-kit-pin.json" 2>/dev/null)"

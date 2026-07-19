@@ -98,8 +98,17 @@ if ! bash "$SETUP" > "$SETUP_LOG" 2>&1; then
 fi
 
 # What changed? Strip the 2 status chars + space; keep the new path for renames.
+# INF-198: the repo-root `.mcp.json` joins `.claude/` as kit-managed — it is
+# the ONLY place Claude Code reads project MCP-server declarations from (the
+# playwright-first testing gate needs it), so setup-project.sh writes it at
+# the root by necessity. Exact-path whitelist — `.mcp.json.bak` or any other
+# root file still BLOCKs.
+# CR round 1.2: keep BOTH sides of rename entries — `s/.* -> //` dropped
+# the source path, so `outside-secret.json -> .mcp.json` would have been
+# judged only by its destination and slipped the guard. Splitting the
+# arrow onto two lines validates source AND destination independently.
 paths_outside() {
-    git status --porcelain | sed 's/^...//; s/.* -> //' | grep -vE '^\.claude/' || true
+    git status --porcelain | sed 's/^...//' | awk '{gsub(/ -> /, "\n"); print}' | grep -vE '^\.claude/' | grep -vE '^(")?\.mcp\.json(")?$' || true
 }
 CHANGED_COUNT="$(git status --porcelain | wc -l | tr -d ' ')"
 
