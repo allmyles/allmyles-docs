@@ -61,7 +61,16 @@ if [ -z "$CONSUMERS_YAML" ] || [ ! -f "$CONSUMERS_YAML" ]; then
     echo "consumers.yaml not found — this audit only runs from a claude-kit checkout" >&2
     echo "AUDIT_RESULT=INFRA_ERROR reached=0 pending=0 expected=none"; exit 2
 fi
-CONSUMERS="$(awk '$1=="-" && $2=="repo:" {print $3}' "$CONSUMERS_YAML")"
+# INF-203: exclude the kit's own self-entry — consumers.yaml records
+# allmyles/claude-kit for self-adoption (INF-179), but the fan-out never
+# delivers to it, so its pin can never equal a fresh release SHA and the
+# audit would report PARTIAL forever (first live run, 0.4.20). The
+# exclusion is printed, never silent.
+ALL_ENTRIES="$(awk '$1=="-" && $2=="repo:" {print $3}' "$CONSUMERS_YAML")"
+if printf '%s\n' "$ALL_ENTRIES" | grep -qx "allmyles/claude-kit"; then
+    echo "── allmyles/claude-kit: skipped (self) — the fan-out does not deliver to the kit repo itself"
+fi
+CONSUMERS="$(printf '%s\n' "$ALL_ENTRIES" | grep -vx "allmyles/claude-kit" || true)"
 [ -n "$CONSUMERS" ] || {
     echo "no repos parsed from ${CONSUMERS_YAML}" >&2
     echo "AUDIT_RESULT=INFRA_ERROR reached=0 pending=0 expected=none"; exit 2
