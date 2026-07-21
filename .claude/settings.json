@@ -12,6 +12,7 @@
       "Bash(.claude/scripts/discover-targeted-tests.sh:*)",
       "Bash(.claude/scripts/get-ci-formatters.sh:*)",
       "Bash(.claude/scripts/jira_sprint_add.sh:*)",
+      "Bash(.claude/scripts/kit-release-audit.sh:*)",
       "Bash(.claude/scripts/resolve_staging_conflict.sh:*)",
       "Bash(.claude/scripts/run-all-formatters.sh:*)",
       "Bash(.claude/scripts/wait_for_check_conclusion.sh:*)",
