@@ -151,6 +151,24 @@ if [ "$PINNED_SHA" = "$PLUGIN_SHA" ]; then
     exit 0
 fi
 
+# INF-205: kit-checkout convergence. In the kit repo ITSELF the pin is
+# legitimately stale forever (the fan-out never delivers to the kit), so
+# pin-vs-cache mismatch would fire the INF-201 auto-updater + notice at
+# EVERY session start with no way to converge. The kit checkout's truth
+# is its own origin/master: when the installed cache already equals the
+# local origin/master ref, the cache is current — stay silent. Local-only
+# (no network): the ref is from the last fetch, which the /develop Init
+# master-sync refreshes constantly in practice.
+SELF_REMOTE="$(git -C "$PROJECT_DIR" remote get-url origin 2>/dev/null || echo "")"
+case "$SELF_REMOTE" in
+    *allmyles/claude-kit*)
+        SELF_MASTER="$(git -C "$PROJECT_DIR" rev-parse origin/master 2>/dev/null || echo "")"
+        if [ -n "$SELF_MASTER" ] && [ "$PLUGIN_SHA" = "$SELF_MASTER" ]; then
+            exit 0
+        fi
+        ;;
+esac
+
 # Mismatch → the pin and the installed cache disagree. Two directions,
 # one machine-level remedy each:
 #   - pin AHEAD of cache (the INF-201 incident class: the fan-out

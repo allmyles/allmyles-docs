@@ -61,14 +61,17 @@ if [ -z "$CONSUMERS_YAML" ] || [ ! -f "$CONSUMERS_YAML" ]; then
     echo "consumers.yaml not found — this audit only runs from a claude-kit checkout" >&2
     echo "AUDIT_RESULT=INFRA_ERROR reached=0 pending=0 expected=none"; exit 2
 fi
-# INF-203: exclude the kit's own self-entry — consumers.yaml records
-# allmyles/claude-kit for self-adoption (INF-179), but the fan-out never
-# delivers to it, so its pin can never equal a fresh release SHA and the
-# audit would report PARTIAL forever (first live run, 0.4.20). The
-# exclusion is printed, never silent.
+# INF-203/INF-205: the kit's own self-entry (consumers.yaml records
+# allmyles/claude-kit for self-adoption, INF-179) is excluded from PIN
+# polling — the fan-out never delivers to the kit repo, so its pin can
+# never equal a fresh release SHA (first live run, 0.4.20, reported
+# PARTIAL forever). INF-205 upgrades the bare skip to a real SELF check
+# (kit master CI + committed-copies parity at the expected SHA) — see
+# the self-audit block after the consumer sweep.
 ALL_ENTRIES="$(awk '$1=="-" && $2=="repo:" {print $3}' "$CONSUMERS_YAML")"
+SELF_PRESENT=0
 if printf '%s\n' "$ALL_ENTRIES" | grep -qx "allmyles/claude-kit"; then
-    echo "── allmyles/claude-kit: skipped (self) — the fan-out does not deliver to the kit repo itself"
+    SELF_PRESENT=1
 fi
 CONSUMERS="$(printf '%s\n' "$ALL_ENTRIES" | grep -vx "allmyles/claude-kit" || true)"
 [ -n "$CONSUMERS" ] || {
@@ -181,15 +184,76 @@ for repo in $CONSUMERS; do
     fi
 done
 
+# ── SELF check (INF-205) — the kit repo's own currency, pin-free ───────
+# The operator's challenge on 0.4.22 ("you did not check your own
+# claude-kit ci either"): the kit is the one consumer nothing measured.
+# Verified here: (a) kit master CI (kit_tests) conclusion for the
+# expected SHA, (b) committed .claude/{scripts,hooks} copies equal their
+# plugins/claude-kit canonical sources AT that SHA (self-adoption rule).
+SELF_STATUS="absent"
+if [ "$SELF_PRESENT" = "1" ]; then
+    KIT_ROOT="$(cd "$(dirname "$CONSUMERS_YAML")" && pwd)"
+    SELF_CI="$("$GH" run list -R allmyles/claude-kit --workflow kit_tests.yaml --commit "$EXPECTED" -L 1 --json conclusion --jq '.[0].conclusion // "missing"' 2>/dev/null)"
+    [ -z "$SELF_CI" ] && SELF_CI="missing"
+    SELF_PARITY="ok"
+    if git -C "$KIT_ROOT" cat-file -e "${EXPECTED}^{commit}" 2>/dev/null; then
+        # CR round 1.1: BOTH directions. A .claude copy whose canonical
+        # plugins/ source no longer exists at the SHA is an ORPHAN — a
+        # retired helper that survived in the consumer-facing tree —
+        # and counts as drift. (Canonical files absent from .claude are
+        # NORMAL: the copy lists deliberately exclude test_*,
+        # templates, setup-project.sh itself.)
+        for d in scripts hooks; do
+            while IFS= read -r f; do
+                [ -z "$f" ] && continue
+                b="$(basename "$f")"
+                SRC="plugins/claude-kit/$d/$b"
+                if git -C "$KIT_ROOT" cat-file -e "$EXPECTED:$SRC" 2>/dev/null; then
+                    A="$(git -C "$KIT_ROOT" rev-parse "$EXPECTED:$f" 2>/dev/null)"
+                    B="$(git -C "$KIT_ROOT" rev-parse "$EXPECTED:$SRC" 2>/dev/null)"
+                    if [ "$A" != "$B" ]; then
+                        SELF_PARITY="drift:$b"
+                        break 2
+                    fi
+                else
+                    SELF_PARITY="drift:orphan:$b"
+                    break 2
+                fi
+            done <<< "$(git -C "$KIT_ROOT" ls-tree --name-only "$EXPECTED" ".claude/$d/" 2>/dev/null)"
+        done
+    else
+        # Expected SHA not in the local checkout (audit run before a
+        # pull) — parity is unverifiable, not failed.
+        SELF_PARITY="unknown"
+    fi
+    if [ "$SELF_CI" = "success" ] && [ "$SELF_PARITY" = "ok" ]; then
+        SELF_STATUS="ok"
+        echo "   ✅ allmyles/claude-kit: self ok (ci=${SELF_CI}, copies=parity)"
+        echo "AUDIT_CONSUMER repo=allmyles/claude-kit pin=self status=self-ok"
+    elif [ "$SELF_CI" = "success" ] && [ "$SELF_PARITY" = "unknown" ]; then
+        # CR round 1.1: unverifiable is NOT failed — say so and leave the
+        # verdict alone (the previous code silently collapsed this into
+        # fail, contradicting the documented design).
+        SELF_STATUS="unknown"
+        echo "   ⚠️ allmyles/claude-kit: self UNKNOWN (ci=${SELF_CI}, copies unverifiable — expected SHA not in this checkout; fetch master and re-run for a full self verdict)"
+        echo "AUDIT_CONSUMER repo=allmyles/claude-kit pin=self status=self-unknown"
+    else
+        SELF_STATUS="fail"
+        echo "   ❌ allmyles/claude-kit: self FAIL (ci=${SELF_CI}, copies=${SELF_PARITY})"
+        echo "AUDIT_CONSUMER repo=allmyles/claude-kit pin=self status=self-fail"
+        echo "      remedy: CI red → inspect the kit_tests run on ${EXPECTED:0:8}; copies drift/orphan → re-run setup-project.sh in the kit checkout, remove retired copies, and commit (self-adoption rule)"
+    fi
+fi
+
 if [ "$INFRA_FAIL" = "1" ]; then
     # CR round 1.1: a failed lookup in the final sweep is infrastructure,
     # not a pending consumer — the audit cannot honestly report reach.
-    echo "AUDIT_RESULT=INFRA_ERROR reached=${REACHED_COUNT} pending=${PENDING_COUNT} expected=${EXPECTED:0:8}"
+    echo "AUDIT_RESULT=INFRA_ERROR reached=${REACHED_COUNT} pending=${PENDING_COUNT} expected=${EXPECTED:0:8} self=${SELF_STATUS}"
     exit 2
 fi
-if [ "$PENDING_COUNT" = "0" ]; then
-    echo "AUDIT_RESULT=ALL_REACHED reached=${REACHED_COUNT} pending=0 expected=${EXPECTED:0:8}"
+if [ "$PENDING_COUNT" = "0" ] && [ "$SELF_STATUS" != "fail" ]; then
+    echo "AUDIT_RESULT=ALL_REACHED reached=${REACHED_COUNT} pending=0 expected=${EXPECTED:0:8} self=${SELF_STATUS}"
     exit 0
 fi
-echo "AUDIT_RESULT=PARTIAL reached=${REACHED_COUNT} pending=${PENDING_COUNT} expected=${EXPECTED:0:8}"
+echo "AUDIT_RESULT=PARTIAL reached=${REACHED_COUNT} pending=${PENDING_COUNT} expected=${EXPECTED:0:8} self=${SELF_STATUS}"
 exit 1
