@@ -176,7 +176,7 @@ if [ -n "$PIN_SHA" ] && [ -n "$PLUGIN_SHA" ]; then
     if [ "$PIN_SHA" = "$PLUGIN_SHA" ]; then
         ok "repo .claude/ copies match the installed plugin (same SHA)"
     else
-        warnl "installed plugin (${PLUGIN_SHA:0:8}) differs from the repo pin (${PIN_SHA:0:8})" "if the plugin is newer: run setup-project.sh to refresh .claude/; if the repo is newer: ${INSTALL_PAIR}. Restart Claude Code afterwards."
+        warnl "installed plugin (${PLUGIN_SHA:0:8}) differs from the repo pin (${PIN_SHA:0:8})" "the session-start hook auto-updates the cache by default (INF-201) — restart Claude Code and this usually self-heals; manual paths: plugin newer → setup-project.sh, repo newer → ${INSTALL_PAIR}. Opt-out flag: kit.auto_cache_update: false."
     fi
 fi
 

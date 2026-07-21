@@ -71,7 +71,10 @@ fi
 
 PROJECT_DIR="${CLAUDE_PROJECT_DIR:-$PWD}"
 PIN_FILE="${PROJECT_DIR}/.claude/claude-kit-pin.json"
-INSTALLED_JSON="${HOME}/.claude/plugins/installed_plugins.json"
+# KIT_CACHE_DRIFT_HOME: test override for the machine-level plugin state
+# (INF-201) — production always uses $HOME.
+DRIFT_HOME="${KIT_CACHE_DRIFT_HOME:-$HOME}"
+INSTALLED_JSON="${DRIFT_HOME}/.claude/plugins/installed_plugins.json"
 
 # jq required for clean JSON parsing; silent skip otherwise (same
 # contract as check-kit-drift.sh).
@@ -148,10 +151,48 @@ if [ "$PINNED_SHA" = "$PLUGIN_SHA" ]; then
     exit 0
 fi
 
-# Mismatch → emit the advisory. Operator updated the plugin cache (via
-# `claude plugin marketplace update`) but the `.claude/` tree hasn't
-# been refreshed by `setup-project.sh`. Hooks and helper scripts in
-# `.claude/{hooks,scripts}/` may be behind the current plugin's version.
+# Mismatch → the pin and the installed cache disagree. Two directions,
+# one machine-level remedy each:
+#   - pin AHEAD of cache (the INF-201 incident class: the fan-out
+#     delivered a new pin but nobody advanced the plugin cache, so
+#     sessions keep loading OLD skills) → `claude plugin update`.
+#   - cache AHEAD of pin (operator ran plugin update but not
+#     setup-project.sh) → setup-project.sh.
+# Direction is not reliably determinable offline (SHAs are unordered),
+# and running the cache update is safe in BOTH directions (it converges
+# the cache on current master; a stale pin is then the fan-out's job).
+#
+# INF-201 — auto-update by DEFAULT ("the update leg of the no-copy-
+# pasting agreement"): unless kit.auto_cache_update is the literal
+# false, launch the bounded kit-cache-update-run.sh worker in the
+# background (never blocks session start) and say so in one line. The
+# next session restart loads the refreshed skills with zero operator
+# commands. Opt-out or missing worker → the pre-INF-201 advisory.
+# has()-based read: `.kit.auto_cache_update // empty` would swallow the
+# JSON literal false (jq treats false as falsy — the DASH-1915
+# default_assignee bug class) and erase the opt-out.
+read_auto_update() {
+    jq -r 'if (.kit // {}) | has("auto_cache_update") then (.kit.auto_cache_update | tostring) else empty end' "$1" 2>/dev/null
+}
+AUTO_UPDATE="$(read_auto_update "${PROJECT_DIR}/.claude/settings.local.json")"
+[ -z "$AUTO_UPDATE" ] && AUTO_UPDATE="$(read_auto_update "${PROJECT_DIR}/.claude/settings.json")"
+# KIT_CACHE_UPDATE_WORKER: test override — production resolves the
+# worker next to this hook (.claude/hooks/ → .claude/scripts/ on
+# consumers; hooks/ → scripts/ in the plugin tree).
+UPDATE_WORKER="${KIT_CACHE_UPDATE_WORKER:-$(cd "$(dirname "$0")/../scripts" 2>/dev/null && pwd)/kit-cache-update-run.sh}"
+if [ "$AUTO_UPDATE" != "false" ] && [ -f "$UPDATE_WORKER" ]; then
+    touch "$MARKER_FILE" 2>/dev/null || true
+    UPDATE_LOG="/tmp/kit-cache-update-${SESSION_ID}.log"
+    nohup bash "$UPDATE_WORKER" "$UPDATE_LOG" >/dev/null 2>&1 &
+    printf '%s\n' "🔄 claude-kit plugin cache (${PLUGIN_SHA:0:8}) differs from the repo pin (${PINNED_SHA:0:8}) — updating the cache in the background (INF-201). Restart this session (or open a new one) to load the refreshed skills. Opt out with kit.auto_cache_update: false. Log: ${UPDATE_LOG}" >&2
+    exit 0
+fi
+
+# Opt-out (or worker missing) → advisory only. Operator updated the
+# plugin cache (via `claude plugin marketplace update`) but the
+# `.claude/` tree hasn't been refreshed by `setup-project.sh` — or the
+# reverse. Hooks and helper scripts in `.claude/{hooks,scripts}/` may be
+# behind the current plugin's version.
 #
 # INF-187: resolve setup-project.sh from the plugin's actual installPath
 # in installed_plugins.json (same source upgrade-kit.sh uses) — installed
@@ -173,6 +214,6 @@ else
     REMEDY="run the /upgrade-kit skill (setup-project.sh path could not be resolved from installed_plugins.json)"
 fi
 touch "$MARKER_FILE" 2>/dev/null || true
-printf '%s\n' "⚠️ claude-kit plugin cache (${PLUGIN_SHA:0:8}) is ahead of consumer pin (${PINNED_SHA:0:8}) — ${REMEDY} && restart Claude Code so the refreshed hooks + scripts take effect." >&2
+printf '%s\n' "⚠️ claude-kit plugin cache (${PLUGIN_SHA:0:8}) differs from the repo pin (${PINNED_SHA:0:8}) — if the cache is stale run: claude plugin update claude-kit@allmyles-claude-kit; if the .claude/ tree is stale ${REMEDY}. Then restart Claude Code so the refreshed skills + hooks take effect. (Auto-update is opted out via kit.auto_cache_update: false.)" >&2
 
 exit 0
