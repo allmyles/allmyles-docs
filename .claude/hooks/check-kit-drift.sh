@@ -161,6 +161,46 @@ fi
 # enumerate it.
 touch "$MARKER_FILE" 2>/dev/null || true
 
+# ── INF-206: both-stale self-heal ──────────────────────────────────────
+# The INF-201 auto-updater triggers on pin↔cache MISMATCH — which misses
+# the COMMON case where checkout and cache lag master together (fan-out
+# updated the remote, nobody pulled locally: the two stale values match
+# and nothing fires; operator incident 2026-07-22). This hook already
+# knows the upstream truth, so when the CACHE also lags upstream, launch
+# the same bounded background worker here. When the cache is already
+# current, only the checkout lags — say so with the right remedy (git
+# pull / next /develop Init) instead of the misleading plugin-update
+# advisory.
+DRIFT_HOME="${KIT_CACHE_DRIFT_HOME:-$HOME}"
+INSTALLED_JSON="${DRIFT_HOME}/.claude/plugins/installed_plugins.json"
+CACHE_SHA=""
+if [ -r "$INSTALLED_JSON" ]; then
+    # Prefer the canonical user-scope entry (INF-196), fall back to any.
+    CACHE_SHA="$(jq -r '
+        (.plugins["claude-kit@allmyles-claude-kit"] // [])
+        | (map(select(.scope == "user")) + .)
+        | first | .gitCommitSha // empty
+    ' "$INSTALLED_JSON" 2>/dev/null)"
+fi
+read_auto_update() {
+    jq -r 'if (.kit // {}) | has("auto_cache_update") then (.kit.auto_cache_update | tostring) else empty end' "$1" 2>/dev/null
+}
+AUTO_UPDATE="$(read_auto_update "${PROJECT_DIR}/.claude/settings.local.json")"
+[ -z "$AUTO_UPDATE" ] && AUTO_UPDATE="$(read_auto_update "${PROJECT_DIR}/.claude/settings.json")"
+UPDATE_WORKER="${KIT_CACHE_UPDATE_WORKER:-$(cd "$(dirname "$0")/../scripts" 2>/dev/null && pwd)/kit-cache-update-run.sh}"
+
+if [ -n "$CACHE_SHA" ] && [ "$CACHE_SHA" != "$UPSTREAM_SHA" ] \
+   && [ "$AUTO_UPDATE" != "false" ] && [ -f "$UPDATE_WORKER" ]; then
+    UPDATE_LOG="/tmp/kit-cache-update-${SESSION_ID}.log"
+    nohup bash "$UPDATE_WORKER" "$UPDATE_LOG" >/dev/null 2>&1 &
+    printf '%s\n' "🔄 claude-kit is ${BEHIND_COUNT:-?} commit(s) behind master and the plugin cache (${CACHE_SHA:0:8}) lags too — updating the cache in the background (INF-206). The checkout syncs at the next /develop Init (or git pull). Restart to load the refreshed skills. Log: ${UPDATE_LOG}" >&2
+    exit 0
+fi
+if [ -n "$CACHE_SHA" ] && [ "$CACHE_SHA" = "$UPSTREAM_SHA" ]; then
+    printf '%s\n' "⚠️ claude-kit checkout is ${BEHIND_COUNT:-?} commit(s) behind master (plugin cache already current) — git pull, or the next /develop run's Init syncs it automatically." >&2
+    exit 0
+fi
+
 if [ -n "$BEHIND_COUNT" ] && [ "$BEHIND_COUNT" != "null" ]; then
     printf '%s\n' "⚠️ claude-kit is ${BEHIND_COUNT} commit(s) behind master — run: claude plugin marketplace update allmyles-claude-kit && bash .claude/plugins/claude-kit/scripts/setup-project.sh" >&2
 else
