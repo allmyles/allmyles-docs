@@ -101,6 +101,23 @@ if [ -f "${PROJECT_DIR}/.claude/settings.json" ]; then
 else
     bad ".claude/settings.json missing — hooks are not registered" "pull the latest default branch, or run setup-project.sh"
 fi
+# INF-206: non-user-scope install entries shadow the canonical user-scope
+# plugin (INF-196) in their repos — the operator's machine kept loading a
+# stale project-scoped cache while user scope was current. Warning-level.
+if [ -r "$INSTALLED_JSON" ]; then
+    # CR round 1.1: LIST the affected installs, not just a count — the
+    # operator needs to know which repos to run the uninstall in.
+    SHADOW_LIST="$(jq -r '
+        (.plugins["claude-kit@allmyles-claude-kit"] // [])
+        | map(select((.scope // "legacy") != "user"))
+        | .[] | "\(.scope // "legacy") scope in \(.projectPath // "?") at \((.gitCommitSha // "?")[0:8])"
+    ' "$INSTALLED_JSON" 2>/dev/null)"
+    if [ -n "$SHADOW_LIST" ]; then
+        SHADOW_COUNT="$(printf '%s\n' "$SHADOW_LIST" | wc -l | tr -d ' ')"
+        warnl "${SHADOW_COUNT} non-user-scope claude-kit install(s) can shadow the user-scope plugin: $(printf '%s' "$SHADOW_LIST" | tr '\n' ';')" "in each listed repo run: claude plugin uninstall claude-kit@allmyles-claude-kit --scope <project|local>, then restart (user scope is canonical — INF-196)"
+    fi
+fi
+
 # INF-198: playwright-first testing gate readiness. Warning-level — the
 # /develop Step 8/10 gates degrade gracefully to the manual prompt when the
 # playwright MCP server is absent, so a missing declaration never blocks.

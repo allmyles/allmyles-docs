@@ -106,6 +106,21 @@ if [ ! -r "$INSTALLED_JSON" ]; then
     plugin_missing_advisory
 fi
 
+# INF-206: stale non-user-scope installs SHADOW the canonical user-scope
+# plugin in their repos (pre-INF-196 debris; operator incident 2026-07-22:
+# mileometer kept loading a project-scoped 0.4.18 cache while user scope
+# was current). Warn loudly with the exact remedy — warn-first, never
+# auto-uninstall. Not marker-gated separately: it prints once per session
+# start alongside whatever the main branches emit.
+SHADOW_ENTRIES="$(jq -r '
+    (.plugins["claude-kit@allmyles-claude-kit"] // [])
+    | map(select((.scope // "legacy") != "user"))
+    | .[] | "\(.scope // "legacy") scope in \(.projectPath // "?") at \((.gitCommitSha // "?")[0:8])"
+' "$INSTALLED_JSON" 2>/dev/null)"
+if [ -n "$SHADOW_ENTRIES" ]; then
+    printf '%s\n' "⚠️ Stale non-user-scope claude-kit installs shadow the canonical user-scope plugin in their repos (INF-196/INF-206): $(printf '%s' "$SHADOW_ENTRIES" | tr '\n' ';') — remove each with: (cd <that repo> && claude plugin uninstall claude-kit@allmyles-claude-kit --scope <scope>) then restart." >&2
+fi
+
 # Read the pinned SHA. `// ""` normalizes a missing field or literal
 # null to empty.
 PINNED_SHA="$(jq -r '.kitSha // ""' "$PIN_FILE" 2>/dev/null || echo "")"
