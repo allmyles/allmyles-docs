@@ -123,9 +123,19 @@ fi
 # (auth, network, rate limit) must not masquerade as a merely-pending
 # consumer — during polling it retries like pending; in the FINAL sweep
 # it flips the audit to INFRA_ERROR.
-pin_of() {  # $1=repo → stdout "<rc> <sha-or-empty>"
-    local raw rc
-    raw="$("$GH" api "repos/$1/contents/.claude/claude-kit-pin.json" --jq '.content' 2>/dev/null)"
+# INF-211: read the pin from an EXPLICIT ref when given. The bug: a
+# ref-less Contents API call returns the repo's DEFAULT branch, so a
+# staging-master consumer whose master carries the expected SHA (fan-out
+# committed to default=master, or a prior promotion) reported `reached`
+# while its staging branch — the branch the delivery PR actually targets —
+# still lagged (whitelabel-internal PR #603). `pin_of` keeps the ref-less
+# default-branch read for single-branch consumers; the staging-aware path
+# passes the base branch explicitly.
+pin_at_ref() {  # $1=repo [$2=ref] → stdout "<rc> <sha-or-empty>"
+    local url raw rc
+    url="repos/$1/contents/.claude/claude-kit-pin.json"
+    [ -n "${2:-}" ] && url="${url}?ref=$2"
+    raw="$("$GH" api "$url" --jq '.content' 2>/dev/null)"
     rc=$?
     if [ "$rc" -ne 0 ]; then
         echo "$rc "
@@ -133,19 +143,155 @@ pin_of() {  # $1=repo → stdout "<rc> <sha-or-empty>"
     fi
     echo "0 $(printf '%s' "$raw" | base64 -d 2>/dev/null | jq -r '.kitSha // ""' 2>/dev/null)"
 }
+pin_of() { pin_at_ref "$1"; }  # back-compat: default-branch read
+
+# INF-211: a consumer's repo shape decides which branch's pin proves reach.
+# Read the consumer's committed .claude/develop-config.json (default branch).
+# Absent/unreadable → treat as single-branch (config-less consumers — static
+# sites, docs, sandbox — keep the pure default-branch check; this preserves
+# the pre-INF-211 behavior for them). Echoes "<shape> <pr_base_branch>".
+# CR round 1.1 (finding 1): distinguish a CONFIRMED-absent config (HTTP
+# 404 → the consumer genuinely has no develop-config, so single-branch)
+# from any OTHER gh failure (transient / auth / rate-limit → indeterminate,
+# NOT single-branch). Collapsing every failure to single-branch would skip
+# the staging-pin check and re-open the same false-`reached` this ticket
+# closes. `gh api` exits 1 for both 404 and 5xx, so the HTTP status is only
+# in stderr — grep it. Shape ∈ staging-master | single-branch | unreadable.
+shape_of() {  # $1=repo → stdout "<shape> <pr_base_branch>"
+    local raw rc errf cfg shape base
+    errf="$(mktemp -t kra-shape-XXXXXX 2>/dev/null)" || errf=""
+    if [ -n "$errf" ]; then
+        raw="$("$GH" api "repos/$1/contents/.claude/develop-config.json" --jq '.content' 2>"$errf")"
+    else
+        raw="$("$GH" api "repos/$1/contents/.claude/develop-config.json" --jq '.content' 2>/dev/null)"
+    fi
+    rc=$?
+    if [ "$rc" -ne 0 ]; then
+        # 404 (or empty stderr — mktemp failed, can't classify) → treat as
+        # config-absent single-branch; any identifiable non-404 error →
+        # unreadable so reach_of degrades to pending rather than skipping
+        # the staging check.
+        if [ -z "$errf" ] || grep -qiE 'HTTP 404|Not Found' "$errf" 2>/dev/null; then
+            [ -n "$errf" ] && rm -f "$errf"
+            echo "single-branch "
+            return
+        fi
+        rm -f "$errf"
+        echo "unreadable "
+        return
+    fi
+    [ -n "$errf" ] && rm -f "$errf"
+    if [ -z "$raw" ]; then
+        echo "single-branch "
+        return
+    fi
+    cfg="$(printf '%s' "$raw" | base64 -d 2>/dev/null)"
+    shape="$(printf '%s' "$cfg" | jq -r '.shape // "single-branch"' 2>/dev/null)"
+    base="$(printf '%s' "$cfg" | jq -r '.pr_base_branch // "staging"' 2>/dev/null)"
+    [ -z "$shape" ] && shape="single-branch"
+    echo "$shape $base"
+}
+
+# INF-211: an open kit-upgrade/* delivery PR to the staging base means the
+# staging-side delivery has not fully landed, regardless of what the pins
+# read. CR round 1.1 (finding 2): propagate the gh exit code IN the output
+# (the pin_at_ref pattern) so a lookup FAILURE is not swallowed as
+# "confirmed no PR" — that was another path back to a false `reached`.
+# Echoes "<rc> <pr-number-or-empty>".
+has_open_kit_delivery_pr() {  # $1=repo $2=base → "<rc> <pr-number-or-empty>"
+    local out rc
+    out="$("$GH" pr list -R "$1" --state open --base "$2" --json number,headRefName \
+        --jq '[.[] | select(.headRefName | startswith("kit-upgrade/"))][0].number // empty' 2>/dev/null)"
+    rc=$?
+    echo "$rc $out"
+}
+
+# INF-211: single reach predicate shared by the poll loop AND the final
+# sweep (so the two can never diverge). CR round 1.1 (nitpick 1, bash-3.2
+# safe): shape/base are precomputed once per repo and passed in — no
+# per-poll-tick develop-config re-fetch. Echoes:
+#   "<status>|<master_sha>|<staging_sha>|<delivery_pr>|<reason>"
+#   status ∈ reached | pending | lookupfail
+reach_of() {  # $1=repo $2=shape $3=base
+    local repo="$1" shp="$2" base="$3" mo mrc msha so src ssha dpo dprc dp
+    mo="$(pin_at_ref "$repo")"; mrc="${mo%% *}"; msha="${mo#* }"
+    if [ "$mrc" != "0" ]; then
+        # Default-branch lookup failure is the infra canary (unchanged).
+        echo "lookupfail||||master-lookup"
+        return
+    fi
+    if [ "$shp" = "unreadable" ]; then
+        # Could not read the consumer's shape → cannot know which branch
+        # proves reach; pending, never a silent single-branch downgrade.
+        echo "pending|${msha}|||shape-unreadable"
+        return
+    fi
+    if [ "$shp" = "staging-master" ] && [ -n "$base" ]; then
+        so="$(pin_at_ref "$repo" "$base")"; src="${so%% *}"; ssha="${so#* }"
+        if [ "$src" != "0" ]; then
+            # Staging unreadable (missing branch/file, transient) → cannot
+            # confirm reach; pending, never infra (the master read already
+            # covers true outages, so a staging hiccup must not flip the
+            # whole audit to INFRA_ERROR).
+            echo "pending|${msha}|||staging-unreadable"
+            return
+        fi
+        dpo="$(has_open_kit_delivery_pr "$repo" "$base")"; dprc="${dpo%% *}"; dp="${dpo#* }"
+        if [ "$dprc" != "0" ]; then
+            # PR-list lookup failed → indeterminate, not "confirmed no PR".
+            echo "pending|${msha}|${ssha}||delivery-lookup-failed"
+            return
+        fi
+        if [ "$msha" = "$EXPECTED" ] && [ "$ssha" = "$EXPECTED" ] && [ -z "$dp" ]; then
+            echo "reached|${msha}|${ssha}||"
+        else
+            local reason=""
+            [ "$msha" != "$EXPECTED" ] && reason="master-lag"
+            [ "$ssha" != "$EXPECTED" ] && reason="${reason:+$reason,}staging-lag"
+            [ -n "$dp" ] && reason="${reason:+$reason,}delivery-open#${dp}"
+            echo "pending|${msha}|${ssha}|${dp}|${reason}"
+        fi
+    else
+        if [ "$msha" = "$EXPECTED" ]; then
+            echo "reached|${msha}|||"
+        else
+            echo "pending|${msha}|||master-lag"
+        fi
+    fi
+}
+
+# CR round 1.1 (nitpick 1): shape is static for the audit's lifetime, so
+# resolve it ONCE per repo into a tab-separated memo file (bash-3.2 safe —
+# no `declare -A`) that both the poll loop and the final sweep read.
+SHAPE_CACHE_FILE="$(mktemp -t kra-shapes-XXXXXX 2>/dev/null || echo "")"
+cached_shape() {  # $1=repo → "<shape> <base>" (recomputes if no cache file)
+    if [ -n "$SHAPE_CACHE_FILE" ] && [ -f "$SHAPE_CACHE_FILE" ]; then
+        local hit
+        hit="$(awk -F'\t' -v r="$1" '$1==r {print $2; exit}' "$SHAPE_CACHE_FILE")"
+        [ -n "$hit" ] && { printf '%s' "$hit"; return; }
+    fi
+    shape_of "$1"
+}
+if [ -n "$SHAPE_CACHE_FILE" ]; then
+    for repo in $CONSUMERS; do
+        printf '%s\t%s\n' "$repo" "$(shape_of "$repo")" >> "$SHAPE_CACHE_FILE"
+    done
+    trap 'rm -f "$SHAPE_CACHE_FILE"' EXIT
+fi
 
 PENDING="$CONSUMERS"
 declare -a REACHED_LIST=()
 while : ; do
     STILL=""
     for repo in $PENDING; do
-        PIN_OUT="$(pin_of "$repo")"
-        PIN="${PIN_OUT#* }"
-        if [ "$PIN" = "$EXPECTED" ]; then
+        # INF-211: reach is shape-aware (master + staging pin + open
+        # delivery PR for staging-master consumers), not a ref-less
+        # default-branch pin. Lookup failures retry like pending here;
+        # the final sweep is where they become INFRA_ERROR.
+        read -r _shp _base <<<"$(cached_shape "$repo")"
+        if [ "$(reach_of "$repo" "$_shp" "$_base" | cut -d'|' -f1)" = "reached" ]; then
             REACHED_LIST+=("$repo")
         else
-            # Lookup failures retry like pending here; the final sweep
-            # is where they become INFRA_ERROR.
             STILL="${STILL}${repo}"$'\n'
         fi
     done
@@ -161,21 +307,27 @@ PENDING_COUNT=0; [ -n "$PENDING" ] && PENDING_COUNT="$(printf '%s\n' "$PENDING" 
 echo "── consumer masters:"
 INFRA_FAIL=0
 for repo in $CONSUMERS; do
-    PIN_OUT="$(pin_of "$repo")"
-    PIN_RC="${PIN_OUT%% *}"
-    PIN="${PIN_OUT#* }"
-    if [ "$PIN_RC" != "0" ]; then
-        echo "   ❌ $repo: pin lookup FAILED (gh api rc=$PIN_RC)"
+    # INF-211: shape-aware reach. Parse reach_of's pipe-record so the human
+    # + machine lines carry the staging pin + pending reason, not just the
+    # default-branch pin the pre-INF-211 sweep read.
+    read -r _shp _base <<<"$(cached_shape "$repo")"
+    R="$(reach_of "$repo" "$_shp" "$_base")"
+    R_STATUS="$(printf '%s' "$R" | cut -d'|' -f1)"
+    R_MSHA="$(printf '%s' "$R" | cut -d'|' -f2)"
+    R_SSHA="$(printf '%s' "$R" | cut -d'|' -f3)"
+    R_REASON="$(printf '%s' "$R" | cut -d'|' -f5)"
+    if [ "$R_STATUS" = "lookupfail" ]; then
+        echo "   ❌ $repo: pin lookup FAILED (default-branch gh api)"
         echo "AUDIT_CONSUMER repo=$repo pin=lookup-failed status=pending"
         INFRA_FAIL=1
         continue
     fi
-    if [ "$PIN" = "$EXPECTED" ]; then
-        echo "   ✅ $repo: ${PIN:0:8}"
-        echo "AUDIT_CONSUMER repo=$repo pin=${PIN:0:8} status=reached"
+    if [ "$R_STATUS" = "reached" ]; then
+        echo "   ✅ $repo: ${R_MSHA:0:8}${R_SSHA:+ (staging ${R_SSHA:0:8})}"
+        echo "AUDIT_CONSUMER repo=$repo pin=${R_MSHA:0:8} status=reached${R_SSHA:+ staging=${R_SSHA:0:8}}"
     else
-        echo "   ⏳ $repo: ${PIN:0:8}${PIN:+ }(expected ${EXPECTED:0:8})"
-        echo "AUDIT_CONSUMER repo=$repo pin=${PIN:0:8} status=pending"
+        echo "   ⏳ $repo: ${R_MSHA:0:8}${R_MSHA:+ }(expected ${EXPECTED:0:8})${R_SSHA:+; staging ${R_SSHA:0:8}}${R_REASON:+ — ${R_REASON}}"
+        echo "AUDIT_CONSUMER repo=$repo pin=${R_MSHA:0:8} status=pending${R_SSHA:+ staging=${R_SSHA:0:8}}${R_REASON:+ reason=${R_REASON}}"
         # Stalled-PR diagnosis + known-remedy hints. Named, never performed.
         "$GH" pr list -R "$repo" --state open --json number,headRefName,baseRefName \
             --jq '.[] | select(.headRefName | startswith("kit-upgrade/")) | "      open delivery PR #\(.number) (base \(.baseRefName)) — if blocked on review: auto-approve guard gap (APY-1431 / MYST-32 class), operator approve needed"' 2>/dev/null
