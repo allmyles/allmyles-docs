@@ -103,14 +103,23 @@ fi
 # playwright-first testing gate needs it), so setup-project.sh writes it at
 # the root by necessity. Exact-path whitelist — `.mcp.json.bak` or any other
 # root file still BLOCKs.
+# INF-208: `.github/workflows/staging_auto_merge.yaml` joins the whitelist —
+# setup-project.sh installs the kit-managed staging auto-merge bot there on
+# staging-master consumers (marker-guarded; see the installer block). Exact
+# path only — any other workflow file still BLOCKs.
 # CR round 1.2: keep BOTH sides of rename entries — `s/.* -> //` dropped
 # the source path, so `outside-secret.json -> .mcp.json` would have been
 # judged only by its destination and slipped the guard. Splitting the
 # arrow onto two lines validates source AND destination independently.
+# --untracked-files=all (INF-208): default porcelain collapses an untracked
+# directory to `dir/` (e.g. `.github/`), which can neither match an
+# exact-path whitelist entry nor name the offending file in the BLOCKED
+# diagnostic. -uall lists every untracked file individually — same blocking
+# semantics, precise paths on both the whitelist and the error message.
 paths_outside() {
-    git status --porcelain | sed 's/^...//' | awk '{gsub(/ -> /, "\n"); print}' | grep -vE '^\.claude/' | grep -vE '^(")?\.mcp\.json(")?$' || true
+    git status --porcelain --untracked-files=all | sed 's/^...//' | awk '{gsub(/ -> /, "\n"); print}' | grep -vE '^\.claude/' | grep -vE '^(")?\.mcp\.json(")?$' | grep -vE '^(")?\.github/workflows/staging_auto_merge\.yaml(")?$' || true
 }
-CHANGED_COUNT="$(git status --porcelain | wc -l | tr -d ' ')"
+CHANGED_COUNT="$(git status --porcelain --untracked-files=all | wc -l | tr -d ' ')"
 
 if [ "$CHANGED_COUNT" = "0" ]; then
     echo "Already up to date — the kit made no changes."
@@ -135,5 +144,5 @@ for want in check-local-kit-edit-drift.sh pre-commit-kit-edit-guard.sh; do
 done
 
 PIN_SHA="$(jq -r '.kitSha // ""' .claude/claude-kit-pin.json 2>/dev/null | cut -c1-8)"
-echo "OK — ${CHANGED_COUNT} file(s) updated under .claude/ (kit ${PIN_SHA:-unknown}). Nothing outside .claude/ was touched."
+echo "OK — ${CHANGED_COUNT} file(s) updated under kit-managed paths (kit ${PIN_SHA:-unknown}). Nothing outside .claude/ + .mcp.json + staging_auto_merge.yaml was touched."
 echo "RESULT=OK"; exit 0
