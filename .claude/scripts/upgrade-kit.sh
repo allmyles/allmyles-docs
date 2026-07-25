@@ -107,6 +107,12 @@ fi
 # setup-project.sh installs the kit-managed staging auto-merge bot there on
 # staging-master consumers (marker-guarded; see the installer block). Exact
 # path only — any other workflow file still BLOCKs.
+# INF-220: `.github/workflows/auto_approve_kit_upgrade.yaml` joins for the same
+# reason — it is the kit-served auto-approve caller stub (INF-215),
+# marker-guarded and re-rendered by setup-project.sh on converted consumers.
+# Without this entry, the FIRST caller-stub template change re-renders the stub
+# and this guard BLOCKs the whole upgrade (the 0.4.29 fan-out stranded
+# allmylespy/whitelabel-internal/mileometer-frontend). Exact path only.
 # CR round 1.2: keep BOTH sides of rename entries — `s/.* -> //` dropped
 # the source path, so `outside-secret.json -> .mcp.json` would have been
 # judged only by its destination and slipped the guard. Splitting the
@@ -117,7 +123,7 @@ fi
 # diagnostic. -uall lists every untracked file individually — same blocking
 # semantics, precise paths on both the whitelist and the error message.
 paths_outside() {
-    git status --porcelain --untracked-files=all | sed 's/^...//' | awk '{gsub(/ -> /, "\n"); print}' | grep -vE '^\.claude/' | grep -vE '^(")?\.mcp\.json(")?$' | grep -vE '^(")?\.github/workflows/staging_auto_merge\.yaml(")?$' || true
+    git status --porcelain --untracked-files=all | sed 's/^...//' | awk '{gsub(/ -> /, "\n"); print}' | grep -vE '^\.claude/' | grep -vE '^(")?\.mcp\.json(")?$' | grep -vE '^(")?\.github/workflows/staging_auto_merge\.yaml(")?$' | grep -vE '^(")?\.github/workflows/auto_approve_kit_upgrade\.yaml(")?$' || true
 }
 CHANGED_COUNT="$(git status --porcelain --untracked-files=all | wc -l | tr -d ' ')"
 
@@ -144,5 +150,5 @@ for want in check-local-kit-edit-drift.sh pre-commit-kit-edit-guard.sh; do
 done
 
 PIN_SHA="$(jq -r '.kitSha // ""' .claude/claude-kit-pin.json 2>/dev/null | cut -c1-8)"
-echo "OK — ${CHANGED_COUNT} file(s) updated under kit-managed paths (kit ${PIN_SHA:-unknown}). Nothing outside .claude/ + .mcp.json + staging_auto_merge.yaml was touched."
+echo "OK — ${CHANGED_COUNT} file(s) updated under kit-managed paths (kit ${PIN_SHA:-unknown}). Nothing outside .claude/ + .mcp.json + staging_auto_merge.yaml + auto_approve_kit_upgrade.yaml was touched."
 echo "RESULT=OK"; exit 0
