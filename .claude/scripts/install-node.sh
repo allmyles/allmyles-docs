@@ -87,8 +87,12 @@ install_via_nodesource() {
   install -d -m 0755 /usr/share/keyrings || return 1
   # `set -o pipefail` (from set -e above) makes a 403 on the key URL fail the
   # pipe; `|| return 1` propagates it even in the if-condition context.
+  # `--batch --yes`: `gpg --dearmor -o <file>` PROMPTS (and fails non-
+  # interactively) if the target already exists — so a re-run, or a base image
+  # that already seeded the keyring, would break the primary tier. --yes forces
+  # the overwrite; --batch keeps it non-interactive. (CR round 1.1 on PR #97.)
   curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key \
-    | gpg --dearmor -o /usr/share/keyrings/nodesource.gpg || return 1
+    | gpg --batch --yes --dearmor -o /usr/share/keyrings/nodesource.gpg || return 1
   # `nodistro` is NodeSource's distro-agnostic suite name for the node_XX.x repos.
   printf 'deb [signed-by=/usr/share/keyrings/nodesource.gpg] https://deb.nodesource.com/node_%s.x nodistro main\n' \
     "$NODE_MAJOR" > /etc/apt/sources.list.d/nodesource.list || return 1
