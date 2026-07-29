@@ -113,6 +113,15 @@ fi
 # Without this entry, the FIRST caller-stub template change re-renders the stub
 # and this guard BLOCKs the whole upgrade (the 0.4.29 fan-out stranded
 # allmylespy/whitelabel-internal/mileometer-frontend). Exact path only.
+# INF-252: `.github/scripts/auto_close_jira.py` +
+# `.github/workflows/auto_close_jira_on_master_deploy.yaml` join for the same
+# reason — the INF-226 kit-delivered auto-close pair, marker-guarded and
+# re-rendered by setup-project.sh on staging-master consumers that declared
+# kit_auto_close. Without these entries, the FIRST change to the delivered
+# auto-close files (INF-236) BLOCKed the whole upgrade and stranded every
+# auto-close consumer on the 0.4.48 + 0.4.49 fan-outs. Exact paths only — any
+# other file under .github/scripts/ or a differently-named workflow still
+# BLOCKs.
 # CR round 1.2: keep BOTH sides of rename entries — `s/.* -> //` dropped
 # the source path, so `outside-secret.json -> .mcp.json` would have been
 # judged only by its destination and slipped the guard. Splitting the
@@ -123,7 +132,7 @@ fi
 # diagnostic. -uall lists every untracked file individually — same blocking
 # semantics, precise paths on both the whitelist and the error message.
 paths_outside() {
-    git status --porcelain --untracked-files=all | sed 's/^...//' | awk '{gsub(/ -> /, "\n"); print}' | grep -vE '^\.claude/' | grep -vE '^(")?\.mcp\.json(")?$' | grep -vE '^(")?\.github/workflows/staging_auto_merge\.yaml(")?$' | grep -vE '^(")?\.github/workflows/auto_approve_kit_upgrade\.yaml(")?$' || true
+    git status --porcelain --untracked-files=all | sed 's/^...//' | awk '{gsub(/ -> /, "\n"); print}' | grep -vE '^\.claude/' | grep -vE '^(")?\.mcp\.json(")?$' | grep -vE '^(")?\.github/workflows/staging_auto_merge\.yaml(")?$' | grep -vE '^(")?\.github/workflows/auto_approve_kit_upgrade\.yaml(")?$' | grep -vE '^(")?\.github/scripts/auto_close_jira\.py(")?$' | grep -vE '^(")?\.github/workflows/auto_close_jira_on_master_deploy\.yaml(")?$' || true
 }
 CHANGED_COUNT="$(git status --porcelain --untracked-files=all | wc -l | tr -d ' ')"
 
