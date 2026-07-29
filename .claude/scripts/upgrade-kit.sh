@@ -97,42 +97,61 @@ if ! bash "$SETUP" > "$SETUP_LOG" 2>&1; then
     echo "RESULT=BLOCKED"; exit 3
 fi
 
-# What changed? Strip the 2 status chars + space; keep the new path for renames.
-# INF-198: the repo-root `.mcp.json` joins `.claude/` as kit-managed — it is
-# the ONLY place Claude Code reads project MCP-server declarations from (the
-# playwright-first testing gate needs it), so setup-project.sh writes it at
-# the root by necessity. Exact-path whitelist — `.mcp.json.bak` or any other
-# root file still BLOCKs.
-# INF-208: `.github/workflows/staging_auto_merge.yaml` joins the whitelist —
-# setup-project.sh installs the kit-managed staging auto-merge bot there on
-# staging-master consumers (marker-guarded; see the installer block). Exact
-# path only — any other workflow file still BLOCKs.
-# INF-220: `.github/workflows/auto_approve_kit_upgrade.yaml` joins for the same
-# reason — it is the kit-served auto-approve caller stub (INF-215),
-# marker-guarded and re-rendered by setup-project.sh on converted consumers.
-# Without this entry, the FIRST caller-stub template change re-renders the stub
-# and this guard BLOCKs the whole upgrade (the 0.4.29 fan-out stranded
-# allmylespy/whitelabel-internal/mileometer-frontend). Exact path only.
-# INF-252: `.github/scripts/auto_close_jira.py` +
-# `.github/workflows/auto_close_jira_on_master_deploy.yaml` join for the same
-# reason — the INF-226 kit-delivered auto-close pair, marker-guarded and
-# re-rendered by setup-project.sh on staging-master consumers that declared
-# kit_auto_close. Without these entries, the FIRST change to the delivered
-# auto-close files (INF-236) BLOCKed the whole upgrade and stranded every
-# auto-close consumer on the 0.4.48 + 0.4.49 fan-outs. Exact paths only — any
-# other file under .github/scripts/ or a differently-named workflow still
-# BLOCKs.
-# CR round 1.2: keep BOTH sides of rename entries — `s/.* -> //` dropped
-# the source path, so `outside-secret.json -> .mcp.json` would have been
-# judged only by its destination and slipped the guard. Splitting the
-# arrow onto two lines validates source AND destination independently.
+# What changed? A path is KIT-MANAGED (allowed) iff it is under `.claude/`,
+# is `.mcp.json`, OR its delivered content carries the line-1 `# claude-kit:`
+# marker. INF-254 replaced the per-file exact-path whitelist — which had to be
+# edited in lockstep for every new delivered file and drifted FOUR times
+# (.mcp.json INF-198, staging_auto_merge.yaml INF-208, auto_approve_kit_upgrade
+# .yaml INF-220, the auto-close pair INF-252; the last stranded the whole fleet
+# on the 0.4.48/0.4.49 fan-outs). The marker travels with the file, so a new
+# delivered file needs NO edit here.
+#   - `.claude/**` is a path-prefix match (bulk of delivered content).
+#   - `.mcp.json` is JSON (no comment syntax) so it CANNOT carry a marker —
+#     the one explicit exact-path exception. `.mcp.json.bak` and any other
+#     root file still BLOCK.
+#   - everything else: read line 1. `# claude-kit:<token> …` = kit-managed.
+#     A deleted/renamed-away file (a kit release RETIRING a delivered file)
+#     is read from HEAD so the retirement is still recognised. Fail-closed:
+#     unreadable / no marker → treated as OUTSIDE (BLOCK).
+# CR round 1.2 lineage: keep BOTH sides of rename entries — `s/.* -> //` dropped
+# the source path, so `outside-secret.json -> .mcp.json` would have been judged
+# only by its destination and slipped the guard. The awk splits the arrow so
+# source AND destination are each classified.
 # --untracked-files=all (INF-208): default porcelain collapses an untracked
-# directory to `dir/` (e.g. `.github/`), which can neither match an
-# exact-path whitelist entry nor name the offending file in the BLOCKED
-# diagnostic. -uall lists every untracked file individually — same blocking
-# semantics, precise paths on both the whitelist and the error message.
+# directory to `dir/` (e.g. `.github/`); -uall lists every untracked file
+# individually so each is classified + named precisely in the BLOCKED diagnostic.
+KIT_MANAGED_MARKER='# claude-kit:'
+
+is_kit_managed() {
+    # $1 = repo-relative path (git may quote paths with special chars).
+    local p="$1"
+    p="${p%\"}"; p="${p#\"}"
+    case "$p" in
+        .claude/*) return 0 ;;
+        .mcp.json) return 0 ;;
+    esac
+    local l1
+    if [ -f "$p" ]; then
+        IFS= read -r l1 < "$p" 2>/dev/null || return 1
+    else
+        # Deleted/renamed-away: read the pre-change line 1 from HEAD so a kit
+        # release that RETIRES a delivered file is still recognised as kit-managed.
+        l1="$(git show "HEAD:$p" 2>/dev/null | head -n 1)"
+        [ -n "$l1" ] || return 1
+    fi
+    case "$l1" in
+        "${KIT_MANAGED_MARKER}"*) return 0 ;;
+        *) return 1 ;;
+    esac
+}
+
 paths_outside() {
-    git status --porcelain --untracked-files=all | sed 's/^...//' | awk '{gsub(/ -> /, "\n"); print}' | grep -vE '^\.claude/' | grep -vE '^(")?\.mcp\.json(")?$' | grep -vE '^(")?\.github/workflows/staging_auto_merge\.yaml(")?$' | grep -vE '^(")?\.github/workflows/auto_approve_kit_upgrade\.yaml(")?$' | grep -vE '^(")?\.github/scripts/auto_close_jira\.py(")?$' | grep -vE '^(")?\.github/workflows/auto_close_jira_on_master_deploy\.yaml(")?$' || true
+    local out="" p
+    while IFS= read -r p; do
+        [ -z "$p" ] && continue
+        is_kit_managed "$p" || out="${out}${p}"$'\n'
+    done < <(git status --porcelain --untracked-files=all | sed 's/^...//' | awk '{gsub(/ -> /, "\n"); print}')
+    printf '%s' "$out"
 }
 CHANGED_COUNT="$(git status --porcelain --untracked-files=all | wc -l | tr -d ' ')"
 
