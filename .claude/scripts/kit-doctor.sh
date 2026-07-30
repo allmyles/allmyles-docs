@@ -18,6 +18,10 @@
 #      claude-kit@allmyles-claude-kit, preferring this project's scope)
 #      and its installPath existing on disk — REQUIRED for skills like
 #      /develop to exist in a session
+#   3b. Marketplace-clone integrity (INF-256): the git clone at
+#      ~/.claude/plugins/marketplaces/<name> is a VALID checkout (HEAD
+#      resolves + working tree populated), not a half-finished/corrupt
+#      clone that exists but serves no skills (the 2026-07-29 incident)
 #   4. Pin vs installed-plugin SHA (setup-project.sh freshness)
 #   5. Pin vs upstream kit master (best-effort, needs gh + network)
 #
@@ -185,6 +189,44 @@ else
         else
             bad "plugin registered but its cache directory is missing (${INSTALL_PATH:-unknown})" "${INSTALL_PAIR} — then RESTART Claude Code"
         fi
+    fi
+fi
+
+# ── 3b. Marketplace clone integrity (INF-256) ────────────────────────
+# Section 3 verifies installed_plugins.json + the version-pinned cache
+# dir. But skills are served from the marketplace git CLONE at
+# ~/.claude/plugins/marketplaces/<name>, and a half-finished / corrupt
+# clone — git objects present, but no HEAD/refs and no checked-out
+# working tree — passes a bare `-d` existence test yet loads ZERO kit
+# skills (/develop, /review, …), silently, until a skill is invoked.
+# That was the whitelabel-internal supacode incident (2026-07-29): a
+# clone interrupted mid-fetch left the whole kit missing with no error.
+# kit-doctor's delivered .claude/scripts/ copy runs independently of
+# this clone, so it can diagnose the corruption the clone itself caused.
+MARKETPLACE="${PLUGIN_KEY##*@}"   # claude-kit@allmyles-claude-kit → allmyles-claude-kit
+MARKETPLACE_DIR="${DOCTOR_HOME}/.claude/plugins/marketplaces/${MARKETPLACE}"
+# The one file that must exist in a healthy checkout — its absence means
+# the clone has no working tree (the corrupt-clone symptom).
+MP_CONTENT="${MARKETPLACE_DIR}/plugins/claude-kit/.claude-plugin/plugin.json"
+# Re-clone remedy (distinct from a plain install): move the broken clone
+# aside FIRST so the re-clone lands on a clean path, then restart.
+RECLONE_FIX="move the broken clone aside, then re-clone + RESTART Claude Code:  mv \"${MARKETPLACE_DIR}\" \"${MARKETPLACE_DIR}.broken-\$(date +%s)\" && ${INSTALL_PAIR}"
+if [ ! -d "$MARKETPLACE_DIR" ]; then
+    bad "claude-kit marketplace clone is missing (${MARKETPLACE_DIR}) — kit skills cannot load" "${INSTALL_PAIR} — then RESTART Claude Code"
+elif command -v git >/dev/null 2>&1 && ! git -C "$MARKETPLACE_DIR" rev-parse --verify --quiet HEAD >/dev/null 2>&1; then
+    # Present but not a valid git checkout (no resolvable HEAD): the exact
+    # half-clone signature — objects fetched, refs/HEAD never written.
+    bad "claude-kit marketplace clone is CORRUPT — present but not a valid git checkout (no HEAD/refs); NO kit skills load until it is re-cloned (the 2026-07-29 half-clone incident)" "$RECLONE_FIX"
+elif [ ! -f "$MP_CONTENT" ]; then
+    # HEAD resolves (or git unavailable) but the working tree is not
+    # populated — the plugin content the loader reads is absent.
+    bad "claude-kit marketplace clone has no working tree — expected content missing (plugins/claude-kit/.claude-plugin/plugin.json); NO kit skills load" "$RECLONE_FIX"
+else
+    if command -v git >/dev/null 2>&1; then
+        MP_SHORT="$(git -C "$MARKETPLACE_DIR" rev-parse --short HEAD 2>/dev/null)"
+        ok "marketplace clone is a healthy git checkout${MP_SHORT:+ (${MP_SHORT})}"
+    else
+        ok "marketplace clone present with expected content (git unavailable — HEAD not verified)"
     fi
 fi
 
