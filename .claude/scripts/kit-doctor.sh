@@ -18,6 +18,10 @@
 #      claude-kit@allmyles-claude-kit, preferring this project's scope)
 #      and its installPath existing on disk — REQUIRED for skills like
 #      /develop to exist in a session
+#   2c. Managed .gitignore block (INF-257): the consumer's .gitignore
+#      carries the marked, setup-project-owned block so kit artifacts
+#      (.gates/, .claude/plans/ evidence, .playwright-mcp/,
+#      settings.local.json) are ignored, not committed. Warning-level.
 #   3b. Marketplace-clone integrity (INF-256): the git clone at
 #      ~/.claude/plugins/marketplaces/<name> is a VALID checkout (HEAD
 #      resolves + working tree populated), not a half-finished/corrupt
@@ -137,6 +141,22 @@ if [ -f "${PROJECT_DIR}/.mcp.json" ] && jq -e '
     ok ".mcp.json declares a runnable, version-pinned playwright MCP server (playwright-first testing gate ready)"
 else
     warnl ".mcp.json missing or its playwright server is absent/not runnable — /develop testing gates fall back to the manual prompt" "re-run setup-project.sh (ships the kit's mcp.template.json), restart Claude Code; ensure Google Chrome is installed (the pinned MCP drives the chrome channel)"
+fi
+
+# INF-257: managed .gitignore block. Warning-level — a missing block never
+# blocks /develop, but without it the kit's own artifacts (.gates/, the
+# .claude/plans/ Playwright evidence dirs, .playwright-mcp/,
+# settings.local.json) get committed into the consumer's history (binary
+# screenshots included). setup-project.sh owns a marked, idempotent block.
+# CR round 1.1: require a COMPLETE, ordered block (begin AND end, begin first),
+# not merely the begin marker — a lone '# >>> claude-kit managed >>>' does not
+# contain the ignore rules and must not read as ready.
+_GIB="$(grep -nxF '# >>> claude-kit managed >>>' "${PROJECT_DIR}/.gitignore" 2>/dev/null | head -1 | cut -d: -f1)"
+_GIE="$(grep -nxF '# <<< claude-kit managed <<<' "${PROJECT_DIR}/.gitignore" 2>/dev/null | head -1 | cut -d: -f1)"
+if [ -f "${PROJECT_DIR}/.gitignore" ] && [ -n "$_GIB" ] && [ -n "$_GIE" ] && [ "$_GIB" -lt "$_GIE" ]; then
+    ok "managed .gitignore block present — kit artifacts are ignored, not committed"
+else
+    warnl "no complete claude-kit managed .gitignore block — kit artifacts (.gates/, .claude/plans/ evidence, .playwright-mcp/, settings.local.json) may be committed" "re-run setup-project.sh (writes the managed block), then 'git rm --cached' any already-tracked kit artifacts"
 fi
 PIN_SHA=""
 if [ -f "${PROJECT_DIR}/.claude/claude-kit-pin.json" ]; then

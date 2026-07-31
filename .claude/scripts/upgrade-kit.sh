@@ -122,6 +122,27 @@ fi
 # individually so each is classified + named precisely in the BLOCKED diagnostic.
 KIT_MANAGED_MARKER='# claude-kit:'
 
+# INF-257 (CR round 1.1, security): `.gitignore` is NOT blanket-exempt. It is
+# consumer-owned with a kit-managed block, so a delivery is only kit-managed if
+# it is CONFINED to that block — i.e. the "consumer view" (everything with the
+# managed block removed AND the standalone kit-path lines removed AND trailing
+# blanks trimmed — exactly what setup-project rewrites) is UNCHANGED between
+# HEAD and the working tree. A change to any consumer-authored line outside the
+# block is treated as outside kit-managed paths (guardrail refuses the upgrade).
+_gi_consumer_view() {  # reads a .gitignore on stdin → normalised consumer view
+    awk -v b='# >>> claude-kit managed >>>' -v e='# <<< claude-kit managed <<<' '
+        $0==b {inblk=1; next} $0==e {inblk=0; next} inblk {next} {print}
+    ' | grep -vxF -e '.gates/' -e '/.gates/' -e '.test-passed' -e '/.test-passed' \
+         -e '.playwright-mcp/' -e '/.playwright-mcp/' -e '.claude/plans/' -e '/.claude/plans/' \
+         -e '.claude/settings.local.json' -e '/.claude/settings.local.json' 2>/dev/null \
+      | awk '{a[NR]=$0} END{last=NR; while(last>0 && a[last]=="") last--; for(i=1;i<=last;i++) print a[i]}'
+}
+_gi_confined() {  # 0 iff the .gitignore change is confined to the managed block
+    local base head
+    base="$(git show HEAD:.gitignore 2>/dev/null | _gi_consumer_view)"
+    if [ -f .gitignore ]; then head="$(_gi_consumer_view < .gitignore)"; else head=""; fi
+    [ "$base" = "$head" ]
+}
 is_kit_managed() {
     # $1 = repo-relative path (git may quote paths with special chars).
     local p="$1"
@@ -129,6 +150,9 @@ is_kit_managed() {
     case "$p" in
         .claude/*) return 0 ;;
         .mcp.json) return 0 ;;
+        # INF-257: root .gitignore is kit-managed ONLY when the change is
+        # confined to the setup-project-owned block (consumer content unchanged).
+        .gitignore) _gi_confined && return 0 || return 1 ;;
     esac
     local l1
     if [ -f "$p" ]; then
@@ -178,5 +202,5 @@ for want in check-local-kit-edit-drift.sh pre-commit-kit-edit-guard.sh; do
 done
 
 PIN_SHA="$(jq -r '.kitSha // ""' .claude/claude-kit-pin.json 2>/dev/null | cut -c1-8)"
-echo "OK — ${CHANGED_COUNT} file(s) updated under kit-managed paths (kit ${PIN_SHA:-unknown}). Nothing outside .claude/ + .mcp.json + staging_auto_merge.yaml + auto_approve_kit_upgrade.yaml was touched."
+echo "OK — ${CHANGED_COUNT} file(s) updated under kit-managed paths (kit ${PIN_SHA:-unknown}). Nothing outside .claude/ + .mcp.json + .gitignore + marker-bearing files was touched."
 echo "RESULT=OK"; exit 0
