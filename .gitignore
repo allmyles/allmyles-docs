@@ -1,2 +1,13 @@
 _build
 .DS_Store
+
+# >>> claude-kit managed >>>
+# Managed by claude-kit setup-project.sh (INF-257) — do NOT edit inside
+# this block; it is regenerated on every kit upgrade. Put your own
+# ignores OUTSIDE the markers.
+.gates/
+.test-passed
+.playwright-mcp/
+.claude/plans/
+.claude/settings.local.json
+# <<< claude-kit managed <<<
