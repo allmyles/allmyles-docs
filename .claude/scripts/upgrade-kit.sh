@@ -92,7 +92,15 @@ fi
 # INF-164: unique log path via mktemp — a fixed /tmp name is symlink/race
 # prone (CWE-377) and collides across concurrent runs.
 SETUP_LOG="$(mktemp -t upgrade-kit-setup.XXXXXX 2>/dev/null || printf '%s' "/tmp/upgrade-kit-setup.$$.log")"
-if ! bash "$SETUP" > "$SETUP_LOG" 2>&1; then
+# KIT_SETUP_MODE=team (INF-263): upgrading/fan-out is ALWAYS an adopt-into-repo
+# operation — it refreshes an already-adopted consumer's committed `.claude/`
+# copies + CI workflows. Force team mode so the delivery never falls into the
+# solo (zero-footprint) early exit, which would deliver nothing (NOCHANGE) if
+# the fan-out checkout's footprint were momentarily absent. Use the ENV var, not
+# the --team flag: a pre-INF-263 setup-project.sh (possible across a marketplace-
+# update boundary) rejects the unknown flag with exit 2 (→ RESULT=BLOCKED),
+# whereas it simply ignores an unknown env var and runs its only (team) flow.
+if ! KIT_SETUP_MODE=team bash "$SETUP" > "$SETUP_LOG" 2>&1; then
     echo "setup-project.sh failed — see ${SETUP_LOG}" >&2
     echo "RESULT=BLOCKED"; exit 3
 fi
