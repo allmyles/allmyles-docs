@@ -15,6 +15,7 @@
       "Bash(.claude/scripts/jira_sprint_add.sh:*)",
       "Bash(.claude/scripts/kit-config.sh:*)",
       "Bash(.claude/scripts/kit-gate.sh:*)",
+      "Bash(.claude/scripts/kit-home.sh:*)",
       "Bash(.claude/scripts/kit-release-audit.sh:*)",
       "Bash(.claude/scripts/kit-scratch-dir.sh:*)",
       "Bash(.claude/scripts/resolve_staging_conflict.sh:*)",
