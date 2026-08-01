@@ -17,6 +17,24 @@ if [ -z "$PROJECT_ROOT" ]; then
     exit 0
 fi
 
+# INF-260: /develop scratch (gates dir + test-passed marker) lives OUTSIDE the
+# repo now. Resolve the scratch gates dir via the sibling helper; the
+# _resolve_gates_dir / _resolve_marker helpers below prefer the scratch location
+# but fall back to the legacy in-repo paths so a repo mid-transition (or the
+# kit's own in-flight run) still enforces.
+_HOOK_DIR="$(cd "$(dirname "$0")" && pwd 2>/dev/null)"
+_SCRATCH_RES="${_HOOK_DIR}/../scripts/kit-scratch-dir.sh"
+SCRATCH=""
+[ -f "$_SCRATCH_RES" ] && SCRATCH="$(CLAUDE_PROJECT_DIR="$PROJECT_ROOT" bash "$_SCRATCH_RES" --no-create 2>/dev/null)"
+_resolve_gates_dir() {
+    if [ -n "$SCRATCH" ] && [ -d "$SCRATCH/gates" ]; then printf '%s' "$SCRATCH/gates"
+    else printf '%s' "$PROJECT_ROOT/.gates"; fi
+}
+_resolve_marker() {
+    if [ -n "$SCRATCH" ] && [ -f "$SCRATCH/test-passed" ]; then printf '%s' "$SCRATCH/test-passed"
+    else printf '%s' "$PROJECT_ROOT/.test-passed"; fi
+}
+
 # Self-no-op: this hook enforces /develop's gate-file + branch-naming
 # convention. Consumers that don't enable /develop (or that aren't on a
 # Jira-driven workflow) shouldn't be blocked. Skip if neither the gates
@@ -29,7 +47,7 @@ fi
 # lookup in scripts/jira_sprint_add.sh (canonical board list).
 TICKET_PREFIXES='DASH|APY|WHIT|INF|MYST'
 BRANCH=$(git branch --show-current)
-if [ ! -d "$PROJECT_ROOT/.gates" ] && ! [[ "$BRANCH" =~ ^($TICKET_PREFIXES)-[0-9]+ ]]; then
+if [ ! -d "$(_resolve_gates_dir)" ] && ! [[ "$BRANCH" =~ ^($TICKET_PREFIXES)-[0-9]+ ]]; then
     exit 0
 fi
 
@@ -41,7 +59,7 @@ if [[ ! "$BRANCH" =~ ^($TICKET_PREFIXES)-[0-9]+ ]]; then
     exit 2
 fi
 
-GATES_DIR="$PROJECT_ROOT/.gates"
+GATES_DIR="$(_resolve_gates_dir)"
 REQUIRED_GATES=(
     "db-synced"
     "jira-parsed"
@@ -119,7 +137,7 @@ fi
 echo "All development gates present. Checking test marker..."
 
 # Verify test marker freshness (CI runs the full suite — no need to re-run locally)
-MARKER_FILE="$PROJECT_ROOT/.test-passed"
+MARKER_FILE="$(_resolve_marker)"
 MAX_AGE_MINUTES=30
 
 if [ ! -f "$MARKER_FILE" ]; then

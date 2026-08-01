@@ -94,10 +94,23 @@ if ! is_branch_creating "$CMD"; then
     exit 0
 fi
 
-# ── Enforcement only inside an active /develop ceremony (.gates/ present) ──
+# ── Enforcement only inside an active /develop ceremony (gates present) ──
 PROJECT_ROOT="${CLAUDE_PROJECT_DIR:-$(git rev-parse --show-toplevel 2>/dev/null)}"
 [ -z "$PROJECT_ROOT" ] && exit 0
-if [ ! -d "$PROJECT_ROOT/.gates" ]; then
+
+# INF-260: the gates dir lives in the per-repo scratch dir (outside the repo).
+# Resolve it via the sibling helper, preferring scratch but falling back to the
+# legacy in-repo .gates/ so a repo mid-transition still enforces.
+_HOOK_DIR="$(cd "$(dirname "$0")" && pwd 2>/dev/null)"
+_SCRATCH_RES="${_HOOK_DIR}/../scripts/kit-scratch-dir.sh"
+SCRATCH=""
+[ -f "$_SCRATCH_RES" ] && SCRATCH="$(CLAUDE_PROJECT_DIR="$PROJECT_ROOT" bash "$_SCRATCH_RES" --no-create 2>/dev/null)"
+if [ -n "$SCRATCH" ] && [ -d "$SCRATCH/gates" ]; then
+    GATES_DIR="$SCRATCH/gates"
+else
+    GATES_DIR="$PROJECT_ROOT/.gates"
+fi
+if [ ! -d "$GATES_DIR" ]; then
     exit 0   # not mid-ceremony → not this hook's business
 fi
 
@@ -107,7 +120,7 @@ if [ "${ALLOW_UNVERIFIED_GROUND:-0}" = "1" ]; then
     exit 0
 fi
 
-GATE="$PROJECT_ROOT/.gates/ground-truth-verified"
+GATE="$GATES_DIR/ground-truth-verified"
 REMEDY="Run: .claude/scripts/establish-ground-truth.sh \"$PROJECT_ROOT\" [<ticket-key>]  — relay its GROUND_TRUTH output, then retry. Deliberate override: ALLOW_UNVERIFIED_GROUND=1."
 
 if [ ! -f "$GATE" ]; then
