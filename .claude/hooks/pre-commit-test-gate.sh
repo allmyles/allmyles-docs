@@ -15,16 +15,30 @@
 PROJECT_ROOT="${CLAUDE_PROJECT_DIR:-$(git rev-parse --show-toplevel 2>/dev/null)}"
 [ -z "$PROJECT_ROOT" ] && exit 0
 
-# Self-no-op: the /develop test convention (gate files + .test-passed marker)
-# is only used in repos where /develop is enabled. If neither marker exists,
-# this repo doesn't participate in the test gate — exit 0 silently.
+# INF-260: /develop scratch (the gates dir + the test-passed marker) now lives
+# OUTSIDE the repo, in the per-repo scratch dir. Resolve it via the sibling
+# helper; fall back to the legacy in-repo paths so a repo mid-transition (or the
+# kit's own in-flight /develop run) still enforces correctly.
+_HOOK_DIR="$(cd "$(dirname "$0")" && pwd 2>/dev/null)"
+_SCRATCH_RES="${_HOOK_DIR}/../scripts/kit-scratch-dir.sh"
+SCRATCH=""
+[ -f "$_SCRATCH_RES" ] && SCRATCH="$(CLAUDE_PROJECT_DIR="$PROJECT_ROOT" bash "$_SCRATCH_RES" --no-create 2>/dev/null)"
+_gates_present() { { [ -n "$SCRATCH" ] && [ -d "$SCRATCH/gates" ]; } || [ -d "$PROJECT_ROOT/.gates" ]; }
+_resolve_marker() {
+    if [ -n "$SCRATCH" ] && [ -f "$SCRATCH/test-passed" ]; then printf '%s' "$SCRATCH/test-passed"
+    else printf '%s' "$PROJECT_ROOT/.test-passed"; fi
+}
+
+# Self-no-op: the /develop test convention (gate files + test-passed marker)
+# is only used in repos where /develop is enabled. If neither the gates dir nor
+# the marker exists (in EITHER location), this repo doesn't participate — exit 0.
 # (DASH-2122: kit consumers opt in to /develop via their CLAUDE.md overlay;
 #  hooks must self-no-op for consumers that don't.)
-if [ ! -d "$PROJECT_ROOT/.gates" ] && [ ! -f "$PROJECT_ROOT/.test-passed" ]; then
+if ! _gates_present && [ ! -f "$(_resolve_marker)" ]; then
     exit 0
 fi
 
-MARKER_FILE="$PROJECT_ROOT/.test-passed"
+MARKER_FILE="$(_resolve_marker)"
 MAX_AGE_MINUTES=30
 
 # Check if marker exists

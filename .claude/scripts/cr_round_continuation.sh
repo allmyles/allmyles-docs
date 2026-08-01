@@ -58,8 +58,18 @@ if [ "$EXIT_REASON_VALUE" != "OK" ]; then
   # Soft-fail per DASH-1916 goal C: log + continue rather than STOP.
   # The leftover-findings log is the canonical surface — Step 12's
   # completion report grep's it on every run.
-  LEFTOVER=".gates/leftover-findings.log"
-  mkdir -p "$(dirname "$LEFTOVER")"
+  # INF-260: leftover-findings.log lives in the per-repo scratch gates dir
+  # (outside the repo). Resolve via the sibling helper; fall back to the legacy
+  # repo-relative .gates/ ONLY when the resolver is unavailable or produces no
+  # path — never let an empty resolution build a root-relative `/gates/...`.
+  _CR_SCRATCH=""
+  [ -f "$SCRIPT_DIR/kit-scratch-dir.sh" ] && _CR_SCRATCH="$(bash "$SCRIPT_DIR/kit-scratch-dir.sh" 2>/dev/null)"
+  if [ -n "$_CR_SCRATCH" ]; then
+    LEFTOVER="${_CR_SCRATCH%/}/gates/leftover-findings.log"
+  else
+    LEFTOVER=".gates/leftover-findings.log"   # repo-relative fallback (never root)
+  fi
+  ( umask 077; mkdir -p "$(dirname "$LEFTOVER")" ) 2>/dev/null || mkdir -p "$(dirname "$LEFTOVER")"
   printf '%s\n' "AUTO_RESOLVE_FAILED pr=${PR_NUMBER} sha=${PUSHED_SHA:0:8} reason=${EXIT_REASON_VALUE:-NO_LOG} log=${AUTO_RESOLVE_LOG} ts=$(date -u +%FT%TZ)" >> "$LEFTOVER"
   emit "[WARN] auto_resolve_addressed_threads.sh emitted EXIT_REASON=${EXIT_REASON_VALUE:-<missing>} (status=$AUTO_RESOLVE_STATUS) — appended to $LEFTOVER and continuing to watcher per the v3.1.0 leftover-findings flow."
 fi

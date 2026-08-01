@@ -174,13 +174,22 @@ echo "   kit currency: $KIT_CURRENCY"
 [ -n "$TICKET" ] && echo "   ticket $TICKET: $TICKET_STATUS"
 
 # ── Write the gate marker (local facts gathered cleanly to reach here) ──
-GATES_DIR="$REPO_ROOT/.gates"
-if ! mkdir -p "$GATES_DIR" 2>/dev/null; then
+# INF-260: gates live in the per-repo scratch dir (outside the repo). Resolve it
+# via the sibling helper (keyed on REPO_ROOT); fall back to the legacy in-repo
+# .gates/ only if the resolver is unavailable.
+_ST_SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd 2>/dev/null)"
+_ST_RES="${_ST_SCRIPT_DIR}/kit-scratch-dir.sh"
+if [ -f "$_ST_RES" ]; then
+    GATES_DIR="$(CLAUDE_PROJECT_DIR="$REPO_ROOT" bash "$_ST_RES" 2>/dev/null)/gates"
+else
+    GATES_DIR="$REPO_ROOT/.gates"
+fi
+if ! ( umask 077; mkdir -p "$GATES_DIR" ) 2>/dev/null; then
     echo "⚠️ ground-truth: could not create ${GATES_DIR} — facts printed above but gate NOT written." >&2
     exit 1
 fi
 NOW_UTC="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
 printf 'repo=%s sha=%s branch=%s ts=%s\n' "$REPO_ROOT" "${HEAD_SHA:0:8}" "$CUR_BRANCH" "$NOW_UTC" \
     > "$GATES_DIR/ground-truth-verified"
-echo "✅ ground truth established — .gates/ground-truth-verified written (repo=$REPO_ROOT sha=${HEAD_SHA:0:8})."
+echo "✅ ground truth established — ground-truth-verified written (repo=$REPO_ROOT sha=${HEAD_SHA:0:8}, gates=$GATES_DIR)."
 exit 0
