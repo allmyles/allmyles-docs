@@ -212,6 +212,58 @@ else
     fi
 fi
 
+# ── 3c. Retired allowlist entries (INF-272) ──────────────────────────
+# permissions.allow merges as a UNION, so an entry the kit has RETIRED can
+# only leave a consumer via setup-project.sh's explicit prune. A consumer
+# still carrying one is running a settings.json that disagrees with the kit's
+# declared state (SKILL.md says the INF-260 gate commands "are removed").
+# Warning-level: stale entries never break /develop, they just misdescribe it.
+# The retired set is read from the SINGLE kit declaration — sibling file when
+# kit-doctor runs from the plugin tree, else the resolved plugin cache. If
+# neither resolves there is nothing to compare against; say so rather than
+# implying the check passed.
+RETIRED_DECL=""
+for _cand in "$(dirname "$0")/settings.retired.json" "${INSTALL_PATH}/scripts/settings.retired.json"; do
+    case "$_cand" in /scripts/*) continue ;; esac   # empty INSTALL_PATH
+    if [ -r "$_cand" ]; then RETIRED_DECL="$_cand"; break; fi
+done
+if [ -z "$RETIRED_DECL" ]; then
+    note "retired-allowlist check skipped (settings.retired.json not resolvable from this checkout)"
+elif [ ! -r "${PROJECT_DIR}/.claude/settings.json" ]; then
+    note "retired-allowlist check skipped (no .claude/settings.json in this repo)"
+elif ! jq empty "${PROJECT_DIR}/.claude/settings.json" >/dev/null 2>&1; then
+    # Without this guard a malformed settings.json makes the jq query below
+    # fail, leaving STALE empty — which would render as a ✅ "no retired
+    # entries" on a file we could not read at all.
+    warnl "settings.json is not valid JSON — retired-allowlist check could not run" "fix the JSON, then re-run setup-project.sh"
+else
+    # Both sides must actually be arrays before they can be compared, and a
+    # nonzero jq status must NEVER fall through to the ✅ branch — an empty
+    # STALE from a failed query is indistinguishable from a genuine "none
+    # found" unless the exit status is checked. `error(...)` inside jq makes
+    # the wrong-type cases exit nonzero too, and 2>&1 carries the reason into
+    # the warning. A settings.json with no permissions.allow at all is
+    # legitimate (nothing to carry), hence `// []` on that side only.
+    if ! STALE="$(jq -rn \
+        --slurpfile r "$RETIRED_DECL" \
+        --slurpfile s "${PROJECT_DIR}/.claude/settings.json" '
+        ($r[0].retiredPermissionsAllow) as $ret
+        | ($s[0].permissions.allow // []) as $allow
+        | if ($ret | type) != "array" then
+              error("retired declaration: retiredPermissionsAllow is not an array")
+          elif ($allow | type) != "array" then
+              error("settings.json: permissions.allow is not an array")
+          else
+              [$ret[] | select(. as $e | $allow | index($e))] | join(", ")
+          end' 2>&1)"; then
+        warnl "retired-allowlist check could not run — ${STALE}" "fix the malformed file, then re-run setup-project.sh"
+    elif [ -z "$STALE" ]; then
+        ok "no retired allowlist entries in .claude/settings.json"
+    else
+        warnl "settings.json still carries retired allowlist entr(ies): ${STALE}" "re-run setup-project.sh — it prunes the kit's retired set (INF-272); these entries were superseded by the kit-gate.sh / kit-scratch-dir.sh helpers in INF-260"
+    fi
+fi
+
 # ── 3b. Marketplace clone integrity (INF-256) ────────────────────────
 # Section 3 verifies installed_plugins.json + the version-pinned cache
 # dir. But skills are served from the marketplace git CLONE at

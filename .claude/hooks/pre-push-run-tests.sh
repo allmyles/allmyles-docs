@@ -34,6 +34,30 @@ _resolve_marker() {
     if [ -n "$SCRATCH" ] && [ -f "$SCRATCH/test-passed" ]; then printf '%s' "$SCRATCH/test-passed"
     else printf '%s' "$PROJECT_ROOT/.test-passed"; fi
 }
+# INF-272: the legacy in-repo fallback STAYS (it is fail-safe — removing it
+# would silently drop enforcement on a repo whose scratch cannot resolve), but
+# it no longer engages silently. Every consumer runs
+# permissions.defaultMode=bypassPermissions, so pruning the retired
+# `Bash(touch .gates/*)` allowlist entry restores NO prompt — this is the only
+# signal that a /develop run wrote its scratch into the repo instead of the
+# scratch dir.
+#
+# "Legacy artifacts exist" and "the legacy path is enforcing" are different
+# claims (CR round 1.1): scratch can hold the live gates while a stale in-repo
+# .gates/ merely sits there from a pre-INF-260 run. Decide from the RESOLVED
+# paths, and report the two cases distinctly.
+_legacy_in_use() {
+    [ "$(_resolve_gates_dir)" = "$PROJECT_ROOT/.gates" ] && [ -d "$PROJECT_ROOT/.gates" ] && return 0
+    [ "$(_resolve_marker)" = "$PROJECT_ROOT/.test-passed" ] && [ -f "$PROJECT_ROOT/.test-passed" ] && return 0
+    return 1
+}
+_warn_legacy_scratch() {
+    if _legacy_in_use; then
+        printf '⚠️  claude-kit: enforcing from the LEGACY in-repo /develop scratch (.gates/ or .test-passed). INF-260 moved scratch to the per-repo scratch dir — a run that wrote here did not apply the kit-gate.sh / kit-scratch-dir.sh convention (INF-272).\n' >&2
+    elif [ -d "$PROJECT_ROOT/.gates" ] || [ -f "$PROJECT_ROOT/.test-passed" ]; then
+        printf 'ℹ️  claude-kit: stale in-repo /develop scratch present (.gates/ or .test-passed) but NOT in use — the per-repo scratch dir is enforcing. Safe to delete the leftovers (INF-260/INF-272).\n' >&2
+    fi
+}
 
 # Self-no-op: this hook enforces /develop's gate-file + branch-naming
 # convention. Consumers that don't enable /develop (or that aren't on a
@@ -50,6 +74,7 @@ BRANCH=$(git branch --show-current)
 if [ ! -d "$(_resolve_gates_dir)" ] && ! [[ "$BRANCH" =~ ^($TICKET_PREFIXES)-[0-9]+ ]]; then
     exit 0
 fi
+_warn_legacy_scratch
 
 # Validate branch name follows Jira naming convention (now that we know the
 # repo IS using /develop's workflow — gates dir exists OR branch carries a

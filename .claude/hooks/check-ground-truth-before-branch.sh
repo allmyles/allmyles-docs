@@ -114,6 +114,17 @@ if [ ! -d "$GATES_DIR" ]; then
     exit 0   # not mid-ceremony → not this hook's business
 fi
 
+# INF-272: the legacy in-repo fallback STAYS (it is fail-safe — removing it
+# would silently drop enforcement on a repo whose scratch cannot resolve), but
+# it no longer engages silently. Every consumer runs
+# permissions.defaultMode=bypassPermissions, so pruning the retired
+# `Bash(touch .gates/*)` allowlist entry restores NO prompt — this line is the
+# only signal that a /develop run wrote its gates into the repo instead of the
+# scratch dir (or that a stale in-repo .gates/ is still lying around).
+if [ "$GATES_DIR" = "$PROJECT_ROOT/.gates" ]; then
+    printf '⚠️  claude-kit: using the legacy in-repo .gates/ (INF-260 moved /develop gates to the per-repo scratch dir). Remove the leftovers, and if a run created them, apply the kit-gate.sh convention (INF-272).\n' >&2
+fi
+
 # ── Bypass ──
 if [ "${ALLOW_UNVERIFIED_GROUND:-0}" = "1" ]; then
     echo "check-ground-truth-before-branch.sh: bypassed via ALLOW_UNVERIFIED_GROUND=1 — branch creation allowed without a fresh ground-truth gate." >&2
