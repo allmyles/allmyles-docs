@@ -38,6 +38,35 @@ if ! _gates_present && [ ! -f "$(_resolve_marker)" ]; then
     exit 0
 fi
 
+# INF-272: the legacy in-repo fallback STAYS (it is fail-safe — removing it
+# would silently drop enforcement on a repo whose scratch cannot resolve), but
+# it no longer engages silently. Every consumer runs
+# permissions.defaultMode=bypassPermissions, so pruning the retired
+# `Bash(touch .gates/*)` allowlist entry restores NO prompt — this is the only
+# signal that a /develop run wrote its scratch into the repo instead of the
+# scratch dir.
+#
+# The two conditions are NOT the same and must not be reported as one (CR round
+# 1.1): scratch can hold the live gates while a stale in-repo .gates/ merely
+# sits there from a pre-INF-260 run. Only the resolved paths tell you which is
+# actually enforcing, so decide from those, not from mere existence.
+_legacy_in_use() {
+    # Gates: in use when scratch holds none but the repo does.
+    if { [ -z "$SCRATCH" ] || [ ! -d "$SCRATCH/gates" ]; } && [ -d "$PROJECT_ROOT/.gates" ]; then
+        return 0
+    fi
+    # Marker: in use when _resolve_marker actually resolved to the repo copy.
+    if [ "$(_resolve_marker)" = "$PROJECT_ROOT/.test-passed" ] && [ -f "$PROJECT_ROOT/.test-passed" ]; then
+        return 0
+    fi
+    return 1
+}
+if _legacy_in_use; then
+    printf '⚠️  claude-kit: enforcing from the LEGACY in-repo /develop scratch (.gates/ or .test-passed). INF-260 moved scratch to the per-repo scratch dir — a run that wrote here did not apply the kit-gate.sh / kit-scratch-dir.sh convention (INF-272).\n' >&2
+elif [ -d "$PROJECT_ROOT/.gates" ] || [ -f "$PROJECT_ROOT/.test-passed" ]; then
+    printf 'ℹ️  claude-kit: stale in-repo /develop scratch present (.gates/ or .test-passed) but NOT in use — the per-repo scratch dir is enforcing. Safe to delete the leftovers (INF-260/INF-272).\n' >&2
+fi
+
 MARKER_FILE="$(_resolve_marker)"
 MAX_AGE_MINUTES=30
 
