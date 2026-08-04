@@ -86,12 +86,37 @@ if [ -f "${PROJECT_DIR}/.claude/develop-config.json" ]; then
 else
     bad "develop-config.json missing — /develop cannot determine the repo shape" "bash <kit>/scripts/setup-project.sh, or pull the latest default branch (the fan-out delivers it)"
 fi
-if [ -d "${PROJECT_DIR}/.claude/scripts" ] && [ -n "$(ls -A "${PROJECT_DIR}/.claude/scripts" 2>/dev/null)" ]; then
+# INF-273 — MANAGED repos deliberately carry no .claude/scripts|hooks: helpers
+# resolve from the plugin via kit-home.sh and every hook fires from the plugin's
+# hooks.json. Detect that shape (settings.json present and activating the kit,
+# but no copies) and report it as healthy instead of three false ❌. A repo that
+# is missing the copies AND has no settings.json is genuinely broken, so the
+# original failures still apply there.
+# Detect on the absence of the KIT-SHIPPED signature files, not on the absence
+# of the directories (CR round 1.1): managed mode deliberately PRESERVES
+# consumer-authored files, so a migrated repo can still have a
+# .claude/scripts/my-own-helper.sh. Testing for the directory would classify
+# that repo as team and emit a false ❌ for the hooks it correctly no longer has.
+# kit-gate.sh is the same signature kit-home.sh uses to recognise a kit scripts
+# dir; detect-jira-issue.sh is the hooks-side equivalent.
+KIT_LAYOUT="team"
+if [ -f "${PROJECT_DIR}/.claude/settings.json" ] \
+   && jq -e '.enabledPlugins' "${PROJECT_DIR}/.claude/settings.json" >/dev/null 2>&1 \
+   && [ ! -f "${PROJECT_DIR}/.claude/scripts/kit-gate.sh" ] \
+   && [ ! -f "${PROJECT_DIR}/.claude/hooks/detect-jira-issue.sh" ]; then
+    KIT_LAYOUT="managed"
+fi
+
+if [ "$KIT_LAYOUT" = "managed" ]; then
+    ok "managed layout — no .claude/scripts|hooks copies (helpers resolve from the plugin, hooks fire from hooks.json)"
+elif [ -d "${PROJECT_DIR}/.claude/scripts" ] && [ -n "$(ls -A "${PROJECT_DIR}/.claude/scripts" 2>/dev/null)" ]; then
     ok ".claude/scripts/ helpers present"
 else
     bad ".claude/scripts/ missing or empty — /develop's watchers and helpers can't run" "pull the latest default branch, or run setup-project.sh"
 fi
-if [ -d "${PROJECT_DIR}/.claude/hooks" ] && [ -n "$(ls -A "${PROJECT_DIR}/.claude/hooks" 2>/dev/null)" ]; then
+if [ "$KIT_LAYOUT" = "managed" ]; then
+    :   # covered by the managed-layout row above
+elif [ -d "${PROJECT_DIR}/.claude/hooks" ] && [ -n "$(ls -A "${PROJECT_DIR}/.claude/hooks" 2>/dev/null)" ]; then
     ok ".claude/hooks/ present"
 else
     bad ".claude/hooks/ missing or empty — gate enforcement and advisories are off" "pull the latest default branch, or run setup-project.sh"
@@ -99,7 +124,7 @@ fi
 if [ -f "${PROJECT_DIR}/.claude/settings.json" ]; then
     if ! jq -e . "${PROJECT_DIR}/.claude/settings.json" >/dev/null 2>&1; then
         bad ".claude/settings.json is not valid JSON — hooks and the shared allowlist will not load" "re-run setup-project.sh to regenerate it"
-    elif ! jq -e 'has("hooks")' "${PROJECT_DIR}/.claude/settings.json" >/dev/null 2>&1; then
+    elif [ "$KIT_LAYOUT" != "managed" ] && ! jq -e 'has("hooks")' "${PROJECT_DIR}/.claude/settings.json" >/dev/null 2>&1; then
         bad ".claude/settings.json has no hooks block — gate enforcement and advisories are not registered" "re-run setup-project.sh (it merges the kit's settings template)"
     elif ! jq -e 'has("permissions")' "${PROJECT_DIR}/.claude/settings.json" >/dev/null 2>&1; then
         warnl ".claude/settings.json has no permissions block — /develop will prompt for every command class" "re-run setup-project.sh to merge the shared allowlist"
