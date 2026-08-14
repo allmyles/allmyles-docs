@@ -21,11 +21,34 @@
 #   first-class signal so new feature work refrains from piling onto an
 #   already-drifted base.
 #
-# The drift measured is `git rev-list --count origin/<default>..origin/<base>`
-# = commits on the PR base branch (staging) NOT yet on the default branch
-# (master) = unpromoted feature merges. The gate is fail-safe: it never mutates
-# master or staging — it only reports, and (in the /develop caller) blocks the
-# START of new work.
+# WHAT IS MEASURED (rewritten in INF-277)
+#
+# The authoritative signal is CONTENT divergence:
+#   git diff --quiet origin/<default> origin/<base>
+# i.e. "is there anything on staging that is not on master". Identical trees →
+# VERDICT=clean, whatever the commit counts say.
+#
+# The original implementation used `git rev-list --count master..staging` and
+# called it "unpromoted feature merges". It is not. In this two-branch flow
+# master NEVER receives staging's merge commits: the promotion PR is opened
+# from the FEATURE branch to master (develop skill Step 15), never from staging,
+# while the post-deploy sync merges master INTO staging. So staging accumulates
+# ~2 commits per ticket that master can never have, the count rises forever, and
+# it says nothing about whether work is actually unpromoted.
+#
+# Measured 2026-08-14, all four staging-master consumers — every tree identical:
+#   mileometer 128 commits | frontend 108 | allmylespy 87 | whitelabel 84
+# At the old 150 threshold mileometer was ~11 tickets from blocking /develop on
+# a perfectly healthy repo, with recovery advice that could not work (there were
+# no pending promotion PRs, and re-running the sync ADDS a staging commit).
+#
+# Commit counts are still emitted, as secondary//informational only. Note that
+# `--no-merges` is NOT sufficient either: whitelabel-internal showed 2 non-merge
+# commits against an identical tree (content already on master by another
+# route). Only the tree comparison is truthful.
+#
+# The gate remains fail-safe: it never mutates master or staging — it only
+# reports, and (in the /develop caller) blocks the START of new work.
 #
 # Usage:
 #   check-staging-drift.sh [--no-fetch] [--diagnose] [--threshold N]
@@ -178,17 +201,115 @@ if ! DRIFT_COUNT=$(git rev-list --count "$RANGE" 2>/dev/null); then
 fi
 echo "DRIFT_COUNT=${DRIFT_COUNT}"
 
-# --- Classify ---
-RECOVERY="Resolve before starting new feature work: merge the pending ${PR_BASE_BRANCH}→${DEFAULT_BRANCH} promotion PRs (gh pr list --base ${DEFAULT_BRANCH} --state open), or re-run the post-deploy 'sync staging with master' job (master_deploy_pipeline.yaml :: sync-staging-branch). Bypass for one run with ALLOW_STAGING_DRIFT=1."
+# --- INF-277: content divergence is the authoritative signal ---
+# DRIFT_COUNT above counts merge topology and rises forever; it is retained for
+# continuity and diagnosis but no longer decides the verdict.
+UNPROMOTED_COMMITS=$(git rev-list --count --no-merges "$RANGE" 2>/dev/null || echo 0)
+echo "UNPROMOTED_COMMITS=${UNPROMOTED_COMMITS}"
 
-if [ "$DRIFT_COUNT" -eq 0 ]; then
+# `git diff A B` is SYMMETRIC — it reports differences in both directions, so it
+# cannot on its own tell "staging has unpromoted work" from "master has a hotfix
+# staging has not received yet". Those need opposite advice, and recommending
+# promotion for a master-only change would be actively wrong (CR round 1.1).
+# Attribute each side against the merge base.
+MERGE_BASE=$(git merge-base "origin/${DEFAULT_BRANCH}" "origin/${PR_BASE_BRANCH}" 2>/dev/null || echo "")
+# The set of paths that ACTUALLY differ between the two branch tips right now.
+DIVERGED_LIST=$(git diff --name-only "origin/${DEFAULT_BRANCH}" "origin/${PR_BASE_BRANCH}" 2>/dev/null)
+
+if [ -n "$MERGE_BASE" ]; then
+  STAGING_SIDE_RAW=$(git diff --name-only "$MERGE_BASE" "origin/${PR_BASE_BRANCH}" 2>/dev/null)
+  MASTER_SIDE_RAW=$(git diff --name-only "$MERGE_BASE" "origin/${DEFAULT_BRANCH}" 2>/dev/null)
+else
+  STAGING_SIDE_RAW=""; MASTER_SIDE_RAW=""
+fi
+
+# A path CHANGED since the merge base is not necessarily a path that still
+# DIVERGES: if both branches made the same edit to a.txt, a.txt appears on both
+# side-lists yet the trees agree on it (CR round 1.2). Counting it would report
+# direction "both" — and possibly unpromoted work — for a repo where only the
+# other branch's file actually differs. This is the same convergent-content case
+# test 2 pins down at the whole-tree level, one level finer. So intersect each
+# side-list with the paths that genuinely differ now, and count only those.
+_intersect_with_diverged() {  # stdin: candidate paths → stdout: those still diverging
+  if [ -z "$DIVERGED_LIST" ]; then cat >/dev/null; return 0; fi
+  grep -Fx -f <(printf '%s\n' "$DIVERGED_LIST") 2>/dev/null || true
+}
+STAGING_SIDE=$(printf '%s\n' "$STAGING_SIDE_RAW" | grep -v '^$' | _intersect_with_diverged)
+MASTER_SIDE=$(printf '%s\n' "$MASTER_SIDE_RAW"  | grep -v '^$' | _intersect_with_diverged)
+
+UNPROMOTED_FILES=$(printf '%s' "$STAGING_SIDE" | grep -c . || true)
+BEHIND_FILES=$(printf '%s' "$MASTER_SIDE" | grep -c . || true)
+
+if git diff --quiet "origin/${DEFAULT_BRANCH}" "origin/${PR_BASE_BRANCH}" 2>/dev/null; then
+  CONTENT_DIVERGED=no
+  DIVERGED_FILES=0
+  DIVERGED_PATHS=""
+  DIVERGE_DIRECTION=none
+else
+  CONTENT_DIVERGED=yes
+  DIVERGED_PATHS=$(git diff --name-only "origin/${DEFAULT_BRANCH}" "origin/${PR_BASE_BRANCH}" 2>/dev/null | head -20 | paste -sd, - )
+  DIVERGED_FILES=$(git diff --name-only "origin/${DEFAULT_BRANCH}" "origin/${PR_BASE_BRANCH}" 2>/dev/null | wc -l | tr -d ' ')
+  if [ "$UNPROMOTED_FILES" -gt 0 ] && [ "$BEHIND_FILES" -gt 0 ]; then
+    DIVERGE_DIRECTION=both
+  elif [ "$UNPROMOTED_FILES" -gt 0 ]; then
+    DIVERGE_DIRECTION=staging-ahead
+  elif [ "$BEHIND_FILES" -gt 0 ]; then
+    DIVERGE_DIRECTION=master-ahead
+  else
+    # Trees differ but neither side changed relative to the merge base — only
+    # reachable if the merge base could not be resolved. Say so rather than
+    # guessing a direction.
+    DIVERGE_DIRECTION=unknown
+  fi
+fi
+echo "CONTENT_DIVERGED=${CONTENT_DIVERGED}"
+echo "DIVERGE_DIRECTION=${DIVERGE_DIRECTION}"
+echo "DIVERGED_FILES=${DIVERGED_FILES}"
+echo "UNPROMOTED_FILES=${UNPROMOTED_FILES}"
+echo "BEHIND_FILES=${BEHIND_FILES}"
+[ -n "$DIVERGED_PATHS" ] && echo "DIVERGED_PATHS=${DIVERGED_PATHS}"
+
+# A threshold inherited from the commit-counting era (e.g. 150) is meaningless
+# against the new measure and would silently disable the gate. Say so rather
+# than letting it pass unnoticed — a gate that cannot fire should never look
+# like a gate that is passing.
+if [ "$BLOCK_THRESHOLD" -ge 50 ] 2>/dev/null; then
+  echo "THRESHOLD_NOTICE=staging_drift_block_threshold=${BLOCK_THRESHOLD} looks like a commit-counting-era value (INF-277 changed the measure to unpromoted files). Consider lowering it in .claude/develop-config.json."
+fi
+
+# --- Classify ---
+# Recovery advice must name an action that actually reduces the measured
+# quantity. The pre-INF-277 text told the operator to re-run the staging sync,
+# which ADDS a staging commit — advice that made the number worse.
+# Recovery advice is DIRECTION-SPECIFIC. The pre-INF-277 text always pointed at
+# the staging sync, which for unpromoted work adds a staging commit and makes
+# things worse — but for a master-ahead hotfix the sync is exactly right. Naming
+# the wrong one is worse than naming none, so each direction gets its own.
+PROMOTE_ADVICE="Promote the outstanding work to ${DEFAULT_BRANCH} (merge its ${PR_BASE_BRANCH}→${DEFAULT_BRANCH} promotion PR, or open one for the paths above), then re-run."
+SYNC_ADVICE="Bring ${PR_BASE_BRANCH} up to date with ${DEFAULT_BRANCH} (the post-deploy 'sync staging with master' job, master_deploy_pipeline.yaml :: sync-staging-branch), then re-run."
+BYPASS="Bypass for one run with ALLOW_STAGING_DRIFT=1."
+
+case "$DIVERGE_DIRECTION" in
+  staging-ahead) RECOVERY="$PROMOTE_ADVICE $BYPASS" ;;
+  master-ahead)  RECOVERY="$SYNC_ADVICE $BYPASS" ;;
+  both)          RECOVERY="Both branches carry changes the other lacks. $PROMOTE_ADVICE Then: $SYNC_ADVICE $BYPASS" ;;
+  *)             RECOVERY="Inspect the diverging paths above before starting new work. $BYPASS" ;;
+esac
+
+if [ "$CONTENT_DIVERGED" = "no" ]; then
+  # Identical trees: nothing is unpromoted, regardless of DRIFT_COUNT.
   echo "VERDICT=clean"
-elif [ "$DRIFT_COUNT" -lt "$BLOCK_THRESHOLD" ]; then
+elif [ "$DIVERGE_DIRECTION" = "master-ahead" ]; then
+  # Nothing is unpromoted — staging is simply behind. That is the sync job's
+  # normal window and never a reason to block the start of new work.
   echo "VERDICT=advisory"
-  echo "MESSAGE=${DEFAULT_BRANCH} is ${DRIFT_COUNT} commit(s) behind ${PR_BASE_BRANCH} (below block threshold ${BLOCK_THRESHOLD}). Normal mid-promotion lag, but watch it: ${RECOVERY}"
+  echo "MESSAGE=${PR_BASE_BRANCH} is behind ${DEFAULT_BRANCH} by ${BEHIND_FILES} file(s) [${DIVERGED_PATHS}]. Nothing is unpromoted. ${RECOVERY}"
+elif [ "$UNPROMOTED_FILES" -lt "$BLOCK_THRESHOLD" ]; then
+  echo "VERDICT=advisory"
+  echo "MESSAGE=${PR_BASE_BRANCH} has ${UNPROMOTED_FILES} file(s) not on ${DEFAULT_BRANCH} [${DIVERGED_PATHS}]. Normal while a promotion is in flight. ${RECOVERY}"
 else
   echo "VERDICT=block"
-  echo "MESSAGE=${DEFAULT_BRANCH} is ${DRIFT_COUNT} commit(s) behind ${PR_BASE_BRANCH} (>= block threshold ${BLOCK_THRESHOLD}). The post-deploy staging-sync has not reconciled them; new feature PRs may be structurally un-mergeable against staging. ${RECOVERY}"
+  echo "MESSAGE=${PR_BASE_BRANCH} has ${UNPROMOTED_FILES} file(s) not on ${DEFAULT_BRANCH} (>= threshold ${BLOCK_THRESHOLD}) [${DIVERGED_PATHS}]. New feature PRs may be structurally un-mergeable against ${PR_BASE_BRANCH}. ${RECOVERY}"
 fi
 
 # --- Optional gh-backed diagnosis (best-effort; never fails the script) ---

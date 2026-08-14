@@ -16,8 +16,13 @@
 # unconditionally (advisory only, NEVER blocks session start).
 #
 # Behavior:
-#   - Silent when in sync (DRIFT_COUNT == 0) or shape is not staging-master.
-#   - On drift: one stderr advisory line with the count + recovery hint.
+#   - Silent when VERDICT=clean or shape is not staging-master. Since INF-277
+#     "clean" means the master and staging TREES are identical — not that the
+#     commit count is zero, which in this flow it never is. Before that change
+#     this hook fired on essentially every session in every repo (128/108/87/84
+#     commits, all with identical trees), which is how a real warning would have
+#     been lost in the noise.
+#   - On drift: one stderr advisory line naming the diverging paths + recovery hint.
 #     advisory verdict (below block threshold) and block verdict (at/above)
 #     both emit; the gate in /develop is what actually STOPs a run.
 #   - Idempotent within a session via /tmp/staging-drift-advisory-<sid>.flag.
