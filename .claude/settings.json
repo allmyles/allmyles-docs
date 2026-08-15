@@ -14,6 +14,7 @@
       "Bash(.claude/scripts/establish-ground-truth.sh:*)",
       "Bash(.claude/scripts/get-ci-formatters.sh:*)",
       "Bash(.claude/scripts/jira_sprint_add.sh:*)",
+      "Bash(.claude/scripts/kit-check.sh:*)",
       "Bash(.claude/scripts/kit-config.sh:*)",
       "Bash(.claude/scripts/kit-gate.sh:*)",
       "Bash(.claude/scripts/kit-home.sh:*)",
