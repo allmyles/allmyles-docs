@@ -8,6 +8,7 @@
       "Bash(.claude/hooks/pre-push-block-staging-merge.sh:*)",
       "Bash(.claude/hooks/pre-push-format-check.sh:*)",
       "Bash(.claude/scripts/auto_resolve_addressed_threads.sh:*)",
+      "Bash(.claude/scripts/cr-thread-audit.sh:*)",
       "Bash(.claude/scripts/cr_round_continuation.sh:*)",
       "Bash(.claude/scripts/discover-targeted-tests.sh:*)",
       "Bash(.claude/scripts/establish-ground-truth.sh:*)",

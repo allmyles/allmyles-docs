@@ -122,6 +122,17 @@ LOG="/tmp/auto-resolve-${PR_NUMBER}.log"
 emit() { printf '%s\n' "$*" | tee -a "$LOG"; }
 warn() { printf '[WARN] %s\n' "$*" | tee -a "$LOG" >&2; }
 
+# Shared GraphQL page validator (INF-280) — one implementation, also used by
+# cr-thread-audit.sh, so the two cannot drift apart.
+_AR_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+if [ -r "$_AR_DIR/kit-graphql-page-guard.sh" ]; then
+  . "$_AR_DIR/kit-graphql-page-guard.sh"
+else
+  warn "kit-graphql-page-guard.sh not found — refusing to act on an unvalidated thread list"
+  emit "EXIT_REASON=GUARD_MISSING"
+  exit 2
+fi
+
 OWNER_REPO=$(gh repo view --json nameWithOwner --jq '.nameWithOwner' 2>/dev/null || echo "")
 if [ -z "$OWNER_REPO" ]; then
   warn "gh repo view returned empty nameWithOwner — not in a GitHub repo, or gh CLI unauthenticated"
@@ -185,7 +196,7 @@ query($owner: String!, $repo: String!, $number: Int!) {
 }' -f owner="$OWNER" -f repo="$REPO" -F number="$PR_NUMBER" 2>>"$LOG") || {
       warn "GraphQL reviewThreads query failed (page $PAGE, no cursor)"
       emit "EXIT_REASON=GRAPHQL_FAILED"
-      exit 0
+      exit 2
     }
   else
     PAGE_JSON=$(gh api graphql -f query='
@@ -215,8 +226,22 @@ query($owner: String!, $repo: String!, $number: Int!, $after: String!) {
 }' -f owner="$OWNER" -f repo="$REPO" -F number="$PR_NUMBER" -f after="$CURSOR" 2>>"$LOG") || {
       warn "GraphQL reviewThreads query failed (page $PAGE, cursor $CURSOR)"
       emit "EXIT_REASON=GRAPHQL_FAILED"
-      exit 0
+      exit 2
     }
+  fi
+
+  # Validate the page BEFORE accumulating it (INF-280). `gh api graphql` exits 0
+  # on an application-level error, so an errored, unparseable or truncated page
+  # would fold in as nothing, stop pagination early, and make this helper
+  # silently skip threads it should have closed. The validator is SHARED with
+  # cr-thread-audit.sh — CR round 1.2 caught a hand-shortened copy here that was
+  # already missing unparseable JSON, a non-boolean hasNextPage and a missing
+  # cursor. Exit 2, not 0: continuing past incomplete pagination without a
+  # failure status is what makes a partial read look like a complete one.
+  if ! validate_graphql_page "$PAGE_JSON" '.data.repository.pullRequest.reviewThreads'; then
+    warn "GraphQL page $PAGE failed validation: ${GRAPHQL_PAGE_INVALID_REASON} — aborting rather than acting on a partial thread list"
+    emit "EXIT_REASON=GRAPHQL_FAILED"
+    exit 2
   fi
 
   # Append this page's nodes to the accumulator file.
