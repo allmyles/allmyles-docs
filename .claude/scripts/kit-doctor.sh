@@ -108,7 +108,17 @@ if [ -f "${PROJECT_DIR}/.claude/settings.json" ] \
 fi
 
 if [ "$KIT_LAYOUT" = "managed" ]; then
-    ok "managed layout — no .claude/scripts|hooks copies (helpers resolve from the plugin, hooks fire from hooks.json)"
+    # INF-284: the layout being managed is not enough — setup-project decides
+    # the mode from the RECORDED marker, and a repo migrated before the marker
+    # existed carries none. Such a repo looks perfectly managed here and is
+    # reverted to the copied-file layer by the next release, silently (kit
+    # upgrade PRs auto-approve and auto-merge). Warning-level, one command to
+    # fix, so it is surfaced rather than left to be discovered by the revert.
+    if [ "$(jq -r '.kitMode // ""' "${PROJECT_DIR}/.claude/claude-kit-pin.json" 2>/dev/null || echo "")" = "managed" ]; then
+        ok "managed layout — no .claude/scripts|hooks copies (helpers resolve from the plugin, hooks fire from hooks.json), and the mode is recorded in the pin"
+    else
+        warnl "managed layout but the mode is NOT recorded in .claude/claude-kit-pin.json — the next kit release will copy .claude/scripts/ and .claude/hooks/ back in" "run setup-project.sh --managed once (it changes one line of the pin) — INF-284"
+    fi
 elif [ -d "${PROJECT_DIR}/.claude/scripts" ] && [ -n "$(ls -A "${PROJECT_DIR}/.claude/scripts" 2>/dev/null)" ]; then
     ok ".claude/scripts/ helpers present"
 else

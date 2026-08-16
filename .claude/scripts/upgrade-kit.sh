@@ -100,7 +100,31 @@ SETUP_LOG="$(mktemp -t upgrade-kit-setup.XXXXXX 2>/dev/null || printf '%s' "/tmp
 # the --team flag: a pre-INF-263 setup-project.sh (possible across a marketplace-
 # update boundary) rejects the unknown flag with exit 2 (→ RESULT=BLOCKED),
 # whereas it simply ignores an unknown env var and runs its only (team) flow.
-if ! KIT_SETUP_MODE=team bash "$SETUP" > "$SETUP_LOG" 2>&1; then
+#
+# INF-284: `team` is the right default but the WRONG answer for a repo that has
+# been migrated to managed mode. Forcing team here outranks the pin marker
+# setup-project reads (env beats the recorded decision, deliberately — an
+# explicit override has to win), so the fan-out would re-add every copied
+# script and hook on the first release after a migration, and land it in an
+# auto-approved, auto-merged PR that no human reads. Honour the recorded
+# decision instead; absence of the marker still means team, so nothing changes
+# for a repo that was never migrated.
+#
+# Guarded on the resolved script actually supporting the mode: across a
+# marketplace-update boundary $SETUP can be a pre-INF-273 copy whose
+# KIT_SETUP_MODE validation accepts only solo|team and exits 2 on anything
+# else — which would turn every migrated consumer's upgrade into RESULT=BLOCKED
+# instead of a no-op. (In the fan-out $SETUP is always the release checkout's
+# own script, so this is belt-and-braces for local invocations.)
+SETUP_MODE="team"
+if [ "$(jq -r '.kitMode // ""' "${PROJECT_ROOT}/.claude/claude-kit-pin.json" 2>/dev/null || echo "")" = "managed" ]; then
+    if grep -q 'solo|team|managed)' "$SETUP" 2>/dev/null; then
+        SETUP_MODE="managed"
+    else
+        echo "⚠️ ${PROJECT_ROOT} records managed mode but the resolved setup-project.sh predates managed support — running team, which will re-add the copied-file layer. Upgrade the kit and re-run." >&2
+    fi
+fi
+if ! KIT_SETUP_MODE="$SETUP_MODE" bash "$SETUP" > "$SETUP_LOG" 2>&1; then
     echo "setup-project.sh failed — see ${SETUP_LOG}" >&2
     echo "RESULT=BLOCKED"; exit 3
 fi
