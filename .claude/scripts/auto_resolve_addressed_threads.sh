@@ -38,7 +38,10 @@
 # regex on a synthetic comment body (no GitHub API calls). Used by the
 # /develop CR-loop tests so the heuristic doesn't silently drift.
 #
-# Args: PR_NUMBER COMMIT_SHA   (or --self-test)
+# Args: PR_NUMBER COMMIT_SHA
+#       --self-test        exercise the H2 heuristic offline
+#       --print-prefixes   print the derived prefix alternation for CWD
+#       --extract "<body>" print the paths H2 would take from that body
 # Exit:
 #   0 — normal (counts in the log: ADDRESSED, SKIPPED, ERRORS)
 #   2 — ERROR_GH_REPO (gh CLI unauthenticated or not a GH repo)
@@ -46,27 +49,136 @@
 set -u
 
 # Conservative regex for project-relative paths CodeRabbit cites in
-# outside-diff bodies. Matches:
-#   - mileometer/...
-#   - .claude/...
-#   - tests/... (less common, but valid)
-# Path tail must end with a recognisable extension or directory marker
-# so we don't pick up arbitrary slashes from prose. Keep this list in
-# sync with the project layout — adding a new top-level dir for shipped
-# code means adding it here too.
+# outside-diff bodies. The path tail must end in a recognisable extension so
+# prose slashes ("50/40", "and/or") are not mistaken for paths.
+#
+# The PREFIX set is DERIVED FROM THE REPO (INF-282), not hardcoded.
+# ----------------------------------------------------------------------
+# It used to be the literal list `mileometer|.claude|tests`, with a comment
+# telling the reader to "keep this list in sync with the project layout". That
+# is a per-repo assumption inside a file the kit ships to EVERY consumer, and
+# no consumer other than mileometer was ever added — so on whitelabel-internal
+# (web/, taurus-api/, docs/, tools/, nginx/, scripts/), allmylespy and
+# mileometer-frontend, H2 was structurally DEAD. Every finding whose fix landed
+# somewhere other than the flagged line — the common case for documentation
+# findings, where the remedy is a new section rather than an edit at the
+# anchor — failed both heuristics and left its thread open. WHIT-387 on
+# whitelabel-internal PR #764 ended three separate rounds in ROUND_INCOMPLETE
+# for exactly this reason, each costing a continuation cycle and manual thread
+# closure.
+#
+# Deriving the prefixes from `git ls-files` self-configures per consumer and
+# removes the keep-in-sync footgun rather than relocating it into config. It
+# also PRESERVES the conservatism: only real tracked top-level directories can
+# match, so prose is no more likely to be picked up than before.
+H2_PATH_PREFIXES="${H2_PATH_PREFIXES:-}"
+
+# Extensions recognised in the path tail. Widened for the non-Python consumers
+# the kit now serves: mjs/cjs (ESM — whitelabel-internal's tools/ is ESM, and
+# their absence alone kept `tools/tour-mapping/src/extract.mjs` invisible),
+# plus tf/sql/go/rb/toml/env.
+# Honest boundary: extension-less files (Dockerfile, Makefile) remain
+# unmatched by design — matching them would require dropping the extension
+# anchor that keeps prose out.
+# Overridable like H2_PATH_PREFIXES. It was a plain assignment, which silently
+# ignored an environment override — a demonstration of "the old extension list
+# would still have failed" quietly ran with the NEW list and appeared to
+# disprove itself. A knob that looks settable and is not is worse than none.
+H2_PATH_EXTENSIONS="${H2_PATH_EXTENSIONS:-py|sh|md|yml|yaml|json|html|js|ts|tsx|jsx|css|mjs|cjs|tf|sql|go|rb|toml|env}"
+
+# Top-level directories that are actually tracked in this repo. Entries without
+# a `/` are root-level FILES, not prefixes, so they are filtered out — leaving
+# them in would let `README.md` register `README.md` as a directory prefix.
+derive_path_prefixes() {
+  git ls-files -z 2>/dev/null \
+    | tr '\0' '\n' \
+    | grep '/' \
+    | cut -d/ -f1 \
+    | sort -u
+}
+
+# Escape ERE metacharacters so a directory named e.g. `c++` or `.claude`
+# cannot alter the pattern's meaning.
+_ere_escape() {
+  printf '%s' "$1" | sed 's/[][\.^$*+?(){}|\/]/\\&/g'
+}
+
+# Resolve the prefix alternation ONCE per invocation (git ls-files is not free
+# on a large repo). Falls back to the historical literal list when derivation
+# yields nothing — a non-git directory, or a repo with no subdirectories. That
+# fallback keeps mileometer working byte-for-byte if git is unavailable, and
+# an EMPTY alternation is never emitted (it would change the regex's meaning
+# rather than narrow it).
+resolve_h2_prefixes() {
+  # `${...:-}` not `$...` — this script runs under `set -u`, and the variable is
+  # legitimately unset both on a fresh invocation and when a caller (the
+  # self-test) clears it to exercise derivation.
+  [ -n "${H2_PATH_PREFIXES:-}" ] && return 0
+  local derived escaped=""
+  derived="$(derive_path_prefixes)"
+  if [ -z "$derived" ]; then
+    H2_PATH_PREFIXES='mileometer|\.claude|tests'
+    return 0
+  fi
+  while IFS= read -r d; do
+    [ -z "$d" ] && continue
+    escaped="${escaped}|$(_ere_escape "$d")"
+  done <<< "$derived"
+  H2_PATH_PREFIXES="${escaped#|}"
+}
+
 extract_paths_from_body() {
   local body="$1"
+  resolve_h2_prefixes
   # Use grep -oE for the regex match; printf to bash because some
   # comment bodies have CRLF that grep doesn't strip. The trailing
   # tr -d '\r' guards against that.
+  # LEFT BOUNDARY (CR round 1.1). Without it a prefix matches anywhere inside a
+  # longer token: `site/docs/spec.md` would yield `docs/spec.md`, and
+  # `myweb/app/page.tsx` would yield `web/app/page.tsx` — resolving a thread on
+  # a path the comment never cited as project-relative. The old hardcoded set
+  # had the same hole, but deriving prefixes from the repo makes it far easier
+  # to hit: the derived names are short and numerous (web, docs, src) where the
+  # literal three were long and distinctive.
+  #
+  # BSD grep has no lookbehind, so match an optional boundary CHARACTER and
+  # strip it afterwards. The boundary class deliberately excludes `.`, `/`, `-`
+  # and `_` so a leading `.claude/...` is never mistaken for a boundary and
+  # shaved off.
   printf '%s' "$body" | tr -d '\r' \
-    | grep -oE '(mileometer|\.claude|tests)/[A-Za-z0-9_./-]+\.(py|sh|md|yml|yaml|json|html|js|ts|tsx|jsx|css)' \
+    | grep -oE "(^|[^A-Za-z0-9_./-])(${H2_PATH_PREFIXES})/[A-Za-z0-9_./-]+\.(${H2_PATH_EXTENSIONS})" \
+    | sed -E 's#^[^A-Za-z0-9_./-]##' \
     | sort -u
 }
+
+# --- introspection modes -----------------------------------------------
+# Small stable interfaces so callers (and tests) can exercise the H2 machinery
+# without GitHub, and without extracting shell functions out of this file with
+# sed — which is exactly as fragile as it sounds and broke on the first brace.
+#
+#   --print-prefixes          resolve and print the prefix alternation for CWD
+#   --extract "<body>"        print the paths H2 would take from that body
+#                             (honours H2_PATH_PREFIXES from the environment)
+if [ "${1:-}" = "--print-prefixes" ]; then
+  resolve_h2_prefixes
+  printf '%s\n' "$H2_PATH_PREFIXES"
+  exit 0
+fi
+
+if [ "${1:-}" = "--extract" ]; then
+  extract_paths_from_body "${2:-}"
+  exit 0
+fi
 
 # --- self-test mode ----------------------------------------------------
 if [ "${1:-}" = "--self-test" ]; then
   fail=0
+  # Pin the prefix set for the LEGACY cases so they assert the same thing in
+  # every repo. Without this the suite would derive prefixes from whatever
+  # checkout it runs in, and `body4`'s "bare src/ is ignored" case would flip
+  # meaning on any consumer that actually has a src/ directory — a test whose
+  # verdict depends on where it runs is not a test.
+  H2_PATH_PREFIXES='mileometer|\.claude|tests'
   check() {
     local label="$1" expected="$2" actual="$3"
     if [ "$expected" = "$actual" ]; then
@@ -97,6 +209,61 @@ if [ "${1:-}" = "--self-test" ]; then
   got5=$(printf '%b' "$body5" | { read -r line; while read -r line; do printf '%s ' "$line"; done; } > /dev/null; \
     extract_paths_from_body "$(printf '%b' "$body5")" | tr '\n' ' ' | sed 's/ $//')
   check "H2 dedupes repeated"     "mileometer/views/todo.py"      "$got5"
+
+  # ── INF-282: a NON-mileometer layout must work ─────────────────────────
+  # whitelabel-internal's actual top-level dirs. Under the old hardcoded
+  # `mileometer|.claude|tests` list every one of these produced NO match, so
+  # H2 could never fire on that consumer.
+  H2_PATH_PREFIXES='web|taurus-api|docs|tools|nginx|scripts'
+
+  body6="The contract is stale — see docs/package-tours/api-contract.md for the current shape."
+  got6=$(extract_paths_from_body "$body6" | tr '\n' ' ' | sed 's/ $//')
+  check "H2 non-mileometer layout: docs/" "docs/package-tours/api-contract.md" "$got6"
+
+  body7="Extraction lives in tools/tour-mapping/src/extract.mjs and is called from web/app/page.tsx."
+  got7=$(extract_paths_from_body "$body7" | tr '\n' ' ' | sed 's/ $//')
+  check "H2 .mjs + nested src under a real prefix" "tools/tour-mapping/src/extract.mjs web/app/page.tsx" "$got7"
+
+  body8="Config drift between nginx/default.conf and scripts/deploy.sh."
+  got8=$(extract_paths_from_body "$body8" | tr '\n' ' ' | sed 's/ $//')
+  check "H2 conf is NOT an extension (stays conservative)" "scripts/deploy.sh" "$got8"
+
+  # A directory that is NOT in the prefix set must still be ignored — the
+  # derivation widens the set to real dirs, it does not match everything.
+  body9="Unrelated: vendor/thirdparty/lib.py should not be picked up here."
+  got9=$(extract_paths_from_body "$body9" | tr '\n' ' ' | sed 's/ $//')
+  check "H2 unknown prefix still ignored" "" "$got9"
+
+  # ── Derivation itself, on a real git repo ──────────────────────────────
+  # Proves the prefixes come from tracked content, that root-level FILES are
+  # not mistaken for directory prefixes, and that a dotted dir survives.
+  unset H2_PATH_PREFIXES
+  _d=$(mktemp -d -t h2-derive-XXXXXX)
+  (
+    cd "$_d" || exit 1
+    git init -q . 2>/dev/null
+    git config user.email t@example.com; git config user.name t
+    mkdir -p web/app taurus-api/src .claude/scripts
+    printf 'x\n' > web/app/page.tsx
+    printf 'x\n' > taurus-api/src/main.go
+    printf 'x\n' > .claude/scripts/helper.sh
+    printf 'x\n' > README.md          # root-level FILE — must NOT become a prefix
+    git add -A >/dev/null 2>&1
+    git -c commit.gpgsign=false commit -qm init >/dev/null 2>&1
+    derived=$(derive_path_prefixes | tr '\n' ' ' | sed 's/ $//')
+    printf '%s' "$derived"
+  ) > "$_d/out.txt"
+  got10=$(cat "$_d/out.txt")
+  check "derive: tracked dirs only, root files excluded" ".claude taurus-api web" "$got10"
+  rm -rf "$_d"
+
+  # Empty/non-git derivation must fall back to the historical list, never to an
+  # empty alternation (which would change the regex's meaning, not narrow it).
+  unset H2_PATH_PREFIXES
+  _e=$(mktemp -d -t h2-nogit-XXXXXX)
+  got11=$(cd "$_e" && resolve_h2_prefixes && printf '%s' "$H2_PATH_PREFIXES")
+  check "derive: non-git falls back to the legacy list" 'mileometer|\.claude|tests' "$got11"
+  rm -rf "$_e"
 
   if [ $fail -eq 0 ]; then
     echo "All H2 self-tests passed."
