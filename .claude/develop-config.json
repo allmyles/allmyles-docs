@@ -1,0 +1,8 @@
+{
+  "shape": "single-branch",
+  "default_branch": "master",
+  "pr_base_branch": "master",
+  "required_check_name": null,
+  "staging_deploy_workflow_name": null,
+  "migration_tool": null
+}
