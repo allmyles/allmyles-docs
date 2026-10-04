@@ -14,7 +14,9 @@ updates:
       - "/"
     schedule:
       interval: "weekly"
-      day: "monday"
+      day: "saturday"
+      time: "06:00"
+      timezone: "Europe/Budapest"
     cooldown:
       default-days: 3
     groups:
@@ -26,7 +28,9 @@ updates:
       - "/"
     schedule:
       interval: "weekly"
-      day: "monday"
+      day: "saturday"
+      time: "06:00"
+      timezone: "Europe/Budapest"
     cooldown:
       default-days: 3
     ignore:
