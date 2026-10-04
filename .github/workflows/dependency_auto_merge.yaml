@@ -8,9 +8,11 @@
 #   small (patch/minor) update  → approved, tested, merges itself into
 #                                 master once every required check passes;
 #   major update                → tested, then waits for a person;
-#   security fix sent to the default branch on a staging repo
-#                               → moved to master first, so master
-#                                 promotion stays manual;
+#   security fix opened against the default branch on a staging repo
+#                               → waits for a person. It cannot be kept on
+#                                 master: Dependabot moves its PRs back
+#                                 to the default branch on every rebase, and an
+#                                 armed PR would then merge there unpromoted;
 #   branch with no test check   → waits for a person.
 # The rules live in the kit's reusable workflow; this stub only switches them on.
 name: Dependency update auto-merge
