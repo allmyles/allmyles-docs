@@ -6,7 +6,11 @@
 # Security fixes are NOT governed here: they come from the repository's
 # "Dependabot security updates" setting and are proposed immediately.
 # This file schedules the other updates: weekly, grouped per ecosystem, three
-# days after release; majors get their own pull request and wait for a person.
+# days after release; majors get their own pull request and wait for a person,
+# and so do minor updates of packages still on 0.x (breaking before 1.0).
+# To hold a package back, list it under "dependabot_ignore" in
+# .claude/develop-config.json — that survives regeneration; an edit here does
+# not.
 version: 2
 updates:
   - package-ecosystem: "pip"
