@@ -6,7 +6,11 @@
 #
 # What happens to a Dependabot pull request in this repo:
 #   small (patch/minor) update  → approved, tested, merges itself into
-#                                 master once every required check passes;
+#                                 master once every required check passes —
+#                                 but only where a required check BUILDS the app
+#                                 (kit_dependency_auto_merge.build_check in
+#                                 .claude/develop-config.json; INF-413). Without
+#                                 one it waits for a person;
 #   major update                → tested, then waits for a person;
 #   security fix opened against the default branch on a staging repo
 #                               → waits for a person. It cannot be kept on
@@ -44,6 +48,7 @@ jobs:
     with:
       pr_base_branch: "master"
       pipeline_event_type: ""
+      build_check: ""
     secrets:
       GH_APP_ID: ${{ secrets.GH_APP_ID }}
       GH_APP_PRIVATE_KEY: ${{ secrets.GH_APP_PRIVATE_KEY }}
