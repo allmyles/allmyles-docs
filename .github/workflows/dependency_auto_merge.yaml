@@ -13,11 +13,16 @@
 #                                 one it waits for a person;
 #   major update                → tested, then waits for a person;
 #   security fix opened against the default branch on a staging repo
-#                               → waits for a person. It cannot be kept on
-#                                 master: Dependabot moves its PRs back
-#                                 to the default branch on every rebase, and an
-#                                 armed PR would then merge there unpromoted;
+#                               → never merged where Dependabot opened it
+#                                 (Dependabot moves its PRs back to the default
+#                                 branch, so an armed PR would merge there
+#                                 unpromoted). When small, the same change is
+#                                 copied onto a branch from master and
+#                                 opened there, where it merges itself like any
+#                                 small update (INF-436). A major, or a change
+#                                 that does not apply cleanly, waits for a person;
 #   branch with no test check   → waits for a person.
+# Whatever waits is listed weekly on one Jira ticket per repo (INF-436).
 # The rules live in the kit's reusable workflow; this stub only switches them on.
 name: Dependency update auto-merge
 
