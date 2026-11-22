@@ -27,19 +27,3 @@ updates:
       pip-minor-and-patch:
         applies-to: version-updates
         update-types: ["minor", "patch"]
-  - package-ecosystem: "github-actions"
-    directories:
-      - "/"
-    schedule:
-      interval: "weekly"
-      day: "saturday"
-      time: "06:00"
-      timezone: "Europe/Budapest"
-    cooldown:
-      default-days: 3
-    ignore:
-      - dependency-name: "allmyles/claude-kit*"
-    groups:
-      github-actions-minor-and-patch:
-        applies-to: version-updates
-        update-types: ["minor", "patch"]
